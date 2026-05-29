@@ -138,7 +138,7 @@ export default function ProfileView() {
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-8">
       {/* Header */}
-      <div className="bg-red-600 px-4 py-3 flex items-center justify-between gap-2">
+      <div className="bg-primary px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 animate-pulse" />
           <span className="font-bold text-sm uppercase tracking-wider">ICE onQ — Emergency Medical Profile</span>
@@ -202,14 +202,14 @@ export default function ProfileView() {
 
         {/* Critical Alerts */}
         {profile.critical_alerts?.length > 0 && (
-          <div className="bg-red-900/60 border border-red-600 rounded-2xl p-4">
+          <div className="bg-red-600 border border-red-700 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-5 h-5 text-red-400 animate-pulse" />
-              <h2 className="font-bold text-red-300 uppercase text-sm tracking-wider">Critical Medical Alerts</h2>
+              <AlertTriangle className="w-5 h-5 text-white animate-pulse" />
+              <h2 className="font-bold text-white uppercase text-sm tracking-wider">Critical Medical Alerts</h2>
             </div>
             <div className="flex flex-wrap gap-2">
               {profile.critical_alerts.map((a, i) => (
-                <span key={i} className="px-3 py-1.5 bg-red-600/70 rounded-lg text-sm font-semibold">{a}</span>
+                <span key={i} className="px-3 py-1.5 bg-white/20 border border-white/30 rounded-lg text-sm font-bold text-white">{a}</span>
               ))}
             </div>
           </div>
