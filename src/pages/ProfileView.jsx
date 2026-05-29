@@ -56,6 +56,7 @@ export default function ProfileView() {
   const profileId = params.get("id") || params.get("fID");
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName");
+  const isOwner = params.get("Owner") === "true";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,7 +73,7 @@ export default function ProfileView() {
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   }, [profileId]);
 
-  const isOwner = viewerEmail && data?.profile?.created_by === viewerEmail;
+
 
   function handleChange(e) {
     const { name, value } = e.target;
