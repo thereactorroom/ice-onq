@@ -19,7 +19,15 @@ import EmergencyAccess from './pages/EmergencyAccess';
 import ProfileView from './pages/ProfileView';
 
 const AuthenticatedApp = () => {
+  // Hooks must always be called first — no early returns before this
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+
+  // Redirect Fusion iframe URLs (/?fID=...&UserName=...) to /profile immediately
+  const fusionParams = new URLSearchParams(window.location.search);
+  if (window.location.pathname === '/' && fusionParams.get('fID')) {
+    window.location.replace(`/profile${window.location.search}`);
+    return null;
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -42,13 +50,6 @@ const AuthenticatedApp = () => {
         return null;
       }
     }
-  }
-
-  // If Fusion passes ?fID=...&UserName=... on the root URL, redirect to /profile
-  const _urlParams = new URLSearchParams(window.location.search);
-  if (window.location.pathname === '/' && _urlParams.get('fID')) {
-    window.location.replace(`/profile${window.location.search}`);
-    return null;
   }
 
   // Render the main app
@@ -75,12 +76,10 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-
           <AuthenticatedApp />
         </Router>
         <Toaster />
