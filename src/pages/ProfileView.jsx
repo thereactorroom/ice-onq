@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Shield, Phone, MessageSquare, MessageCircle, AlertTriangle, Pill, Activity, Stethoscope, Building2, CreditCard, Pencil, X, Save, LayoutDashboard, Users, Heart, CreditCard as WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useQueryString } from "@/hooks/useQueryString";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
 import ContactCard from "../components/ContactCard";
@@ -64,12 +65,12 @@ function SelectField({ label, name, value, editing, onChange, options }) {
 }
 
 export default function ProfileView() {
+  const queryString = useQueryString();
   const params = new URLSearchParams(window.location.search);
   const profileId = params.get("id") || params.get("fID");
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName");
   const isOwner = params.get("Owner")?.toLowerCase() === "true";
-  const queryString = params.toString() ? `?${params.toString()}` : "";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -2,11 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { CreditCard, Download, QrCode, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQueryString } from "@/hooks/useQueryString";
 import WalletCardPreview from "../components/WalletCardPreview";
 
 export default function WalletCard() {
-  const search = new URLSearchParams(window.location.search).toString();
-  const queryString = search ? `?${search}` : "";
+  const queryString = useQueryString();
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["iceProfile", user?.email],

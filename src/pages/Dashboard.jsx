@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { Shield, Plus, Pencil, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQueryString } from "@/hooks/useQueryString";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
 import ContactCard from "../components/ContactCard";
@@ -12,8 +13,7 @@ import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 const HERO_IMG = "https://media.base44.com/images/public/6a19919636ff0cb3ba316242/20083dd98_generated_image.png";
 
 export default function Dashboard() {
-  const search = new URLSearchParams(window.location.search).toString();
-  const queryString = search ? `?${search}` : "";
+  const queryString = useQueryString();
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data: profiles = [], isLoading: lp } = useQuery({
     queryKey: ["iceProfile", user?.email],
