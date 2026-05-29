@@ -75,7 +75,7 @@ export default function ProfileView() {
   const [profileDbId, setProfileDbId] = useState(null);
 
   useEffect(() => {
-    if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
+    if (!profileId) { setError("User not found."); setLoading(false); return; }
     base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName })
       .then((res) => { setData(res.data); setForm(res.data?.profile || {}); setProfileDbId(res.data?.profileDbId || null); setLoading(false); })
       .catch(() => { setError("Could not load profile."); setLoading(false); });

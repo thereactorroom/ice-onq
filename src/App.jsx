@@ -14,7 +14,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import EmergencyAccess from './pages/EmergencyAccess';
+
 import ProfileView from './pages/ProfileView';
 
 const AuthenticatedApp = () => {
@@ -44,7 +44,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route path="/emergency" element={<EmergencyAccess />} />
+
       <Route path="/profile" element={<ProfileView />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
