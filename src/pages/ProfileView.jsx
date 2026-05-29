@@ -152,8 +152,8 @@ export default function ProfileView() {
       {/* Header */}
       <div className="bg-primary px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 animate-pulse" />
-          <span className="font-bold text-sm uppercase tracking-wider">ICE onQ — Emergency Medical Profile</span>
+          <Shield className="w-5 h-5 animate-pulse text-white" />
+          <span className="font-bold text-sm uppercase tracking-wider text-white">ICE onQ — Emergency Medical Profile</span>
         </div>
         {isOwner && (
           <div className="flex gap-2">
