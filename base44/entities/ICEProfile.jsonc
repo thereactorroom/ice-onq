@@ -2,6 +2,14 @@
   "name": "ICEProfile",
   "type": "object",
   "properties": {
+    "fusion_id": {
+      "type": "string",
+      "title": "Fusion ID"
+    },
+    "display_name": {
+      "type": "string",
+      "title": "Display Name"
+    },
     "profile_photo": {
       "type": "string",
       "title": "Profile Photo"
@@ -85,30 +93,8 @@
   "required": [],
   "rls": {
     "create": {},
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
+    "read": {},
+    "update": {},
     "delete": {
       "$or": [
         {
