@@ -53,8 +53,9 @@ function SelectField({ label, name, value, editing, onChange, options }) {
 
 export default function ProfileView() {
   const params = new URLSearchParams(window.location.search);
-  const profileId = params.get("id");
+  const profileId = params.get("id") || params.get("fID");
   const viewerEmail = params.get("userEmail");
+  const urlUserName = params.get("UserName");
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -167,7 +168,7 @@ export default function ProfileView() {
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{user?.full_name || "Unknown"}</h1>
+              <h1 className="text-2xl font-bold">{user?.full_name || urlUserName || "Unknown"}</h1>
               <div className="flex flex-wrap gap-2 mt-1">
                 {dob && <span className="text-sm text-slate-400">DOB: {new Date(dob).toLocaleDateString()}</span>}
                 {age !== null && <span className="text-sm text-slate-400">Age: {age}</span>}

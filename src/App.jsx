@@ -44,6 +44,13 @@ const AuthenticatedApp = () => {
     }
   }
 
+  // If Fusion passes ?fID=...&UserName=... on the root URL, redirect to /profile
+  const _urlParams = new URLSearchParams(window.location.search);
+  if (window.location.pathname === '/' && _urlParams.get('fID')) {
+    window.location.replace(`/profile${window.location.search}`);
+    return null;
+  }
+
   // Render the main app
   return (
     <Routes>
