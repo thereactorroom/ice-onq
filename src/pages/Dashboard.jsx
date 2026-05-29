@@ -63,7 +63,7 @@ export default function Dashboard() {
         <div className="w-14 h-14 rounded-2xl bg-emergency/10 flex items-center justify-center mb-4">
           <Shield className="w-7 h-7 text-emergency" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Welcome to ICE onQ</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Overview</h2>
         <p className="text-muted-foreground max-w-md mb-6">
           Your emergency lifeline. Set up your ICE profile so responders can access your critical medical information when it matters most.
         </p>

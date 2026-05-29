@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const navItems = [
-  { path: "/", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/", label: "Overview", icon: LayoutDashboard },
   { path: "/contacts", label: "Contacts", icon: Users },
   { path: "/medical", label: "Medical", icon: Heart },
   { path: "/wallet-card", label: "Wallet Card", icon: WalletIcon },

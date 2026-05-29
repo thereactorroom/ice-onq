@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { path: "/", label: "Dashboard", icon: Shield },
+  { path: "/", label: "Overview", icon: Shield },
   { path: "/contacts", label: "Contacts", icon: Users },
   { path: "/medical", label: "Medical", icon: Heart },
   { path: "/wallet-card", label: "Wallet Card", icon: CreditCard },
