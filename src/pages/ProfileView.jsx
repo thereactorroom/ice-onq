@@ -378,10 +378,11 @@ export default function ProfileView() {
           <div className="flex justify-around py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const dest = `${item.path}${window.location.search}`;
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  to={dest}
                   className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-slate-500 hover:text-red-600 transition-colors"
                 >
                   <Icon className="w-5 h-5" />
