@@ -18,7 +18,7 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                 <Shield className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-bold tracking-widest uppercase">ICE onQ</p>
+                <p className="text-xs font-bold tracking-widest">ICE onQ</p>
                 <p className="text-[9px] opacity-60">In Case of Emergency</p>
               </div>
             </div>
