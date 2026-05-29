@@ -376,9 +376,9 @@ export default function ProfileView() {
 
         {/* Emergency Notes (view only) */}
         {!editing && profile.emergency_notes && (
-          <div className="bg-amber-900/40 border border-amber-700 rounded-2xl p-4">
-            <p className="text-xs font-semibold text-amber-400 uppercase mb-1">Emergency Notes</p>
-            <p className="text-sm text-amber-100 whitespace-pre-wrap">{profile.emergency_notes}</p>
+          <div className="bg-amber-50 border-l-4 border-amber-400 rounded-2xl p-4">
+            <p className="text-xs font-semibold text-amber-700 uppercase mb-1">Emergency Notes</p>
+            <p className="text-sm text-slate-800 whitespace-pre-wrap">{profile.emergency_notes}</p>
           </div>
         )}
 
