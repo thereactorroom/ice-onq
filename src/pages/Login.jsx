@@ -14,13 +14,17 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Preserve Fusion parameters through login
+  const fusionParams = new URLSearchParams(window.location.search);
+  const redirectUrl = fusionParams.get('fID') ? `/profile${window.location.search}` : "/";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      window.location.href = redirectUrl;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -29,7 +33,7 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", redirectUrl);
   };
 
   return (
