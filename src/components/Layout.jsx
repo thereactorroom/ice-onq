@@ -52,11 +52,11 @@ export default function Layout() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 pb-24">
         <Outlet />
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
         <div className="flex justify-around py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
