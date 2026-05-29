@@ -79,7 +79,11 @@ export default function ProfileView() {
 
   async function handleSave() {
     setSaving(true);
-    await base44.entities.ICEProfile.update(profileId, form);
+    await base44.functions.invoke("updatePublicICEProfile", {
+      profileId,
+      userEmail: viewerEmail,
+      updates: form
+    });
     // Refetch
     const res = await base44.functions.invoke("getPublicICEProfile", { profileId });
     setData(res.data);
