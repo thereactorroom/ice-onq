@@ -12,12 +12,15 @@ const navItems = [
 
 export default function Layout() {
   const location = useLocation();
+  const searchParams = new URLSearchParams(window.location.search);
+  const queryString = searchParams.toString();
+  const search = queryString ? `?${queryString}` : "";
 
   return (
     <div className="min-h-screen bg-background font-sans">
       <header className="sticky top-0 z-50 bg-primary text-primary-foreground shadow-lg">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to={`/${search}`} className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-emergency flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
@@ -30,7 +33,7 @@ export default function Layout() {
             {navItems.map((item) => (
               <Link
                 key={item.path}
-                to={item.path}
+                to={`${item.path}${search}`}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   location.pathname === item.path
                     ? "bg-white/15 text-white"
@@ -64,7 +67,7 @@ export default function Layout() {
             return (
               <Link
                 key={item.path}
-                to={item.path}
+                to={`${item.path}${search}`}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
                   active ? "text-emergency" : "text-muted-foreground"
                 }`}
