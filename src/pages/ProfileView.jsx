@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Shield, Phone, MessageSquare, MessageCircle, AlertTriangle, Pill, Activity, Stethoscope, Building2, CreditCard, Pencil, X, Save, User } from "lucide-react";
+import { Shield, Phone, MessageSquare, MessageCircle, AlertTriangle, Pill, Activity, Stethoscope, Building2, CreditCard, Pencil, X, Save, User, LayoutDashboard, Users, Heart, CreditCard as WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+const navItems = [
+  { path: "/", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/contacts", label: "Contacts", icon: Users },
+  { path: "/medical", label: "Medical", icon: Heart },
+  { path: "/wallet-card", label: "Wallet Card", icon: WalletIcon },
+];
 
 function cleanPhone(num) {
   return (num || "").replace(/[^+\d]/g, "");
@@ -364,6 +372,26 @@ export default function ProfileView() {
 
         <p className="text-center text-xs text-slate-400 pt-2">ICE onQ · Emergency Medical Profile</p>
       </div>
+
+      {isOwner && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+          <div className="flex justify-around py-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-slate-500 hover:text-red-600 transition-colors"
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
