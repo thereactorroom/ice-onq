@@ -6,19 +6,19 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
   const age = dob ? Math.floor((new Date() - new Date(dob)) / 31557600000) : null;
 
   return (
-    <div className="bg-card rounded-2xl border border-border p-5 flex items-center gap-3">
-      <div className="w-16 h-16 rounded-full bg-muted border-2 border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
-        {profile?.profile_photo ? (
-          <img src={profile.profile_photo} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <User className="w-7 h-7 text-muted-foreground" />
-        )}
-      </div>
-      <div className="flex-1 min-w-0 max-w-full">
-        <h2 className="text-base font-bold text-foreground leading-tight whitespace-nowrap overflow-hidden text-ellipsis w-full">
-          {user?.full_name || "Your Name"}
-        </h2>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
+    <div className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
+      <h2 className="text-lg font-bold text-foreground">
+        {user?.full_name || "Your Name"}
+      </h2>
+      <div className="flex items-center gap-3">
+        <div className="w-16 h-16 rounded-full bg-muted border-2 border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+          {profile?.profile_photo ? (
+            <img src={profile.profile_photo} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-7 h-7 text-muted-foreground" />
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground flex-1">
           {dob && <span>DOB: {new Date(dob).toLocaleDateString()}</span>}
           {age !== null && <span>Age: {age}</span>}
           {profile?.blood_group && profile.blood_group !== "Unknown" && (
@@ -27,8 +27,8 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
             </span>
           )}
         </div>
+        <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} />
       </div>
-      <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} />
     </div>
   );
 }
