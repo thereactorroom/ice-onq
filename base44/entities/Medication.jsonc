@@ -1,0 +1,26 @@
+{
+  "name": "Medication",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Medication Name"
+    },
+    "dosage": {
+      "type": "string",
+      "title": "Dosage"
+    },
+    "frequency": {
+      "type": "string",
+      "title": "Frequency"
+    },
+    "is_critical_alert": {
+      "type": "boolean",
+      "title": "Critical Alert",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

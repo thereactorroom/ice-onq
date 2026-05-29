@@ -1,0 +1,22 @@
+{
+  "name": "ChronicCondition",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Condition Name"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "is_critical_alert": {
+      "type": "boolean",
+      "title": "Critical Alert",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

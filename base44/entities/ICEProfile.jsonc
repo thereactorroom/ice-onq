@@ -1,0 +1,86 @@
+{
+  "name": "ICEProfile",
+  "type": "object",
+  "properties": {
+    "profile_photo": {
+      "type": "string",
+      "title": "Profile Photo"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "title": "Date of Birth"
+    },
+    "blood_group": {
+      "type": "string",
+      "title": "Blood Group",
+      "enum": [
+        "A+",
+        "A-",
+        "B+",
+        "B-",
+        "AB+",
+        "AB-",
+        "O+",
+        "O-",
+        "Unknown"
+      ]
+    },
+    "critical_alerts": {
+      "type": "array",
+      "title": "Critical Medical Alerts",
+      "items": {
+        "type": "string"
+      }
+    },
+    "medical_aid_name": {
+      "type": "string",
+      "title": "Medical Aid Name"
+    },
+    "medical_aid_number": {
+      "type": "string",
+      "title": "Membership Number"
+    },
+    "medical_aid_plan": {
+      "type": "string",
+      "title": "Plan"
+    },
+    "doctor_name": {
+      "type": "string",
+      "title": "Doctor Name"
+    },
+    "doctor_practice": {
+      "type": "string",
+      "title": "Practice Name"
+    },
+    "doctor_mobile": {
+      "type": "string",
+      "title": "Doctor Mobile"
+    },
+    "doctor_practice_number": {
+      "type": "string",
+      "title": "Practice Number"
+    },
+    "hospital_name": {
+      "type": "string",
+      "title": "Preferred Hospital"
+    },
+    "hospital_location": {
+      "type": "string",
+      "title": "Hospital Location"
+    },
+    "emergency_notes": {
+      "type": "string",
+      "title": "Emergency Notes"
+    },
+    "pre_login_enabled": {
+      "type": "boolean",
+      "title": "Allow ICE Access Before Login",
+      "default": false
+    },
+    "last_reviewed_date": {
+      "type": "string",
+      "title": "Last Reviewed Date"
+    }
+  },
+  "required": []
+}

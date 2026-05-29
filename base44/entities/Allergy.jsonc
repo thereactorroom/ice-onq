@@ -1,0 +1,29 @@
+{
+  "name": "Allergy",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Allergy Name"
+    },
+    "severity": {
+      "type": "string",
+      "title": "Severity",
+      "enum": [
+        "Mild",
+        "Moderate",
+        "Severe",
+        "Life-Threatening"
+      ]
+    },
+    "is_critical_alert": {
+      "type": "boolean",
+      "title": "Critical Alert",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "severity"
+  ]
+}

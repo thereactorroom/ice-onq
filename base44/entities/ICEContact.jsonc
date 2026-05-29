@@ -1,0 +1,45 @@
+{
+  "name": "ICEContact",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "title": "Full Name"
+    },
+    "relationship": {
+      "type": "string",
+      "title": "Relationship"
+    },
+    "mobile": {
+      "type": "string",
+      "title": "Mobile Number"
+    },
+    "alternative_number": {
+      "type": "string",
+      "title": "Alternative Number"
+    },
+    "email": {
+      "type": "string",
+      "title": "Email"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    },
+    "priority": {
+      "type": "number",
+      "title": "Priority",
+      "default": 0
+    },
+    "is_primary": {
+      "type": "boolean",
+      "title": "Primary Contact",
+      "default": false
+    }
+  },
+  "required": [
+    "full_name",
+    "mobile",
+    "relationship"
+  ]
+}
