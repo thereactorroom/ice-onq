@@ -150,11 +150,12 @@ export default function ProfileView() {
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-8">
       {/* Header */}
-      <div className="bg-primary px-4 py-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 animate-pulse text-white" />
-          <span className="font-bold text-sm uppercase tracking-wider text-white">ICE onQ — Emergency Medical Profile</span>
-        </div>
+      <div className="sticky top-0 z-50 bg-primary shadow-lg">
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 animate-pulse text-white" />
+            <span className="font-bold text-sm uppercase tracking-wider text-white whitespace-nowrap">ICE onQ — Emergency Medical Profile</span>
+          </div>
         {isOwner && (
           <div className="flex gap-2">
             {editing ? (
@@ -176,6 +177,7 @@ export default function ProfileView() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 space-y-4 pt-4">
