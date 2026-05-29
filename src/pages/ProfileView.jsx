@@ -56,7 +56,7 @@ export default function ProfileView() {
   const profileId = params.get("id") || params.get("fID");
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName");
-  const isOwner = params.get("Owner") === "true";
+  const isOwner = params.get("Owner")?.toLowerCase() === "true";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
