@@ -2,7 +2,7 @@ import { Shield, User } from "lucide-react";
 
 export default function WalletCardPreview({ user, profile, primaryContact }) {
   const dob = profile?.date_of_birth;
-  const qrData = encodeURIComponent(window.location.origin);
+  const qrData = encodeURIComponent(`${window.location.origin}/emergency?id=${profile?.id || ''}`);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&color=0F172A&bgcolor=FFFFFF`;
 
   return (

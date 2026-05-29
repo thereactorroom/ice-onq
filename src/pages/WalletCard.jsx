@@ -25,7 +25,7 @@ export default function WalletCard() {
   });
   const primaryContact = sorted[0];
 
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin)}&color=0F172A&bgcolor=FFFFFF`;
+  const qrUrl = profile ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/emergency?id=${profile.id}`)}&color=0F172A&bgcolor=FFFFFF` : null;
 
   if (isLoading) {
     return <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" /></div>;
