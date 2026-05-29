@@ -112,13 +112,25 @@ export default function ProfileView() {
     );
   }
 
-  if (error || !data?.profile) {
+  if (error && !profileId) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="text-center">
           <Shield className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-slate-900 text-lg font-semibold">Profile Not Found</p>
-          <p className="text-slate-500 text-sm mt-1">{error || "This ICE profile could not be loaded."}</p>
+          <p className="text-slate-900 text-lg font-semibold">User Not Found</p>
+          <p className="text-slate-500 text-sm mt-1">No profile ID was provided.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <Shield className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <p className="text-slate-900 text-lg font-semibold">Could Not Load Profile</p>
+          <p className="text-slate-500 text-sm mt-1">{error}</p>
         </div>
       </div>
     );
