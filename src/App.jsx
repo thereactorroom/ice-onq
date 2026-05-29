@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ManageContacts from './pages/ManageContacts';
@@ -20,7 +19,7 @@ import ProfileView from './pages/ProfileView';
 
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
   // Redirect Fusion iframe URLs (/?fID=...&UserName=...) to /profile immediately
   const fusionParams = new URLSearchParams(window.location.search);
@@ -38,21 +37,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      const publicPaths = ['/emergency', '/profile'];
-      const isPublicPath = publicPaths.some(p => window.location.pathname.startsWith(p));
-      if (!isPublicPath) {
-        navigateToLogin();
-        return null;
-      }
-    }
+  // Only block for unregistered users — no forced login redirects
+  if (authError?.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
-  // Render the main app
   return (
     <Routes>
       <Route path="/emergency" element={<EmergencyAccess />} />
@@ -61,19 +50,16 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/contacts" element={<ManageContacts />} />
-          <Route path="/medical" element={<EditProfile />} />
-          <Route path="/wallet-card" element={<WalletCard />} />
-        </Route>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/contacts" element={<ManageContacts />} />
+        <Route path="/medical" element={<EditProfile />} />
+        <Route path="/wallet-card" element={<WalletCard />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
-
 
 function App() {
   return (
