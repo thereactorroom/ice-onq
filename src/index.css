@@ -7,19 +7,19 @@
 @layer base {
   :root {
     --font-sans: 'Inter', system-ui, sans-serif;
-    --background: 210 25% 97%;
-    --foreground: 222 47% 11%;
+    --background: 214 40% 96%;
+    --foreground: 216 60% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 216 60% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 222 47% 11%;
+    --popover-foreground: 216 60% 10%;
+    --primary: 217 91% 22%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 213 94% 52%;
+    --secondary: 214 40% 92%;
+    --secondary-foreground: 216 60% 10%;
+    --muted: 214 40% 92%;
+    --muted-foreground: 215 25% 45%;
+    --accent: 217 91% 35%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
