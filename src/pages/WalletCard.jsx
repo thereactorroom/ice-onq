@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import WalletCardPreview from "../components/WalletCardPreview";
 
 export default function WalletCard() {
+  const search = new URLSearchParams(window.location.search).toString();
+  const queryString = search ? `?${search}` : "";
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["iceProfile", user?.email],

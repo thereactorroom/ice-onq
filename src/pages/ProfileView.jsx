@@ -69,6 +69,7 @@ export default function ProfileView() {
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName");
   const isOwner = params.get("Owner")?.toLowerCase() === "true";
+  const queryString = params.toString() ? `?${params.toString()}` : "";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -297,11 +298,10 @@ export default function ProfileView() {
           <div className="flex justify-around py-2">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const dest = `${item.path}${window.location.search}`;
               return (
                 <Link
                   key={item.path}
-                  to={dest}
+                  to={`${item.path}${queryString}`}
                   className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Icon className="w-5 h-5" />

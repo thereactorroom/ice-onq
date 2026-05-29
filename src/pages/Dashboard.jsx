@@ -12,6 +12,8 @@ import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 const HERO_IMG = "https://media.base44.com/images/public/6a19919636ff0cb3ba316242/20083dd98_generated_image.png";
 
 export default function Dashboard() {
+  const search = new URLSearchParams(window.location.search).toString();
+  const queryString = search ? `?${search}` : "";
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data: profiles = [], isLoading: lp } = useQuery({
     queryKey: ["iceProfile", user?.email],
@@ -69,10 +71,10 @@ export default function Dashboard() {
         </p>
         <div className="flex gap-3">
           <Button asChild size="lg" className="gap-2">
-            <Link to="/medical"><Plus className="w-4 h-4" /> Create ICE Profile</Link>
+            <Link to={`/medical${queryString}`}><Plus className="w-4 h-4" /> Create ICE Profile</Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="gap-2">
-            <Link to="/contacts"><Plus className="w-4 h-4" /> Add Contacts</Link>
+            <Link to={`/contacts${queryString}`}><Plus className="w-4 h-4" /> Add Contacts</Link>
           </Button>
         </div>
       </div>
@@ -89,14 +91,14 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-foreground">Emergency Contacts</h3>
           <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" asChild>
-            <Link to="/contacts"><Pencil className="w-3.5 h-3.5" /> Manage</Link>
+            <Link to={`/contacts${queryString}`}><Pencil className="w-3.5 h-3.5" /> Manage</Link>
           </Button>
         </div>
         {sortedContacts.length === 0 ? (
           <div className="bg-card rounded-2xl border border-dashed border-border p-6 text-center">
             <p className="text-muted-foreground text-sm mb-3">No emergency contacts yet</p>
             <Button size="sm" variant="outline" asChild>
-              <Link to="/contacts" className="gap-1"><Plus className="w-3.5 h-3.5" /> Add Contact</Link>
+              <Link to={`/contacts${queryString}`} className="gap-1"><Plus className="w-3.5 h-3.5" /> Add Contact</Link>
             </Button>
           </div>
         ) : (
@@ -112,7 +114,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-foreground">Medical Information</h3>
           <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" asChild>
-            <Link to="/medical"><Pencil className="w-3.5 h-3.5" /> Edit</Link>
+            <Link to={`/medical${queryString}`}><Pencil className="w-3.5 h-3.5" /> Edit</Link>
           </Button>
         </div>
         <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} />
