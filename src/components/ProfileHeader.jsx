@@ -15,7 +15,7 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <h2 className="text-lg font-bold text-foreground leading-tight break-words">
+        <h2 className="text-lg font-bold text-foreground leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
           {user?.full_name || "Your Name"}
         </h2>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
