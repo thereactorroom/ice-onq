@@ -63,11 +63,12 @@ export default function ProfileView() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [profileDbId, setProfileDbId] = useState(null);
 
   useEffect(() => {
     if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
-    base44.functions.invoke("getPublicICEProfile", { profileId })
-      .then((res) => { setData(res.data); setForm(res.data?.profile || {}); setLoading(false); })
+    base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName })
+      .then((res) => { setData(res.data); setForm(res.data?.profile || {}); setProfileDbId(res.data?.profileDbId || null); setLoading(false); })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   }, [profileId]);
 
@@ -81,14 +82,15 @@ export default function ProfileView() {
   async function handleSave() {
     setSaving(true);
     await base44.functions.invoke("updatePublicICEProfile", {
-      profileId,
+      profileId: profileDbId,
       userEmail: viewerEmail,
       updates: form
     });
     // Refetch
-    const res = await base44.functions.invoke("getPublicICEProfile", { profileId });
+    const res = await base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName });
     setData(res.data);
     setForm(res.data?.profile || {});
+    setProfileDbId(res.data?.profileDbId || null);
     setSaving(false);
     setEditing(false);
   }
