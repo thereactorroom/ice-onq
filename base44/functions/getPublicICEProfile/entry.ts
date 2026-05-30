@@ -1,5 +1,8 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
     const { profileId, userName } = body;
 
@@ -7,77 +10,32 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'profileId (fID) is required' }, { status: 400 });
     }
 
-    const SERVICE_ROLE_KEY = Deno.env.get('BASE44_SERVICE_ROLE_KEY');
-    const SERVER_URL = Deno.env.get('BASE44_SERVER_URL') || 'https://api.base44.com';
-    const APP_ID = Deno.env.get('BASE44_APP_ID');
-
-    const headers = {
-      'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-      'X-App-Id': APP_ID,
-    };
-
-    // Look up profile by fusion_id
-    const profileRes = await fetch(`${SERVER_URL}/entities/ICEProfile/filter`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ fusion_id: profileId }),
-    });
-    const profiles = await profileRes.json();
+    // Use service role — no user auth needed for this public endpoint
+    const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
     let profile = profiles[0] || null;
 
     // Auto-create profile if none found
     if (!profile) {
-      const createRes = await fetch(`${SERVER_URL}/entities/ICEProfile`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          fusion_id: profileId,
-          display_name: userName || '',
-          pre_login_enabled: true,
-        }),
+      profile = await base44.asServiceRole.entities.ICEProfile.create({
+        fusion_id: profileId,
+        display_name: userName || '',
+        pre_login_enabled: true,
       });
-      profile = await createRes.json();
     } else if (userName && profile.display_name !== userName) {
-      const updateRes = await fetch(`${SERVER_URL}/entities/ICEProfile/${profile.id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({ display_name: userName }),
+      profile = await base44.asServiceRole.entities.ICEProfile.update(profile.id, {
+        display_name: userName,
       });
-      profile = await updateRes.json();
     }
 
     const profileDbId = profile.id;
+    const ownerEmail = profile.created_by;
 
-    // Fetch related records
-    const [contactsRes, allergiesRes, conditionsRes, medicationsRes] = await Promise.all([
-      fetch(`${SERVER_URL}/entities/ICEContact/filter`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ created_by: profile.created_by }),
-      }),
-      fetch(`${SERVER_URL}/entities/Allergy/filter`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ created_by: profile.created_by }),
-      }),
-      fetch(`${SERVER_URL}/entities/ChronicCondition/filter`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ created_by: profile.created_by }),
-      }),
-      fetch(`${SERVER_URL}/entities/Medication/filter`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ created_by: profile.created_by }),
-      }),
-    ]);
-
+    // Fetch related records by owner
     const [contacts, allergies, conditions, medications] = await Promise.all([
-      contactsRes.json(),
-      allergiesRes.json(),
-      conditionsRes.json(),
-      medicationsRes.json(),
+      ownerEmail ? base44.asServiceRole.entities.ICEContact.filter({ created_by: ownerEmail }) : [],
+      ownerEmail ? base44.asServiceRole.entities.Allergy.filter({ created_by: ownerEmail }) : [],
+      ownerEmail ? base44.asServiceRole.entities.ChronicCondition.filter({ created_by: ownerEmail }) : [],
+      ownerEmail ? base44.asServiceRole.entities.Medication.filter({ created_by: ownerEmail }) : [],
     ]);
 
     return Response.json({
