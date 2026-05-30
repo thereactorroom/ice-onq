@@ -21,7 +21,8 @@ Deno.serve(async (req) => {
         display_name: userName || '',
         pre_login_enabled: true,
       });
-    } else if (userName && profile.display_name !== userName) {
+    } else if (userName && !profile.display_name) {
+      // Only set display_name from URL if not already saved — never overwrite a saved medical name
       profile = await base44.asServiceRole.entities.ICEProfile.update(profile.id, {
         display_name: userName,
       });
@@ -45,7 +46,7 @@ Deno.serve(async (req) => {
       allergies: allergies || [],
       conditions: conditions || [],
       medications: medications || [],
-      user: { full_name: userName || profile.display_name || 'Unknown' },
+      user: { full_name: profile.display_name || userName || 'Unknown' },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
