@@ -51,7 +51,7 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/profile" replace />} />
         <Route path="/contacts" element={<ManageContacts />} />
         <Route path="/medical" element={<EditProfile />} />
         <Route path="/wallet-card" element={<WalletCard />} />

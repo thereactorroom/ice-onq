@@ -133,7 +133,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
 // ── Main ProfileView ──────────────────────────────────────────────────────────
 export default function ProfileView() {
   const params = new URLSearchParams(window.location.search);
-  const profileId = params.get("id") || params.get("fID");
+  const profileId = params.get("id") || params.get("fID") || "1";
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName");
   const isOwner = params.get("Owner")?.toLowerCase() === "true";
