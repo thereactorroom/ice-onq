@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Heart, LayoutDashboard, CreditCard as WalletIcon, Save, X } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Heart, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
@@ -240,8 +240,56 @@ export default function ProfileView() {
         )}
 
         {!isEditMode && displayTab === "wallet" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <WalletCardPreview profile={profile} contacts={sortedContacts} user={user} />
+
+            <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Emergency QR Code</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                This QR code links to your ICE onQ profile. Attach it to your phone case, cycling helmet, medical bracelet, or wallet.
+              </p>
+              <div className="flex justify-center py-4">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-border">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/profile?id=${profileDbId}`)}&color=0F172A&bgcolor=FFFFFF`}
+                    alt="ICE QR Code"
+                    className="w-40 h-40"
+                  />
+                </div>
+              </div>
+              <div className="text-center text-xs text-muted-foreground">Scan to access emergency information</div>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+              <h3 className="font-semibold">Potential Uses</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: Smartphone, label: "Phone lock screen" },
+                  { icon: CreditCard, label: "Physical wallet card" },
+                  { icon: "🚴", label: "Cycling ID tag" },
+                  { icon: "🏃", label: "Running bib" },
+                  { icon: "🏥", label: "Medical bracelet" },
+                  { icon: "🚗", label: "Vehicle sticker" },
+                ].map((use, i) => (
+                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 text-sm">
+                    {typeof use.icon === "string" ? (
+                      <span className="text-lg">{use.icon}</span>
+                    ) : (
+                      <use.icon className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className="text-foreground">{use.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-2xl p-5 text-center space-y-2">
+              <p className="text-sm font-medium text-foreground">Coming Soon</p>
+              <p className="text-xs text-muted-foreground">Apple Wallet · Google Wallet · Printable Card · NFC Tag Support</p>
+            </div>
           </div>
         )}
 
