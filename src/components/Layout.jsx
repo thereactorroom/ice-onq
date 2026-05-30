@@ -1,14 +1,13 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Shield, Users, Heart, CreditCard, LogOut } from "lucide-react";
+import { Shield, Users, Heart, CreditCard, LogOut, ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQueryString } from "@/hooks/useQueryString";
 
 const navItems = [
-  { path: "/", label: "Overview", icon: Shield },
   { path: "/contacts", label: "Contacts", icon: Users },
   { path: "/medical", label: "Medical", icon: Heart },
-  { path: "/wallet-card", label: "Wallet Card", icon: CreditCard },
+  { path: "/", label: "Back", icon: ArrowLeft },
 ];
 
 export default function Layout() {
