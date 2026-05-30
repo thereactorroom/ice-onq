@@ -109,6 +109,7 @@ export default function EditProfile() {
   useEffect(() => {
     if (profile) {
       setForm({
+        display_name: profile.display_name || "",
         date_of_birth: profile.date_of_birth || "",
         blood_group: profile.blood_group || "",
         medical_aid_name: profile.medical_aid_name || "",
@@ -206,6 +207,11 @@ export default function EditProfile() {
           <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
             <h3 className="font-semibold">Personal Details</h3>
             <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1.5 col-span-2">
+                <Label>Full Name (Medical / Legal)</Label>
+                <Input value={form.display_name || ""} onChange={(e) => setForm({ ...form, display_name: e.target.value })} placeholder="Name used on all medical records" />
+                <p className="text-xs text-muted-foreground">This name appears on your emergency profile and wallet card.</p>
+              </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>
                 <Input type="date" value={form.date_of_birth || ""} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} />
