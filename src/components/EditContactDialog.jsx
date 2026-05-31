@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { BookUser } from "lucide-react";
 
 export default function EditContactDialog({ open, onOpenChange, contact, onSave }) {
   const [form, setForm] = useState({
@@ -12,6 +13,31 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave 
     email: "", notes: "", is_primary: false,
   });
   const [saving, setSaving] = useState(false);
+  const hasContactPicker = typeof navigator !== "undefined" && "contacts" in navigator;
+
+  const pickFromPhonebook = async () => {
+    try {
+      const results = await navigator.contacts.select(["name", "tel"], { multiple: false });
+      if (!results || results.length === 0) return;
+      const picked = results[0];
+      // Get phone
+      const phone = picked.tel?.[0] || "";
+      // Build truncated name: first word + last word of first name entry
+      let name = "";
+      const rawName = picked.name?.[0] || "";
+      if (rawName) {
+        const parts = rawName.trim().split(/\s+/);
+        name = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1]}` : parts[0];
+      }
+      setForm((prev) => ({
+        ...prev,
+        mobile: phone || prev.mobile,
+        full_name: name || prev.full_name,
+      }));
+    } catch (err) {
+      // User cancelled or permission denied — silently ignore
+    }
+  };
 
   useEffect(() => {
     if (contact) {
@@ -45,16 +71,29 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave 
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label>Mobile Number *</Label>
+            <div className="flex gap-2">
+              <Input
+                className="flex-1"
+                value={form.mobile}
+                onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                required
+                placeholder="+27 82 123 4567"
+              />
+              {hasContactPicker && (
+                <Button type="button" variant="outline" size="icon" onClick={pickFromPhonebook} title="Pick from contacts">
+                  <BookUser className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
             <Label>Full Name *</Label>
-            <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
+            <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required placeholder="First Last" />
           </div>
           <div className="space-y-2">
             <Label>Relationship *</Label>
             <Input value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })} required placeholder="e.g. Spouse, Parent, Sibling" />
-          </div>
-          <div className="space-y-2">
-            <Label>Mobile Number *</Label>
-            <Input value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} required placeholder="+27 82 123 4567" />
           </div>
           <div className="space-y-2">
             <Label>Alternative Number</Label>
