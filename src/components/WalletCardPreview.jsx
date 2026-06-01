@@ -56,7 +56,7 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
               </div>
 
               {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                <span className="inline-block px-3 rounded bg-emergency/80 text-[10px] font-bold leading-6">
+                <span className="inline-block rounded bg-emergency/80 text-[10px] font-bold" style={{ padding: '4px 12px', lineHeight: '1.2', verticalAlign: 'middle' }}>
                   Blood: {profile.blood_group}
                 </span>
               )}
