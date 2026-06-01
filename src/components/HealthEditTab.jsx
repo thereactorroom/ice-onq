@@ -23,7 +23,7 @@ function ItemDialog({ title, fields, initial, onSave, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-24" onClick={onClose}>
       <div className="bg-card rounded-2xl border border-border w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-sm">{title}</h3>
