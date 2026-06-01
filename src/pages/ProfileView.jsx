@@ -135,7 +135,7 @@ export default function ProfileView() {
   const params = new URLSearchParams(window.location.search);
   const profileId = params.get("id") || params.get("fID") || "1";
   const viewerEmail = params.get("userEmail");
-  const urlUserName = params.get("UserName");
+  const urlUserName = params.get("UserName") || params.get("Name");
   const isOwner = params.get("Owner")?.toLowerCase() === "true";
 
   const [data, setData] = useState(null);
