@@ -7,17 +7,26 @@ import { Plus, GripVertical, Pencil, Trash2, Star, Phone } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import EditContactDialog from "../components/EditContactDialog";
 
-export default function ManageContacts() {
+export default function ManageContacts({ profileId: profileIdProp }) {
   const qc = useQueryClient();
   const [editContact, setEditContact] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
+
+  // If no profileId prop, look up the user's own profile
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["iceProfile", user?.email],
+    queryFn: () => base44.entities.ICEProfile.filter({ created_by: user.email }),
+    enabled: !!user?.email && !profileIdProp,
+  });
+  const profileId = profileIdProp || profiles[0]?.id;
+
   const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ["iceContacts", user?.email],
-    queryFn: () => base44.entities.ICEContact.filter({ created_by: user.email }, "priority", 50),
-    enabled: !!user?.email,
+    queryKey: ["iceContacts", profileId],
+    queryFn: () => base44.entities.ICEContact.filter({ profile_id: profileId }, "priority", 50),
+    enabled: !!profileId,
   });
 
   const sorted = [...contacts].sort((a, b) => {
@@ -27,7 +36,7 @@ export default function ManageContacts() {
   });
 
   const createMut = useMutation({
-    mutationFn: (data) => base44.entities.ICEContact.create({ ...data, priority: contacts.length }),
+    mutationFn: (data) => base44.entities.ICEContact.create({ ...data, profile_id: profileId, priority: contacts.length }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["iceContacts"] }),
   });
   const updateMut = useMutation({

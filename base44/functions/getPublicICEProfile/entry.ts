@@ -31,12 +31,12 @@ Deno.serve(async (req) => {
     const profileDbId = profile.id;
     const ownerEmail = profile.created_by;
 
-    // Fetch related records by owner
+    // Fetch related records by profile_id
     const [contacts, allergies, conditions, medications] = await Promise.all([
-      ownerEmail ? base44.asServiceRole.entities.ICEContact.filter({ created_by: ownerEmail }) : [],
-      ownerEmail ? base44.asServiceRole.entities.Allergy.filter({ created_by: ownerEmail }) : [],
-      ownerEmail ? base44.asServiceRole.entities.ChronicCondition.filter({ created_by: ownerEmail }) : [],
-      ownerEmail ? base44.asServiceRole.entities.Medication.filter({ created_by: ownerEmail }) : [],
+      base44.asServiceRole.entities.ICEContact.filter({ profile_id: profileDbId }),
+      base44.asServiceRole.entities.Allergy.filter({ profile_id: profileDbId }),
+      base44.asServiceRole.entities.ChronicCondition.filter({ profile_id: profileDbId }),
+      base44.asServiceRole.entities.Medication.filter({ profile_id: profileDbId }),
     ]);
 
     return Response.json({

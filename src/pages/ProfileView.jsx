@@ -294,7 +294,7 @@ export default function ProfileView() {
 
         {/* EDIT MODE */}
         {isEditMode && editTab === "contacts" && (
-          <ManageContacts />
+          <ManageContacts profileId={profileDbId || profile?.id} />
         )}
 
         {isEditMode && editTab === "medical" && (

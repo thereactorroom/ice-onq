@@ -98,9 +98,10 @@ export default function EditProfile() {
     enabled: !!user?.email,
   });
   const profile = profiles[0];
-  const { data: allergies = [] } = useQuery({ queryKey: ["allergies", user?.email], queryFn: () => base44.entities.Allergy.filter({ created_by: user.email }), enabled: !!user?.email });
-  const { data: conditions = [] } = useQuery({ queryKey: ["conditions", user?.email], queryFn: () => base44.entities.ChronicCondition.filter({ created_by: user.email }), enabled: !!user?.email });
-  const { data: medications = [] } = useQuery({ queryKey: ["medications", user?.email], queryFn: () => base44.entities.Medication.filter({ created_by: user.email }), enabled: !!user?.email });
+  const profileId = profile?.id;
+  const { data: allergies = [] } = useQuery({ queryKey: ["allergies", profileId], queryFn: () => base44.entities.Allergy.filter({ profile_id: profileId }), enabled: !!profileId });
+  const { data: conditions = [] } = useQuery({ queryKey: ["conditions", profileId], queryFn: () => base44.entities.ChronicCondition.filter({ profile_id: profileId }), enabled: !!profileId });
+  const { data: medications = [] } = useQuery({ queryKey: ["medications", profileId], queryFn: () => base44.entities.Medication.filter({ profile_id: profileId }), enabled: !!profileId });
 
   const [form, setForm] = useState({});
   const [alertInput, setAlertInput] = useState("");
@@ -133,15 +134,15 @@ export default function EditProfile() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["iceProfile"] }); toast.success("Profile saved"); },
   });
 
-  const allergyCreate = useMutation({ mutationFn: (d) => base44.entities.Allergy.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["allergies"] }) });
+  const allergyCreate = useMutation({ mutationFn: (d) => base44.entities.Allergy.create({ ...d, profile_id: profileId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["allergies"] }) });
   const allergyUpdate = useMutation({ mutationFn: ({ id, data }) => base44.entities.Allergy.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["allergies"] }) });
   const allergyDelete = useMutation({ mutationFn: (id) => base44.entities.Allergy.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["allergies"] }) });
 
-  const condCreate = useMutation({ mutationFn: (d) => base44.entities.ChronicCondition.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["conditions"] }) });
+  const condCreate = useMutation({ mutationFn: (d) => base44.entities.ChronicCondition.create({ ...d, profile_id: profileId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["conditions"] }) });
   const condUpdate = useMutation({ mutationFn: ({ id, data }) => base44.entities.ChronicCondition.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["conditions"] }) });
   const condDelete = useMutation({ mutationFn: (id) => base44.entities.ChronicCondition.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["conditions"] }) });
 
-  const medCreate = useMutation({ mutationFn: (d) => base44.entities.Medication.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const medCreate = useMutation({ mutationFn: (d) => base44.entities.Medication.create({ ...d, profile_id: profileId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
   const medUpdate = useMutation({ mutationFn: ({ id, data }) => base44.entities.Medication.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
   const medDelete = useMutation({ mutationFn: (id) => base44.entities.Medication.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
 
