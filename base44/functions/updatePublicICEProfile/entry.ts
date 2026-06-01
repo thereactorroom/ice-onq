@@ -9,25 +9,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get the authenticated user
+    // Require authentication
     const user = await base44.auth.me();
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch the profile as service role to check ownership
+    // Verify profile exists
     const profile = await base44.asServiceRole.entities.ICEProfile.get(profileId);
-
     if (!profile) {
       return Response.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Validate ownership by matching the authenticated user's email
-    if (profile.created_by !== user.email) {
-      return Response.json({ error: 'Forbidden: You do not own this profile' }, { status: 403 });
-    }
-
-    // Safe fields that can be updated via this public endpoint
+    // Safe fields that can be updated via this endpoint
     const allowedFields = [
       'display_name', 'date_of_birth', 'blood_group', 'critical_alerts', 'emergency_notes',
       'medical_aid_name', 'medical_aid_number', 'medical_aid_plan',
