@@ -201,7 +201,7 @@ export default function ProfileView() {
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-white" />
-            <span className="font-bold text-sm uppercase tracking-wider text-white">ICE onQ</span>
+            <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
           </div>
           {isOwner && !isEditMode && (
             <Button size="sm" onClick={() => { setMode("edit"); setEditTab("contacts"); }}
