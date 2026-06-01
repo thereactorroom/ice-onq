@@ -74,7 +74,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
         <p className="text-xs text-muted-foreground -mt-2">This name is used on all medical and emergency records.</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full Name (Medical)" name="display_name" value={form.display_name} onChange={handleChange} span2 placeholder="Legal / medical name" />
           <Field label="Date of Birth" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} type="date" />
           <SelectField label="Blood Group" name="blood_group" value={form.blood_group} onChange={handleChange} options={BLOOD_GROUPS} />
@@ -84,7 +84,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       {/* Medical Aid */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Medical Aid</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Medical Aid Name" name="medical_aid_name" value={form.medical_aid_name} onChange={handleChange} />
           <Field label="Membership No." name="medical_aid_number" value={form.medical_aid_number} onChange={handleChange} />
           <Field label="Plan" name="medical_aid_plan" value={form.medical_aid_plan} onChange={handleChange} />
@@ -94,7 +94,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       {/* Doctor */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Doctor</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Doctor Name" name="doctor_name" value={form.doctor_name} onChange={handleChange} />
           <Field label="Practice" name="doctor_practice" value={form.doctor_practice} onChange={handleChange} />
           <Field label="Mobile" name="doctor_mobile" value={form.doctor_mobile} onChange={handleChange} />
@@ -105,7 +105,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       {/* Hospital */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hospital</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Preferred Hospital" name="hospital_name" value={form.hospital_name} onChange={handleChange} />
           <Field label="Location" name="hospital_location" value={form.hospital_location} onChange={handleChange} />
         </div>

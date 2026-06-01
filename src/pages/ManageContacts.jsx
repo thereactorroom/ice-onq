@@ -74,7 +74,7 @@ export default function ManageContacts({ profileId: profileIdProp }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-xl font-bold text-foreground">Emergency Contacts</h2>
           <p className="text-sm text-muted-foreground">Drag to reorder priority. Primary contact appears first.</p>
