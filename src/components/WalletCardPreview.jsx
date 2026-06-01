@@ -50,13 +50,13 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-sm truncate">{user?.full_name || "Your Name"}</p>
-                  {dob && <p className="text-[10px] opacity-70">DOB: {new Date(dob).toLocaleDateString()}</p>}
+                  <p className="font-bold text-sm leading-5">{user?.full_name || "Your Name"}</p>
+                {dob && <p className="text-[10px] opacity-70 mt-0.5">DOB: {new Date(dob).toLocaleDateString()}</p>}
                 </div>
               </div>
 
               {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                <span className="inline-block px-2 py-0.5 rounded bg-emergency/80 text-[10px] font-bold mb-1">
+                <span className="inline-flex items-center px-3 py-1 rounded bg-emergency/80 text-[10px] font-bold">
                   Blood: {profile.blood_group}
                 </span>
               )}
