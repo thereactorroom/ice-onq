@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -132,12 +133,13 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
 
 // ── Main ProfileView ──────────────────────────────────────────────────────────
 export default function ProfileView() {
+  const { user: authUser } = useAuth();
   const params = new URLSearchParams(window.location.search);
   const profileId = params.get("id") || params.get("fID") || "1";
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
   const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
-  const isOwner = ownerParam?.toLowerCase() === "true";
+  const isOwner = ownerParam?.toLowerCase() === "true" || !!authUser;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
