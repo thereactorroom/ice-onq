@@ -39,7 +39,7 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                 <img src={qrUrl} alt="QR Code" className="w-14 h-14" />
               </div>
               {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                <p style={{ fontSize: '13px', fontWeight: 'bold', color: '#fca5a5', textAlign: 'right', lineHeight: '1' }}>{profile.blood_group}</p>
+                <p style={{ fontSize: '13px', fontWeight: 'bold', color: '#fca5a5', textAlign: 'right', lineHeight: '1' }}>Blood: {profile.blood_group}</p>
               )}
             </div>
           </div>
