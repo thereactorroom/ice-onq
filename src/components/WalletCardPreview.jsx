@@ -10,10 +10,21 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
   async function handleDownload() {
     if (!cardRef.current) return;
     const canvas = await html2canvas(cardRef.current, { scale: 3, useCORS: true, backgroundColor: null });
-    const link = document.createElement("a");
-    link.download = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const dataUrl = canvas.toDataURL("image/png");
+    const inIframe = window.self !== window.top;
+    if (inIframe) {
+      // In iframe (e.g. Fusion mobile): open image in new tab so user can long-press to save
+      const win = window.open();
+      if (win) {
+        win.document.write(`<img src="${dataUrl}" style="max-width:100%" /><p style="font-family:sans-serif;text-align:center;color:#555">Long-press the image and tap Save to download</p>`);
+        win.document.close();
+      }
+    } else {
+      const link = document.createElement("a");
+      link.download = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
+      link.href = dataUrl;
+      link.click();
+    }
     toast.success("Your ICE card has been downloaded!");
   }
   const dob = profile?.date_of_birth;
