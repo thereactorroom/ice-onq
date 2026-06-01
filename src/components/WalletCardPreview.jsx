@@ -1,13 +1,26 @@
-import { Shield, User } from "lucide-react";
+import { useRef } from "react";
+import { Shield, User, Download } from "lucide-react";
+import html2canvas from "html2canvas";
+import { Button } from "@/components/ui/button";
 
 export default function WalletCardPreview({ user, profile, primaryContact }) {
+  const cardRef = useRef(null);
+
+  async function handleDownload() {
+    if (!cardRef.current) return;
+    const canvas = await html2canvas(cardRef.current, { scale: 3, useCORS: true, backgroundColor: null });
+    const link = document.createElement("a");
+    link.download = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }
   const dob = profile?.date_of_birth;
   const qrData = encodeURIComponent(`${window.location.origin}/emergency?id=${profile?.id || ''}`);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&color=0F172A&bgcolor=FFFFFF`;
 
   return (
-    <div className="w-full max-w-sm mx-auto">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-slate-700 text-white p-6 shadow-2xl aspect-[1.6/1]">
+    <div className="w-full max-w-sm mx-auto space-y-3">
+      <div ref={cardRef} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-slate-700 text-white p-6 shadow-2xl aspect-[1.6/1]">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
@@ -66,6 +79,9 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
           </div>
         </div>
       </div>
+      <Button onClick={handleDownload} variant="outline" className="w-full gap-2">
+        <Download className="w-4 h-4" /> Download Card as Image
+      </Button>
     </div>
   );
 }
