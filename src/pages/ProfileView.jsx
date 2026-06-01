@@ -154,12 +154,14 @@ export default function ProfileView() {
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("contacts");
 
-  useEffect(() => {
+  const fetchProfile = () => {
     if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
     base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName })
       .then((res) => { setData(res.data); setLoading(false); })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
-  }, [profileId]);
+  };
+
+  useEffect(() => { fetchProfile(); }, [profileId]);
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
@@ -371,7 +373,7 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium">Health</span>
             </button>
             <button
-              onClick={() => setMode("display")}
+              onClick={() => { setMode("display"); fetchProfile(); }}
               className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
             >
               <ArrowLeft className="w-5 h-5" />
