@@ -139,7 +139,9 @@ export default function ProfileView() {
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
   const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
-  const isOwner = ownerParam?.toLowerCase() === "true" || !!authUser;
+  // Latch owner status once true so toggling edit mode doesn't reset it
+  const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
+  useEffect(() => { if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true); }, [authUser]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
