@@ -69,7 +69,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
   }
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-36">
       {/* Name */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
@@ -214,7 +214,7 @@ export default function ProfileView() {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-28">
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-36">
 
         {/* DISPLAY MODE */}
         {!isEditMode && displayTab === "overview" && (

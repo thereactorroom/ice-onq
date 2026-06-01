@@ -151,7 +151,7 @@ export default function HealthEditTab({ profileId }) {
   });
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className="space-y-4 pb-36">
       <Section
         title="Allergies"
         icon="⚠️"
