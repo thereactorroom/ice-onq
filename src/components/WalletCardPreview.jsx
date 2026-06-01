@@ -21,10 +21,10 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
   return (
     <div className="w-full max-w-sm mx-auto space-y-3">
       <div ref={cardRef} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-slate-700 text-white p-6 shadow-2xl">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none z-0" />
+        <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none z-0" />
 
-        <div className="relative flex flex-col gap-4">
+        <div className="relative flex flex-col gap-4 z-10">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-emergency flex items-center justify-center">
