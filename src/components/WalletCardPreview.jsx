@@ -34,8 +34,13 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                 <p className="text-[9px] opacity-60">In Case of Emergency</p>
               </div>
             </div>
-            <div className="rounded-lg overflow-hidden bg-white p-1">
-              <img src={qrUrl} alt="QR Code" className="w-14 h-14" />
+            <div className="flex flex-col items-end gap-1">
+              <div className="rounded-lg overflow-hidden bg-white p-1">
+                <img src={qrUrl} alt="QR Code" className="w-14 h-14" />
+              </div>
+              {profile?.blood_group && profile.blood_group !== "Unknown" && (
+                <p style={{ fontSize: '13px', fontWeight: 'bold', color: '#fca5a5', textAlign: 'right', lineHeight: '1' }}>{profile.blood_group}</p>
+              )}
             </div>
           </div>
 
@@ -53,9 +58,6 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                   <p className="font-bold text-sm leading-5">{user?.full_name || "Your Name"}</p>
                 <p className="text-[10px] opacity-70 mt-0.5">
                   {dob && <>DOB: {new Date(dob).toLocaleDateString()}</>}
-                  {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                    <span style={{ color: '#fca5a5', fontWeight: 'bold' }}>{dob ? ' · ' : ''}Blood: {profile.blood_group}</span>
-                  )}
                 </p>
                 </div>
               </div>
