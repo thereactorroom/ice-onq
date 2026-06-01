@@ -11,20 +11,24 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
     if (!cardRef.current) return;
     const canvas = await html2canvas(cardRef.current, { scale: 3, useCORS: true, backgroundColor: null });
     const dataUrl = canvas.toDataURL("image/png");
-    const inIframe = window.self !== window.top;
-    if (inIframe) {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      // iOS Safari doesn't support anchor downloads — open in new tab for long-press save
       const win = window.open();
       if (win) {
-        win.document.write(`<img src="${dataUrl}" style="max-width:100%" /><p style="font-family:sans-serif;text-align:center;color:#555">Long-press the image and tap Save to download</p>`);
+        win.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUrl}" style="max-width:100%;height:auto" /><p style="font-family:sans-serif;text-align:center;color:#aaa;padding:16px">Long-press the image and tap "Save to Photos" or "Add to Photos"</p></body></html>`);
         win.document.close();
       }
     } else {
+      // Android, desktop web — anchor download works
       const link = document.createElement("a");
       link.download = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     }
-    toast.success("Your ICE card has been downloaded!");
+    toast.success("Download ready!");
   }
 
   const dob = profile?.date_of_birth;
