@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Heart, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
@@ -354,8 +354,8 @@ export default function ProfileView() {
                 editTab === "medical" ? "text-primary" : "text-muted-foreground hover:text-primary"
               }`}
             >
-              <Heart className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Medical</span>
+              <Info className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Info</span>
             </button>
             <button
               onClick={() => setEditTab("health")}
