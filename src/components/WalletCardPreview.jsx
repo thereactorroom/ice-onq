@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { toast } from "sonner";
 import { Shield, User, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
     link.download = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+    toast.success("Your ICE card has been downloaded!");
   }
   const dob = profile?.date_of_birth;
   const qrData = encodeURIComponent(`${window.location.origin}/emergency?id=${profile?.id || ''}`);
