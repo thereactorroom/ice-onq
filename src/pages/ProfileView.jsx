@@ -9,6 +9,7 @@ import MedicalInfoDisplay from "../components/MedicalInfoDisplay";
 import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 import WalletCardPreview from "../components/WalletCardPreview";
 import ManageContacts from "./ManageContacts";
+import HealthEditTab from "../components/HealthEditTab";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
@@ -146,7 +147,7 @@ export default function ProfileView() {
   const [mode, setMode] = useState("display");
   // display sub-view: 'overview' | 'wallet'
   const [displayTab, setDisplayTab] = useState("overview");
-  // edit tab: 'contacts' | 'medical'
+  // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("contacts");
 
   useEffect(() => {
@@ -306,6 +307,10 @@ export default function ProfileView() {
             onSaved={handleMedicalSaved}
           />
         )}
+
+        {isEditMode && editTab === "health" && (
+          <HealthEditTab profileId={profileDbId || profile?.id} />
+        )}
       </div>
 
       {/* ── Bottom Navigation ── */}
@@ -351,6 +356,15 @@ export default function ProfileView() {
             >
               <Heart className="w-5 h-5" />
               <span className="text-[10px] font-medium">Medical</span>
+            </button>
+            <button
+              onClick={() => setEditTab("health")}
+              className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
+                editTab === "health" ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              <span className="text-base leading-none">💊</span>
+              <span className="text-[10px] font-medium">Health</span>
             </button>
             <button
               onClick={() => setMode("display")}
