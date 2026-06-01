@@ -59,7 +59,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
   async function handleSave() {
     setSaving(true);
     await base44.functions.invoke("updatePublicICEProfile", {
-      profileId: profileDbId,
+      profileId: profile.id,
       updates: form,
     });
     setSaving(false);
