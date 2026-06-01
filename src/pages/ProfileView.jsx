@@ -254,7 +254,7 @@ export default function ProfileView() {
               <div className="flex justify-center py-4">
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-border">
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/profile?id=${profileDbId}`)}&color=0F172A&bgcolor=FFFFFF`}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/profile?fID=${profile.fusion_id || profileDbId}`)}&color=0F172A&bgcolor=FFFFFF`}
                     alt="ICE QR Code"
                     className="w-40 h-40"
                   />
