@@ -3,10 +3,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { profileId, userEmail, updates } = await req.json();
+    const { profileId, updates } = await req.json();
 
-    if (!profileId || !userEmail || !updates) {
+    if (!profileId || !updates) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Get the authenticated user
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Fetch the profile as service role to check ownership
@@ -16,14 +22,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Validate ownership by matching the email passed from Fusion
-    if (profile.created_by !== userEmail) {
+    // Validate ownership by matching the authenticated user's email
+    if (profile.created_by !== user.email) {
       return Response.json({ error: 'Forbidden: You do not own this profile' }, { status: 403 });
     }
 
     // Safe fields that can be updated via this public endpoint
     const allowedFields = [
-      'date_of_birth', 'blood_group', 'critical_alerts', 'emergency_notes',
+      'display_name', 'date_of_birth', 'blood_group', 'critical_alerts', 'emergency_notes',
       'medical_aid_name', 'medical_aid_number', 'medical_aid_plan',
       'doctor_name', 'doctor_practice', 'doctor_mobile', 'doctor_practice_number',
       'hospital_name', 'hospital_location', 'profile_photo'
