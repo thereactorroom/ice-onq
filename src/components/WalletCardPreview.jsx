@@ -51,15 +51,16 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-sm leading-5">{user?.full_name || "Your Name"}</p>
-                {dob && <p className="text-[10px] opacity-70 mt-0.5">DOB: {new Date(dob).toLocaleDateString()}</p>}
+                <p className="text-[10px] opacity-70 mt-0.5">
+                  {dob && <>DOB: {new Date(dob).toLocaleDateString()}</>}
+                  {profile?.blood_group && profile.blood_group !== "Unknown" && (
+                    <span style={{ color: '#fca5a5', fontWeight: 'bold' }}>{dob ? ' · ' : ''}Blood: {profile.blood_group}</span>
+                  )}
+                </p>
                 </div>
               </div>
 
-              {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                <div style={{ display: 'table', backgroundColor: 'rgba(220,38,38,0.8)', borderRadius: '6px' }}>
-                  <div style={{ display: 'table-cell', verticalAlign: 'middle', padding: '6px 12px', fontSize: '10px', fontWeight: 'bold', color: 'white', lineHeight: '1', whiteSpace: 'nowrap' }}>Blood: {profile.blood_group}</div>
-                </div>
-              )}
+
 
               {profile?.critical_alerts?.length > 0 && (
                 <p className="text-[10px] opacity-80 mt-1 leading-relaxed">
