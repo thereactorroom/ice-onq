@@ -2,6 +2,10 @@
   "name": "ChronicCondition",
   "type": "object",
   "properties": {
+    "profile_id": {
+      "type": "string",
+      "title": "Profile ID"
+    },
     "name": {
       "type": "string",
       "title": "Condition Name"
@@ -21,30 +25,8 @@
   ],
   "rls": {
     "create": {},
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
+    "read": {},
+    "update": {},
     "delete": {
       "$or": [
         {
