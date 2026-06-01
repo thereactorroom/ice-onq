@@ -8,7 +8,7 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
   return (
     <div className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
       <h2 className="text-lg font-bold text-foreground">
-        {user?.full_name || "Your Name"}
+        {profile?.display_name || user?.full_name || "Your Name"}
       </h2>
       <div className="flex items-center gap-3">
         <div className="w-16 h-16 rounded-full bg-muted border-2 border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
