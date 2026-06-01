@@ -56,7 +56,9 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
               </div>
 
               {profile?.blood_group && profile.blood_group !== "Unknown" && (
-                <span style={{ display: 'inline-block', padding: '6px 12px', borderRadius: '6px', fontSize: '10px', fontWeight: 'bold', lineHeight: '1', backgroundColor: 'rgba(220,38,38,0.8)', color: 'white' }}>Blood: {profile.blood_group}</span>
+                <div style={{ display: 'table', backgroundColor: 'rgba(220,38,38,0.8)', borderRadius: '6px' }}>
+                  <div style={{ display: 'table-cell', verticalAlign: 'middle', padding: '6px 12px', fontSize: '10px', fontWeight: 'bold', color: 'white', lineHeight: '1', whiteSpace: 'nowrap' }}>Blood: {profile.blood_group}</div>
+                </div>
               )}
 
               {profile?.critical_alerts?.length > 0 && (
