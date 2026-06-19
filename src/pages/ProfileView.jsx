@@ -251,7 +251,7 @@ export default function ProfileView() {
     );
   }
 
-  if (data.notFound) {
+  if (data.notFound || !data.profile) {
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-primary sticky top-0 z-50 shadow-lg">
