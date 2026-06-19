@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, ExternalLink } from "lucide-react";
 
-// Add trusted hostnames here to skip the popup for those domains
-const TRUSTED_HOSTS = [];
-
 export default function IframeDetector() {
   const [hostname, setHostname] = useState(null);
   const [visible, setVisible] = useState(false);
@@ -25,19 +22,7 @@ export default function IframeDetector() {
       }
     }
 
-    if (!host || host === "unknown") {
-      setHostname("unknown");
-      setVisible(true);
-      return;
-    }
-
-    // Skip popup for trusted hosts
-    const isTrusted = TRUSTED_HOSTS.some(
-      (trusted) => host === trusted || host.endsWith("." + trusted)
-    );
-    if (isTrusted) return;
-
-    setHostname(host);
+    setHostname(host || "unknown");
     setVisible(true);
   }, []);
 
