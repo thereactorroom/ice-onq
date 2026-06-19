@@ -167,8 +167,7 @@ export default function ProfileView() {
     const timer = setInterval(async () => {
       attempts += 1;
       const bridge = window.FusionBridge;
-      // Wait for init() to finish — __csrf is empty string until the API token is fetched
-      if (bridge && typeof bridge.getUser === "function" && bridge.__csrf) {
+      if (bridge && typeof bridge.getUser === "function") {
         clearInterval(timer);
         if (cancelled) return;
         setFusionOpen(true);
