@@ -162,32 +162,35 @@ export default function ProfileView() {
   const [fusionError, setFusionError] = useState(null);
 
   useEffect(() => {
-    let cancelled = false;
-    let attempts = 0;
-    const timer = setInterval(async () => {
-      attempts += 1;
-      const bridge = window.FusionBridge;
-      if (bridge && typeof bridge.getUser === "function") {
-        clearInterval(timer);
-        if (cancelled) return;
-        setFusionOpen(true);
-        setFusionStatus("loading");
-        try {
-          const result = await bridge.getUser();
-          if (cancelled) return;
-          setFusionUser(result);
-          setFusionStatus("success");
-        } catch (e) {
-          if (cancelled) return;
-          setFusionError(e?.message || "Could not retrieve user info.");
-          setFusionStatus("error");
-        }
-      } else if (attempts > 40) {
-        // ~16s: bridge never loaded (not embedded in Fusion) — give up silently
-        clearInterval(timer);
-      }
-    }, 400);
-    return () => { cancelled = true; clearInterval(timer); };
+    const isIframe = window.self !== window.top;
+    if (!isIframe) return;
+
+    // Determine Fusion host from parent location or referrer
+    let host = "";
+    try {
+      host = window.parent.location.origin;
+    } catch {
+      try {
+        const ref = new URL(document.referrer);
+        host = ref.origin;
+      } catch { /* not embedded in a known host */ }
+    }
+    if (!host) return;
+
+    const session = new URLSearchParams(window.location.search).get("session");
+    if (!session) return;
+
+    setFusionOpen(true);
+    setFusionStatus("loading");
+    base44.functions.invoke("getFusionUser", { host, session })
+      .then((res) => {
+        setFusionUser(res.data.user);
+        setFusionStatus("success");
+      })
+      .catch((e) => {
+        setFusionError(e?.response?.data?.error || e?.message || "Could not retrieve user info.");
+        setFusionStatus("error");
+      });
   }, []);
 
   const fetchProfile = () => {
@@ -205,21 +208,39 @@ export default function ProfileView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
-      </div>
+      <>
+        <FusionUserDialog
+          open={fusionOpen}
+          onClose={() => setFusionOpen(false)}
+          status={fusionStatus}
+          userData={fusionUser}
+          error={fusionError}
+        />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 text-center">
-        <div>
-          <Shield className="w-12 h-12 text-emergency mx-auto mb-3" />
-          <p className="text-foreground text-lg font-semibold">Could Not Load Profile</p>
-          <p className="text-muted-foreground text-sm mt-1">{error}</p>
+      <>
+        <FusionUserDialog
+          open={fusionOpen}
+          onClose={() => setFusionOpen(false)}
+          status={fusionStatus}
+          userData={fusionUser}
+          error={fusionError}
+        />
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 text-center">
+          <div>
+            <Shield className="w-12 h-12 text-emergency mx-auto mb-3" />
+            <p className="text-foreground text-lg font-semibold">Could Not Load Profile</p>
+            <p className="text-muted-foreground text-sm mt-1">{error}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
