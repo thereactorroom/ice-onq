@@ -139,6 +139,9 @@ export default function ProfileView() {
   const urlUserName = params.get("UserName") || params.get("Name");
   const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
   const [isFusionIframe, setIsFusionIframe] = useState(false);
+  const [fusionUser, setFusionUser] = useState(null);
+  const [fusionHost, setFusionHost] = useState(null);
+  const [fusionReady, setFusionReady] = useState(false);
   // Latch owner status once true so toggling edit mode doesn't reset it
   const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
   useEffect(() => { if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true); }, [authUser]);
@@ -176,29 +179,42 @@ export default function ProfileView() {
     if (!session) return;
 
     setIsFusionIframe(true);
+    setFusionHost(host);
     base44.functions.invoke("getFusionUser", { host, session })
       .then((res) => {
-        const fusionUser = res.data.user;
-        console.log("[FusionBridge] getUser:", fusionUser);
+        const userData = res.data.user;
+        console.log("[FusionBridge] getUser:", userData);
+        setFusionUser(userData);
         // Owner if the iframe's fID matches the logged-in Fusion user's userId
         const fID = new URLSearchParams(window.location.search).get("fID");
-        if (fID && String(fusionUser?.userId) === fID) {
+        if (fID && String(userData?.userId) === fID) {
           setIsOwner(true);
         }
+        setFusionReady(true);
       })
       .catch((e) => {
         console.error("[FusionBridge] getUser error:", e?.response?.data?.error || e?.message);
+        setFusionReady(true);
       });
   }, []);
 
   const fetchProfile = () => {
     if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
-    base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName })
+    const payload = { profileId, userName: urlUserName };
+    // When in fusion iframe, pass user seed data so a new profile auto-creates with real info
+    if (isFusionIframe && fusionUser) {
+      payload.fusionUser = fusionUser;
+      payload.fusionHost = fusionHost;
+    }
+    base44.functions.invoke("getPublicICEProfile", payload)
       .then((res) => { setData(res.data); setLoading(false); })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   };
 
-  useEffect(() => { fetchProfile(); }, [profileId]);
+  // Non-fusion: fetch immediately. Fusion: wait for getUser to resolve.
+  useEffect(() => {
+    if (!isFusionIframe || fusionReady) fetchProfile();
+  }, [profileId, isFusionIframe, fusionReady]);
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
