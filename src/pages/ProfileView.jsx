@@ -138,6 +138,7 @@ export default function ProfileView() {
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
   const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
+  const [isFusionIframe, setIsFusionIframe] = useState(false);
   // Latch owner status once true so toggling edit mode doesn't reset it
   const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
   useEffect(() => { if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true); }, [authUser]);
@@ -155,27 +156,35 @@ export default function ProfileView() {
 
   useEffect(() => {
     const isIframe = window.self !== window.top;
-    if (!isIframe) { console.log("[FusionBridge] not in iframe, skipping"); return; }
+    if (!isIframe) return;
 
-    let host = "";
+    let hostname = "";
     try {
-      host = window.parent.location.origin;
+      hostname = window.parent.location.hostname;
     } catch {
       try {
         const ref = new URL(document.referrer);
-        host = ref.origin;
-      } catch { /* not embedded in a known host */ }
+        hostname = ref.hostname;
+      } catch { /* unknown */ }
     }
-    console.log("[FusionBridge] host:", host);
 
+    const isFusion = hostname.endsWith("fusiononq.com");
+    if (!isFusion) return;
+
+    const host = hostname.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
     const session = new URLSearchParams(window.location.search).get("session");
-    console.log("[FusionBridge] session:", session);
+    if (!session) return;
 
-    if (!host || !session) return;
-
+    setIsFusionIframe(true);
     base44.functions.invoke("getFusionUser", { host, session })
       .then((res) => {
-        console.log("[FusionBridge] getUser response:", res.data.user);
+        const fusionUser = res.data.user;
+        console.log("[FusionBridge] getUser:", fusionUser);
+        // Owner if the iframe's fID matches the logged-in Fusion user's userId
+        const fID = new URLSearchParams(window.location.search).get("fID");
+        if (fID && String(fusionUser?.userId) === fID) {
+          setIsOwner(true);
+        }
       })
       .catch((e) => {
         console.error("[FusionBridge] getUser error:", e?.response?.data?.error || e?.message);
