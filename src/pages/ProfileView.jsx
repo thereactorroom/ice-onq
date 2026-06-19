@@ -266,9 +266,27 @@ export default function ProfileView() {
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">No ICE Profile Found</h2>
           <p className="text-muted-foreground text-sm max-w-xs">
-            This user hasn't set up their emergency profile yet. Please ask them to create one through their Fusion account.
+            This user hasn't set up their emergency profile yet. Please ask them to create one through their community member profile.
           </p>
         </div>
+        {window.__fusiononqBridge && (
+          <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+            <div className="flex justify-around py-2 max-w-lg mx-auto">
+              <button
+                onClick={() => {
+                  if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
+                    window.FusionBridge.closeComponent();
+                  }
+                  window.top.postMessage({ request: "closeComponent" }, "*");
+                }}
+                className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
+              >
+                <X className="w-5 h-5" />
+                <span className="text-[10px] font-medium">Close</span>
+              </button>
+            </div>
+          </nav>
+        )}
       </div>
     );
   }
