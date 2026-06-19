@@ -331,10 +331,9 @@ export default function ProfileView() {
             {window.__fusiononqBridge && (
               <button
                 onClick={() => {
-                  const bridge = window.FusionBridge || window.parent?.FusionBridge;
-                  if (bridge && typeof bridge.closeComponent === "function") {
-                    bridge.closeComponent();
-                  } else if (window.parent) {
+                  if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
+                    window.FusionBridge.closeComponent();
+                  } else {
                     // Fallback: postMessage to host so it can close the component
                     window.parent.postMessage({ type: "fusion:closeComponent" }, "*");
                   }
