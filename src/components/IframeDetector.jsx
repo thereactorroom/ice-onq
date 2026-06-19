@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { X, ExternalLink } from "lucide-react";
 
-// Add trusted hostnames here to skip the popup for those domains
+const FUSION_BRIDGES = {
+  "uat.fusiononq.com": "https://uat.fusiononq.com/js/fusion.bridge.js",
+  "fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js",
+  "app.fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js",
+};
+
+// Other trusted hosts that should load silently (no popup, no bridge)
 const TRUSTED_HOSTS = [];
 
 export default function IframeDetector() {
@@ -16,7 +22,6 @@ export default function IframeDetector() {
     try {
       host = window.parent.location.hostname;
     } catch {
-      // Cross-origin — fall back to referrer
       try {
         const url = new URL(document.referrer);
         host = url.hostname;
@@ -31,7 +36,17 @@ export default function IframeDetector() {
       return;
     }
 
-    // Skip popup for trusted hosts
+    // Inject Fusion bridge script if host matches
+    const bridgeSrc = FUSION_BRIDGES[host];
+    if (bridgeSrc) {
+      const script = document.createElement("script");
+      script.src = bridgeSrc;
+      script.async = true;
+      document.head.appendChild(script);
+      return;
+    }
+
+    // Skip popup for other trusted hosts
     const isTrusted = TRUSTED_HOSTS.some(
       (trusted) => host === trusted || host.endsWith("." + trusted)
     );
