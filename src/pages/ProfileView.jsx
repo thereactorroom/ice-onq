@@ -331,7 +331,13 @@ export default function ProfileView() {
             {window.__fusiononqBridge && (
               <button
                 onClick={() => {
-                  try { window.FusionBridge.closeComponent(); } catch {}
+                  const bridge = window.FusionBridge || window.parent?.FusionBridge;
+                  if (bridge && typeof bridge.closeComponent === "function") {
+                    bridge.closeComponent();
+                  } else if (window.parent) {
+                    // Fallback: postMessage to host so it can close the component
+                    window.parent.postMessage({ type: "fusion:closeComponent" }, "*");
+                  }
                 }}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
               >
