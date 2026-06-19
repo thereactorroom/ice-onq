@@ -251,6 +251,28 @@ export default function ProfileView() {
     );
   }
 
+  if (data.notFound) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-primary sticky top-0 z-50 shadow-lg">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-white" />
+            <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
+          </div>
+        </div>
+        <div className="max-w-lg mx-auto px-4 pt-16 pb-36 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Shield className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">No ICE Profile Found</h2>
+          <p className="text-muted-foreground text-sm max-w-xs">
+            This user hasn't set up their emergency profile yet. Please ask them to create one through their Fusion account.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const { profile, contacts, allergies, conditions, medications, user, profileDbId } = data;
   const sortedContacts = [...contacts].sort((a, b) => {
     if (a.is_primary && !b.is_primary) return -1;

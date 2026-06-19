@@ -14,8 +14,25 @@ Deno.serve(async (req) => {
     const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
     let profile = profiles[0] || null;
 
-    // Auto-create profile if none found
+    // Auto-create profile if none found — but only when the Fusion user
+    // is the owner (fID === userId) or no Fusion user is present.
     if (!profile) {
+      const isOwner = !fusionUser || String(fusionUser.userId) === String(profileId);
+
+      if (!isOwner) {
+        // Another Fusion user is viewing a non-existent profile — don't create
+        return Response.json({
+          profile: null,
+          profileDbId: null,
+          contacts: [],
+          allergies: [],
+          conditions: [],
+          medications: [],
+          user: { full_name: userName || 'Unknown' },
+          notFound: true,
+        });
+      }
+
       const seedData = { fusion_id: profileId, pre_login_enabled: true };
 
       if (fusionUser) {
