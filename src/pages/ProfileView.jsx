@@ -167,7 +167,8 @@ export default function ProfileView() {
     const timer = setInterval(async () => {
       attempts += 1;
       const bridge = window.FusionBridge;
-      if (bridge && typeof bridge.getUser === "function") {
+      // Wait for init() to finish — __csrf is empty string until the API token is fetched
+      if (bridge && typeof bridge.getUser === "function" && bridge.__csrf) {
         clearInterval(timer);
         if (cancelled) return;
         setFusionOpen(true);
@@ -182,8 +183,8 @@ export default function ProfileView() {
           setFusionError(e?.message || "Could not retrieve user info.");
           setFusionStatus("error");
         }
-      } else if (attempts > 30) {
-        // ~12s: bridge never loaded (not embedded in Fusion) — give up silently
+      } else if (attempts > 40) {
+        // ~16s: bridge never loaded (not embedded in Fusion) — give up silently
         clearInterval(timer);
       }
     }, 400);
