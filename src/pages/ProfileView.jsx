@@ -142,6 +142,7 @@ export default function ProfileView() {
   const [fusionUser, setFusionUser] = useState(null);
   const [fusionHost, setFusionHost] = useState(null);
   const [fusionReady, setFusionReady] = useState(false);
+  const [detectionDone, setDetectionDone] = useState(false);
   // Latch owner status once true so toggling edit mode doesn't reset it
   const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
   useEffect(() => { if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true); }, [authUser]);
@@ -159,43 +160,52 @@ export default function ProfileView() {
 
   useEffect(() => {
     const isIframe = window.self !== window.top;
-    if (!isIframe) return;
 
     let hostname = "";
-    try {
-      hostname = window.parent.location.hostname;
-    } catch {
+    if (isIframe) {
       try {
-        const ref = new URL(document.referrer);
-        hostname = ref.hostname;
-      } catch { /* unknown */ }
+        hostname = window.parent.location.hostname;
+      } catch {
+        try {
+          const ref = new URL(document.referrer);
+          hostname = ref.hostname;
+        } catch { /* unknown */ }
+      }
     }
 
     const isFusion = hostname.endsWith("fusiononq.com");
-    if (!isFusion) return;
 
-    const host = hostname.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
-    const session = new URLSearchParams(window.location.search).get("session");
-    if (!session) return;
+    if (isIframe && isFusion) {
+      const host = hostname.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
+      const session = new URLSearchParams(window.location.search).get("session");
 
-    setIsFusionIframe(true);
-    setFusionHost(host);
-    base44.functions.invoke("getFusionUser", { host, session })
-      .then((res) => {
-        const userData = res.data.user;
-        console.log("[FusionBridge] getUser:", userData);
-        setFusionUser(userData);
-        // Owner if the iframe's fID matches the logged-in Fusion user's userId
-        const fID = new URLSearchParams(window.location.search).get("fID");
-        if (fID && String(userData?.userId) === fID) {
-          setIsOwner(true);
-        }
-        setFusionReady(true);
-      })
-      .catch((e) => {
-        console.error("[FusionBridge] getUser error:", e?.response?.data?.error || e?.message);
-        setFusionReady(true);
-      });
+      if (session) {
+        setIsFusionIframe(true);
+        setFusionHost(host);
+        base44.functions.invoke("getFusionUser", { host, session })
+          .then((res) => {
+            const userData = res.data.user;
+            console.log("[FusionBridge] getUser:", userData);
+            setFusionUser(userData);
+            // Owner if the iframe's fID matches the logged-in Fusion user's userId
+            const fID = new URLSearchParams(window.location.search).get("fID");
+            if (fID && String(userData?.userId) === fID) {
+              setIsOwner(true);
+            }
+            setFusionReady(true);
+            setDetectionDone(true);
+          })
+          .catch((e) => {
+            console.error("[FusionBridge] getUser error:", e?.response?.data?.error || e?.message);
+            setFusionReady(true);
+            setDetectionDone(true);
+          });
+        return; // async path — detectionDone set in callbacks above
+      }
+    }
+
+    // Not a fusion iframe with session — proceed with profile fetch immediately
+    setDetectionDone(true);
   }, []);
 
   const fetchProfile = () => {
@@ -211,10 +221,11 @@ export default function ProfileView() {
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   };
 
-  // Non-fusion: fetch immediately. Fusion: wait for getUser to resolve.
+  // Wait for fusion detection to complete before fetching, avoiding
+  // a premature bare-profile creation that would block user-data seeding.
   useEffect(() => {
-    if (!isFusionIframe || fusionReady) fetchProfile();
-  }, [profileId, isFusionIframe, fusionReady]);
+    if (detectionDone && (!isFusionIframe || fusionReady)) fetchProfile();
+  }, [profileId, detectionDone, isFusionIframe, fusionReady]);
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
