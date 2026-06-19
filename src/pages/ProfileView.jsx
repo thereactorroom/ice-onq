@@ -333,10 +333,10 @@ export default function ProfileView() {
                 onClick={() => {
                   if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
                     window.FusionBridge.closeComponent();
-                  } else {
-                    // Fallback: postMessage to host so it can close the component
-                    window.parent.postMessage({ type: "fusion:closeComponent" }, "*");
                   }
+                  // Always send the raw message the host listens for, in case the
+                  // bridge global failed to initialise or its target origin differs.
+                  window.top.postMessage({ request: "closeComponent" }, "*");
                 }}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
               >
