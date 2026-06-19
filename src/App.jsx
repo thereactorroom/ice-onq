@@ -16,6 +16,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
 import ProfileView from './pages/ProfileView';
+import IframeDetector from './components/IframeDetector';
 
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
@@ -43,21 +44,24 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <Routes>
+    <>
+      <IframeDetector />
+      <Routes>
 
-      <Route path="/profile" element={<ProfileView />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<Layout />}>
-        <Route path="/" element={<Navigate to="/profile" replace />} />
-        <Route path="/contacts" element={<ManageContacts />} />
-        <Route path="/medical" element={<EditProfile />} />
-        <Route path="/wallet-card" element={<WalletCard />} />
-      </Route>
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="/profile" element={<ProfileView />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/profile" replace />} />
+          <Route path="/contacts" element={<ManageContacts />} />
+          <Route path="/medical" element={<EditProfile />} />
+          <Route path="/wallet-card" element={<WalletCard />} />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </>
   );
 };
 
