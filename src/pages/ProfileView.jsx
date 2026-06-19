@@ -11,8 +11,6 @@ import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 import WalletCardPreview from "../components/WalletCardPreview";
 import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
-import FusionUserDialog from "../components/FusionUserDialog";
-
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -155,17 +153,10 @@ export default function ProfileView() {
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("contacts");
 
-  // Fusion getUser popup
-  const [fusionOpen, setFusionOpen] = useState(false);
-  const [fusionStatus, setFusionStatus] = useState("loading");
-  const [fusionUser, setFusionUser] = useState(null);
-  const [fusionError, setFusionError] = useState(null);
-
   useEffect(() => {
     const isIframe = window.self !== window.top;
-    if (!isIframe) return;
+    if (!isIframe) { console.log("[FusionBridge] not in iframe, skipping"); return; }
 
-    // Determine Fusion host from parent location or referrer
     let host = "";
     try {
       host = window.parent.location.origin;
@@ -175,21 +166,19 @@ export default function ProfileView() {
         host = ref.origin;
       } catch { /* not embedded in a known host */ }
     }
-    if (!host) return;
+    console.log("[FusionBridge] host:", host);
 
     const session = new URLSearchParams(window.location.search).get("session");
-    if (!session) return;
+    console.log("[FusionBridge] session:", session);
 
-    setFusionOpen(true);
-    setFusionStatus("loading");
+    if (!host || !session) return;
+
     base44.functions.invoke("getFusionUser", { host, session })
       .then((res) => {
-        setFusionUser(res.data.user);
-        setFusionStatus("success");
+        console.log("[FusionBridge] getUser response:", res.data.user);
       })
       .catch((e) => {
-        setFusionError(e?.response?.data?.error || e?.message || "Could not retrieve user info.");
-        setFusionStatus("error");
+        console.error("[FusionBridge] getUser error:", e?.response?.data?.error || e?.message);
       });
   }, []);
 
@@ -208,39 +197,21 @@ export default function ProfileView() {
 
   if (loading) {
     return (
-      <>
-        <FusionUserDialog
-          open={fusionOpen}
-          onClose={() => setFusionOpen(false)}
-          status={fusionStatus}
-          userData={fusionUser}
-          error={fusionError}
-        />
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
-        </div>
-      </>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
-        <FusionUserDialog
-          open={fusionOpen}
-          onClose={() => setFusionOpen(false)}
-          status={fusionStatus}
-          userData={fusionUser}
-          error={fusionError}
-        />
-        <div className="min-h-screen bg-background flex items-center justify-center p-4 text-center">
-          <div>
-            <Shield className="w-12 h-12 text-emergency mx-auto mb-3" />
-            <p className="text-foreground text-lg font-semibold">Could Not Load Profile</p>
-            <p className="text-muted-foreground text-sm mt-1">{error}</p>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 text-center">
+        <div>
+          <Shield className="w-12 h-12 text-emergency mx-auto mb-3" />
+          <p className="text-foreground text-lg font-semibold">Could Not Load Profile</p>
+          <p className="text-muted-foreground text-sm mt-1">{error}</p>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -255,13 +226,6 @@ export default function ProfileView() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <FusionUserDialog
-        open={fusionOpen}
-        onClose={() => setFusionOpen(false)}
-        status={fusionStatus}
-        userData={fusionUser}
-        error={fusionError}
-      />
       {/* ── Fixed Header ── */}
       <div className="bg-primary sticky top-0 z-50 shadow-lg">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
