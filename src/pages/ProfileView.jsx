@@ -11,6 +11,7 @@ import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 import WalletCardPreview from "../components/WalletCardPreview";
 import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
+import FusionUserDialog from "../components/FusionUserDialog";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
@@ -154,6 +155,41 @@ export default function ProfileView() {
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("contacts");
 
+  // Fusion getUser popup
+  const [fusionOpen, setFusionOpen] = useState(false);
+  const [fusionStatus, setFusionStatus] = useState("loading");
+  const [fusionUser, setFusionUser] = useState(null);
+  const [fusionError, setFusionError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let attempts = 0;
+    const timer = setInterval(async () => {
+      attempts += 1;
+      const bridge = window.FusionBridge;
+      if (bridge && typeof bridge.getUser === "function") {
+        clearInterval(timer);
+        if (cancelled) return;
+        setFusionOpen(true);
+        setFusionStatus("loading");
+        try {
+          const result = await bridge.getUser();
+          if (cancelled) return;
+          setFusionUser(result);
+          setFusionStatus("success");
+        } catch (e) {
+          if (cancelled) return;
+          setFusionError(e?.message || "Could not retrieve user info.");
+          setFusionStatus("error");
+        }
+      } else if (attempts > 30) {
+        // ~12s: bridge never loaded (not embedded in Fusion) — give up silently
+        clearInterval(timer);
+      }
+    }, 400);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, []);
+
   const fetchProfile = () => {
     if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
     base44.functions.invoke("getPublicICEProfile", { profileId, userName: urlUserName })
@@ -198,6 +234,13 @@ export default function ProfileView() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <FusionUserDialog
+        open={fusionOpen}
+        onClose={() => setFusionOpen(false)}
+        status={fusionStatus}
+        userData={fusionUser}
+        error={fusionError}
+      />
       {/* ── Fixed Header ── */}
       <div className="bg-primary sticky top-0 z-50 shadow-lg">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between gap-2">
