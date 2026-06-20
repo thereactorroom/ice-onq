@@ -31,7 +31,7 @@ export default function ContactCard({ contact, userName }) {
         </div>
       </div>
       <p className="text-sm font-mono text-foreground mb-3">{contact.mobile}</p>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button size="sm" className="flex-1 bg-success hover:bg-success/90 text-white gap-1.5" asChild>
           <a href={`tel:${phone}`}>
             <Phone className="w-3.5 h-3.5" /> Call
