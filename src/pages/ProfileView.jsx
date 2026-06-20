@@ -156,7 +156,7 @@ export default function ProfileView() {
   // display sub-view: 'overview' | 'wallet'
   const [displayTab, setDisplayTab] = useState("overview");
   // edit tab: 'contacts' | 'medical' | 'health'
-  const [editTab, setEditTab] = useState("contacts");
+  const [editTab, setEditTab] = useState("medical");
 
   useEffect(() => {
     const isIframe = window.self !== window.top;
@@ -471,15 +471,6 @@ export default function ProfileView() {
         <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
           <div className="flex justify-around py-2 max-w-lg mx-auto">
             <button
-              onClick={() => setEditTab("contacts")}
-              className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
-                editTab === "contacts" ? "text-primary" : "text-muted-foreground hover:text-primary"
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Contacts</span>
-            </button>
-            <button
               onClick={() => setEditTab("medical")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
                 editTab === "medical" ? "text-primary" : "text-muted-foreground hover:text-primary"
@@ -487,6 +478,15 @@ export default function ProfileView() {
             >
               <Info className="w-5 h-5" />
               <span className="text-[10px] font-medium">Info</span>
+            </button>
+            <button
+              onClick={() => setEditTab("contacts")}
+              className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
+                editTab === "contacts" ? "text-primary" : "text-muted-foreground hover:text-primary"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Contacts</span>
             </button>
             <button
               onClick={() => setEditTab("health")}
