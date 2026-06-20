@@ -310,7 +310,7 @@ export default function ProfileView() {
             <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
           </div>
           {isOwner && !isEditMode && (
-            <Button size="sm" onClick={() => { setMode("edit"); setEditTab("contacts"); }}
+            <Button size="sm" onClick={() => { setMode("edit"); setEditTab("medical"); }}
               className="bg-white text-primary hover:bg-white/90 gap-1 text-xs font-semibold">
               <Pencil className="w-3 h-3" /> Edit Profile
             </Button>
