@@ -473,7 +473,7 @@ export default function ProfileView() {
             <button
               onClick={() => setEditTab("medical")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
-                editTab === "medical" ? "text-primary" : "text-muted-foreground hover:text-primary"
+                editTab === "medical" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
             >
               <Info className="w-5 h-5" />
@@ -482,7 +482,7 @@ export default function ProfileView() {
             <button
               onClick={() => setEditTab("contacts")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
-                editTab === "contacts" ? "text-primary" : "text-muted-foreground hover:text-primary"
+                editTab === "contacts" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
             >
               <Users className="w-5 h-5" />
@@ -491,7 +491,7 @@ export default function ProfileView() {
             <button
               onClick={() => setEditTab("health")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
-                editTab === "health" ? "text-primary" : "text-muted-foreground hover:text-primary"
+                editTab === "health" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
             >
               <span className="text-base leading-none">💊</span>
