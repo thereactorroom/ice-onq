@@ -7,11 +7,17 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BookUser } from "lucide-react";
 
+const RELATIONSHIPS = [
+  "Spouse / Partner", "Parent", "Child", "Sibling",
+  "Other Family Member", "Friend", "Colleague", "Neighbour", "Caregiver", "Other"
+];
+
 export default function EditContactDialog({ open, onOpenChange, contact, onSave }) {
   const [form, setForm] = useState({
     full_name: "", relationship: "", mobile: "", alternative_number: "",
     email: "", notes: "", is_primary: false,
   });
+  const [customRelationship, setCustomRelationship] = useState("");
   const [saving, setSaving] = useState(false);
   const hasContactPicker = typeof navigator !== "undefined" && "contacts" in navigator;
 
@@ -41,24 +47,32 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave 
 
   useEffect(() => {
     if (contact) {
+      const rel = contact.relationship || "";
+      const isKnown = RELATIONSHIPS.includes(rel);
       setForm({
         full_name: contact.full_name || "",
-        relationship: contact.relationship || "",
+        relationship: isKnown ? rel : (rel ? "Other" : ""),
         mobile: contact.mobile || "",
         alternative_number: contact.alternative_number || "",
         email: contact.email || "",
         notes: contact.notes || "",
         is_primary: contact.is_primary || false,
       });
+      setCustomRelationship(isKnown ? "" : rel);
     } else {
       setForm({ full_name: "", relationship: "", mobile: "", alternative_number: "", email: "", notes: "", is_primary: false });
+      setCustomRelationship("");
     }
   }, [contact, open]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
+    const finalForm = {
+      ...form,
+      relationship: form.relationship === "Other" ? customRelationship : form.relationship,
+    };
+    await onSave(finalForm);
     setSaving(false);
     onOpenChange(false);
   };
@@ -93,7 +107,23 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave 
           </div>
           <div className="space-y-2">
             <Label>Relationship *</Label>
-            <Input value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })} required placeholder="e.g. Spouse, Parent, Sibling" />
+            <select
+              value={form.relationship}
+              onChange={(e) => setForm({ ...form, relationship: e.target.value })}
+              required
+              className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">Select relationship...</option>
+              {RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+            {form.relationship === "Other" && (
+              <Input
+                value={customRelationship}
+                onChange={(e) => setCustomRelationship(e.target.value)}
+                required
+                placeholder="Please specify..."
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label>Alternative Number</Label>
