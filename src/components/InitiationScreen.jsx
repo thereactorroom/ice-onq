@@ -1,7 +1,22 @@
+import { useState } from "react";
 import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LoginFlow from "./LoginFlow";
 
 export default function InitiationScreen({ onViewDemo }) {
+  const [showLogin, setShowLogin] = useState(false);
+
+  if (showLogin) {
+    return (
+      <LoginFlow
+        onBack={() => setShowLogin(false)}
+        onSuccess={(result) => {
+          window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}`;
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -14,7 +29,10 @@ export default function InitiationScreen({ onViewDemo }) {
               <div className="text-white/70 text-xs mt-0.5">In Case of Emergency</div>
             </div>
           </div>
-          <button className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors">
+          <button
+            onClick={() => setShowLogin(true)}
+            className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+          >
             Sign In
           </button>
         </div>
@@ -87,7 +105,7 @@ export default function InitiationScreen({ onViewDemo }) {
               Your emergency information ready when it matters most.
             </p>
             <p className="text-xs text-muted-foreground font-medium">Securely powered by fusion onQ.</p>
-            <Button className="w-full gap-2 h-11 text-sm font-semibold">
+            <Button onClick={() => setShowLogin(true)} className="w-full gap-2 h-11 text-sm font-semibold">
               <Shield className="w-4 h-4" />
               Create Profile
             </Button>
