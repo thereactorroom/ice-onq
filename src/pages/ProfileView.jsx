@@ -289,8 +289,13 @@ export default function ProfileView() {
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
   // Latch owner status once true so toggling edit mode doesn't reset it
+  const rawFID = params.get("fID");
+  const isDemoMode = !rawFID || rawFID === "0";
   const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
-  useEffect(() => { if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true); }, [authUser]);
+  useEffect(() => {
+    if (isDemoMode) return; // never grant owner on demo profile
+    if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
+  }, [authUser]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
