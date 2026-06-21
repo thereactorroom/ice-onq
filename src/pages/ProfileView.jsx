@@ -21,6 +21,7 @@ import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 import WalletCardPreview from "../components/WalletCardPreview";
 import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
+import InitiationScreen from "../components/InitiationScreen";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -279,7 +280,12 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
 export default function ProfileView() {
   const { user: authUser } = useAuth();
   const params = new URLSearchParams(window.location.search);
-  const profileId = params.get("id") || params.get("fID") || "0";
+  const rawFID = params.get("fID");
+  // No fID at all → Initiation Mode (public welcome screen)
+  const isInitiationMode = !rawFID;
+  // fID=0 → demo profile (read-only)
+  const isDemoMode = rawFID === "0";
+  const profileId = rawFID || "0";
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
   const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
@@ -288,12 +294,13 @@ export default function ProfileView() {
   const [fusionHost, setFusionHost] = useState(null);
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
-  // Latch owner status once true so toggling edit mode doesn't reset it
-  const rawFID = params.get("fID");
-  const isDemoMode = !rawFID || rawFID === "0";
   const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
+  // Track if this is a brand-new profile (first-time user → auto edit mode)
+  const [isNewProfile, setIsNewProfile] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
   useEffect(() => {
-    if (isDemoMode) return; // never grant owner on demo profile
+    if (isDemoMode || isInitiationMode) return;
     if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
   }, [authUser]);
 
@@ -315,6 +322,9 @@ export default function ProfileView() {
   const medicalBackHandler = useRef(null);
 
   useEffect(() => {
+    // No fID = initiation mode; skip fusion detection entirely
+    if (isInitiationMode) return;
+
     const isIframe = window.self !== window.top;
 
     let hostname = "";
@@ -343,7 +353,6 @@ export default function ProfileView() {
             const userData = res.data.user;
             console.log("[FusionBridge] getUser:", userData);
             setFusionUser(userData);
-            // Owner if the iframe's fID matches the logged-in Fusion user's userId
             const fID = new URLSearchParams(window.location.search).get("fID");
             if (fID && String(userData?.userId) === fID) {
               setIsOwner(true);
@@ -356,35 +365,56 @@ export default function ProfileView() {
             setFusionReady(true);
             setDetectionDone(true);
           });
-        return; // async path — detectionDone set in callbacks above
+        return;
       }
     }
 
-    // Not a fusion iframe with session — proceed with profile fetch immediately
     setDetectionDone(true);
   }, []);
 
-  const fetchProfile = () => {
-    if (!profileId) { setError("No profile ID provided."); setLoading(false); return; }
-    const payload = { profileId, userName: urlUserName };
-    // When in fusion iframe, pass user seed data so a new profile auto-creates with real info
-    if (isFusionIframe && fusionUser) {
+  const fetchProfile = (forDemo = false) => {
+    const pid = forDemo ? "0" : profileId;
+    const payload = { profileId: pid, userName: urlUserName };
+    if (!forDemo && isFusionIframe && fusionUser) {
       payload.fusionUser = fusionUser;
       payload.fusionHost = fusionHost;
     }
     base44.functions.invoke("getPublicICEProfile", payload)
-      .then((res) => { setData(res.data); setLoading(false); })
+      .then((res) => {
+        const result = res.data;
+        setData(result);
+        setLoading(false);
+        // If a new profile was just created (owner context, profile has no meaningful data yet)
+        // auto-open edit mode so the user doesn't see a blank display
+        if (!forDemo && result.profile && isOwner) {
+          const p = result.profile;
+          const isEmpty = !p.blood_group && !p.medical_aid_name && !p.doctor_name &&
+            !p.hospital_name && (!result.contacts || result.contacts.length === 0) &&
+            (!result.allergies || result.allergies.length === 0);
+          if (isEmpty) {
+            setIsNewProfile(true);
+            setMode("edit");
+          }
+        }
+      })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   };
 
-  // Wait for fusion detection to complete before fetching, avoiding
-  // a premature bare-profile creation that would block user-data seeding.
+  // Wait for fusion detection to complete before fetching
   useEffect(() => {
+    // Initiation mode: don't fetch anything until user chooses View Demo
+    if (isInitiationMode && !showDemo) { setLoading(false); return; }
+    if (showDemo) { fetchProfile(true); return; }
     if (detectionDone && (!isFusionIframe || fusionReady)) fetchProfile();
-  }, [profileId, detectionDone, isFusionIframe, fusionReady]);
+  }, [profileId, detectionDone, isFusionIframe, fusionReady, showDemo]);
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
+  }
+
+  // ── Initiation Mode: no fID supplied ──
+  if (isInitiationMode && !showDemo) {
+    return <InitiationScreen onViewDemo={() => { setLoading(true); setShowDemo(true); }} />;
   }
 
   if (loading) {
