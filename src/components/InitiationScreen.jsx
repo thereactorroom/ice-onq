@@ -6,12 +6,17 @@ export default function InitiationScreen({ onViewDemo }) {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="bg-primary shadow-lg">
-        <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
-          <Shield className="w-6 h-6 text-white" />
-          <div>
-            <div className="font-bold text-white tracking-wider leading-none">ICE onQ</div>
-            <div className="text-white/70 text-xs mt-0.5">In Case of Emergency</div>
+        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-white" />
+            <div>
+              <div className="font-bold text-white tracking-wider leading-none">ICE onQ</div>
+              <div className="text-white/70 text-xs mt-0.5">In Case of Emergency</div>
+            </div>
           </div>
+          <button className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors">
+            Sign In
+          </button>
         </div>
       </div>
 
