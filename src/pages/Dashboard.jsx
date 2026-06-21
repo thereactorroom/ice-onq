@@ -9,6 +9,7 @@ import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
 import ContactCard from "../components/ContactCard";
 import MedicalInfoDisplay from "../components/MedicalInfoDisplay";
 import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
+import CompressImagesTool from "../components/CompressImagesTool";
 
 const HERO_IMG = "https://media.base44.com/images/public/6a19919636ff0cb3ba316242/20083dd98_generated_image.png";
 
@@ -143,6 +144,8 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {user?.role === "admin" && <CompressImagesTool />}
     </div>
   );
 }
