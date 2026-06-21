@@ -333,12 +333,12 @@ export default function ProfileView() {
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
             <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} />
-            <CriticalAlertsBanner alerts={[
+            <CriticalAlertsBanner alerts={[...new Set([
               ...(profile.critical_alerts || []),
               ...allergies.filter(a => a.is_critical_alert).map(a => `${a.name}${a.severity ? ` · ${a.severity}` : ''} Allergy`),
               ...conditions.filter(c => c.is_critical_alert).map(c => c.name),
               ...medications.filter(m => m.is_critical_alert).map(m => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}`),
-            ]} />
+            ])]} />
             {sortedContacts.length > 0 && (
               <div>
                 <h3 className="font-bold text-foreground mb-3">Emergency Contacts</h3>
