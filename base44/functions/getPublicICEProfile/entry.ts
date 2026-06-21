@@ -21,7 +21,8 @@ Deno.serve(async (req) => {
       if (isDemoRequest) {
         return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
       }
-      const isOwner = !fusionUser || String(fusionUser.userId) === String(profileId);
+      // Never auto-create without a verified Fusion user session
+      const isOwner = fusionUser && String(fusionUser.userId) === String(profileId);
 
       if (!isOwner) {
         // Another Fusion user is viewing a non-existent profile — don't create
