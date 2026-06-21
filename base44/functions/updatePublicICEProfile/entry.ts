@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, profile: updated });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("[updatePublicICEProfile]", error);
+    return Response.json({ error: error.message || 'Unknown error', detail: String(error) }, { status: 500 });
   }
 });

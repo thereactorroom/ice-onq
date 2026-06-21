@@ -1,8 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
 import ContactCard from "../components/ContactCard";
@@ -79,14 +89,31 @@ function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
 }
 
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
-function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
+function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack }) {
   const [form, setForm] = useState({ ...profile });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [showBackDialog, setShowBackDialog] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const dirtyRef = useRef(false);
+
+  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+
+  useEffect(() => {
+    onRegisterBack(() => {
+      if (dirtyRef.current) {
+        setShowBackDialog(true);
+      } else {
+        onBack();
+      }
+    });
+  }, [onRegisterBack, onBack]);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setDirty(true);
   }
 
   async function handlePhotoUpload(e) {
@@ -97,6 +124,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       const compressed = await compressImage(file);
       const result = await base44.integrations.Core.UploadFile({ file: compressed });
       setForm((prev) => ({ ...prev, profile_photo: result.file_url }));
+      setDirty(true);
     } catch (err) {
       console.error("Photo upload failed:", err);
     } finally {
@@ -106,12 +134,22 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
 
   async function handleSave() {
     setSaving(true);
-    await base44.functions.invoke("updatePublicICEProfile", {
-      profileId: profile.id,
-      updates: form,
-    });
-    setSaving(false);
-    onSaved(form);
+    setSaveError(null);
+    try {
+      await base44.functions.invoke("updatePublicICEProfile", {
+        profileId: profileDbId,
+        updates: form,
+      });
+      setDirty(false);
+      setSaving(false);
+      onSaved(form);
+      return true;
+    } catch (err) {
+      const msg = err?.response?.data?.error || err?.response?.data?.detail || err?.message || "Unknown error";
+      setSaveError(msg);
+      setSaving(false);
+      return false;
+    }
   }
 
   return (
@@ -190,9 +228,49 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
         />
       </div>
 
+      {saveError && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-destructive">{saveError}</p>
+        </div>
+      )}
+
       <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
         <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Medical Info"}
       </Button>
+
+      {/* Unsaved changes confirmation */}
+      <AlertDialog open={showBackDialog} onOpenChange={(open) => {
+        if (!open) setShowBackDialog(false);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save them before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="outline" onClick={() => { setShowBackDialog(false); setDirty(false); onBack(); }}>
+              Discard
+            </Button>
+            <Button
+              onClick={async (e) => {
+                e.preventDefault();
+                const ok = await handleSave();
+                if (ok) {
+                  setShowBackDialog(false);
+                  onBack();
+                }
+              }}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+            >
+              Save & Exit
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -229,6 +307,7 @@ export default function ProfileView() {
   }
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("medical");
+  const medicalBackHandler = useRef(null);
 
   useEffect(() => {
     const isIframe = window.self !== window.top;
@@ -492,6 +571,8 @@ export default function ProfileView() {
             profileDbId={profileDbId}
             viewerEmail={viewerEmail}
             onSaved={handleMedicalSaved}
+            onBack={() => { setMode("display"); fetchProfile(); }}
+            onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
           />
         )}
 
@@ -570,7 +651,13 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium">Health</span>
             </button>
             <button
-              onClick={() => { setMode("display"); fetchProfile(); }}
+              onClick={() => {
+                if (editTab === "medical" && medicalBackHandler.current) {
+                  medicalBackHandler.current();
+                } else {
+                  setMode("display"); fetchProfile();
+                }
+              }}
               className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
             >
               <ArrowLeft className="w-5 h-5" />
