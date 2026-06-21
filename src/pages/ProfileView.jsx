@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProfileHeader from "../components/ProfileHeader";
 import CriticalAlertsBanner from "../components/CriticalAlertsBanner";
@@ -47,14 +47,61 @@ function SelectField({ label, name, value, onChange, options }) {
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
 
+// ── Image compression utility ─────────────────────────────────────────────────
+function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error("Compression failed"));
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }));
+        }, "image/jpeg", quality);
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
 function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
   const [form, setForm] = useState({ ...profile });
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const { data } = await base44.integrations.Core.UploadFile({ file: compressed });
+      setForm((prev) => ({ ...prev, profile_photo: data.file_url }));
+    } catch (err) {
+      console.error("Photo upload failed:", err);
+    } finally {
+      setUploadingPhoto(false);
+    }
   }
 
   async function handleSave() {
@@ -73,6 +120,26 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
         <p className="text-xs text-muted-foreground -mt-2">This name is used on all medical and emergency records.</p>
+
+        {/* Profile Photo */}
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-full bg-muted border-2 border-border overflow-hidden flex-shrink-0 flex items-center justify-center">
+            {form.profile_photo ? (
+              <img src={form.profile_photo} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-8 h-8 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1">
+            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold cursor-pointer hover:bg-primary/90 transition-colors">
+              <Upload className="w-3.5 h-3.5" />
+              {uploadingPhoto ? "Uploading..." : form.profile_photo ? "Change Photo" : "Upload Photo"}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploadingPhoto} />
+            </label>
+            <p className="text-[10px] text-muted-foreground mt-1.5">Images are automatically resized to 400×400</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full Name (Medical)" name="display_name" value={form.display_name} onChange={handleChange} span2 placeholder="Legal / medical name" />
           <Field label="Date of Birth" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} type="date" />
