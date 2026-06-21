@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoginFlow from "./LoginFlow";
+import CreateProfileFlow from "./CreateProfileFlow";
 
 export default function InitiationScreen({ onViewDemo }) {
   const [showLogin, setShowLogin] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
 
   if (showLogin) {
     return (
@@ -15,6 +17,10 @@ export default function InitiationScreen({ onViewDemo }) {
         }}
       />
     );
+  }
+
+  if (showCreate) {
+    return <CreateProfileFlow onBack={() => setShowCreate(false)} />;
   }
 
   return (
@@ -105,7 +111,7 @@ export default function InitiationScreen({ onViewDemo }) {
               Your emergency information ready when it matters most.
             </p>
             <p className="text-xs text-muted-foreground font-medium">Securely powered by fusion onQ.</p>
-            <Button onClick={() => setShowLogin(true)} className="w-full gap-2 h-11 text-sm font-semibold">
+            <Button onClick={() => setShowCreate(true)} className="w-full gap-2 h-11 text-sm font-semibold">
               <Shield className="w-4 h-4" />
               Create Profile
             </Button>
