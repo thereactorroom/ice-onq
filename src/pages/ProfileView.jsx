@@ -155,6 +155,11 @@ export default function ProfileView() {
   const [mode, setMode] = useState("display");
   // display sub-view: 'overview' | 'wallet'
   const [displayTab, setDisplayTab] = useState("overview");
+
+  function setDisplayTabScrollTop(tab) {
+    setDisplayTab(tab);
+    window.scrollTo({ top: 0 });
+  }
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("medical");
 
@@ -454,7 +459,7 @@ export default function ProfileView() {
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setDisplayTab(id)}
+                onClick={() => setDisplayTabScrollTop(id)}
                 className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-lg transition-colors ${
                   displayTab === id ? "text-primary" : "text-muted-foreground hover:text-primary"
                 }`}
