@@ -6,9 +6,9 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { profileId: rawProfileId, userName, fusionUser, fusionHost } = body;
 
-    // fID=0, empty, or missing → serve the demo profile (fusion_id "1")
+    // fID=0, empty, or missing → serve the demo profile (fusion_id "0")
     const isDemoRequest = !rawProfileId || String(rawProfileId) === "0";
-    const profileId = isDemoRequest ? "1" : rawProfileId;
+    const profileId = isDemoRequest ? "0" : rawProfileId;
 
     // Use service role — no user auth needed for this public endpoint
     const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
