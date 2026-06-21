@@ -77,12 +77,12 @@ export default function InitiationScreen({ onViewDemo }) {
           </Button>
 
           <div className="bg-card rounded-2xl border border-border p-4 text-center space-y-2">
-            <p className="text-sm font-semibold text-foreground">Create Your ICE Profile</p>
+            <p className="text-sm font-semibold text-foreground">Create an ICE Profile Now</p>
             <p className="text-xs text-muted-foreground">
-              Log in to your fusion account to set up and manage your personal ICE profile.
-            </p>
-            <p className="text-xs text-muted-foreground italic">
               Registration and login are handled by fusion.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              ICE profiles can also be created and managed through your fusion account.
             </p>
           </div>
         </div>
