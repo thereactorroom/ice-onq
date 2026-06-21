@@ -655,7 +655,7 @@ export default function ProfileView() {
                 key={id}
                 onClick={() => setDisplayTabScrollTop(id)}
                 className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-lg transition-colors ${
-                  displayTab === id ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  displayTab === id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
                 }`}
               >
                 <Icon className="w-5 h-5" />
