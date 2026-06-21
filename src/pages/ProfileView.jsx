@@ -95,8 +95,8 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved }) {
     setUploadingPhoto(true);
     try {
       const compressed = await compressImage(file);
-      const { data } = await base44.integrations.Core.UploadFile({ file: compressed });
-      setForm((prev) => ({ ...prev, profile_photo: data.file_url }));
+      const result = await base44.integrations.Core.UploadFile({ file: compressed });
+      setForm((prev) => ({ ...prev, profile_photo: result.file_url }));
     } catch (err) {
       console.error("Photo upload failed:", err);
     } finally {

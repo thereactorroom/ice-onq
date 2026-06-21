@@ -73,10 +73,10 @@ export default function CompressImagesTool({ onComplete }) {
 
         const file = new File([blob], "photo.jpg", { type: blob.type || "image/jpeg" });
         const compressed = await compressImage(file);
-        const { data } = await base44.integrations.Core.UploadFile({ file: compressed });
+        const result = await base44.integrations.Core.UploadFile({ file: compressed });
         await base44.functions.invoke("updatePublicICEProfile", {
           profileId: profile.id,
-          updates: { profile_photo: data.file_url },
+          updates: { profile_photo: result.file_url },
         });
         items.push({ id: profile.id, status: "compressed", display_name: profile.display_name });
       } catch (err) {
