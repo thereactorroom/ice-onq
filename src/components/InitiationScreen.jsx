@@ -76,14 +76,20 @@ export default function InitiationScreen({ onViewDemo }) {
             View Demo Profile
           </Button>
 
-          <div className="bg-card rounded-2xl border border-border p-4 text-center space-y-2">
-            <p className="text-sm font-semibold text-foreground">Create an ICE Profile Now</p>
-            <p className="text-xs text-muted-foreground">
-              Registration and login are handled by fusion.
+          <div className="bg-card rounded-2xl border border-border p-5 text-center space-y-3">
+            <p className="text-base font-bold text-foreground">Create Your Free ICE Profile</p>
+            <p className="text-sm text-muted-foreground">
+              Your emergency information ready when it matters most.
             </p>
-            <p className="text-xs text-muted-foreground">
-              ICE profiles can also be created and managed through your fusion account.
-            </p>
+            <p className="text-xs text-muted-foreground font-medium">Securely powered by fusion onQ.</p>
+            <Button className="w-full gap-2 h-11 text-sm font-semibold">
+              <Shield className="w-4 h-4" />
+              Create Profile
+            </Button>
+            <div className="pt-1 space-y-0.5">
+              <p className="text-xs text-muted-foreground font-medium">Already have fusion onQ?</p>
+              <p className="text-xs text-muted-foreground">Sign in above to activate or manage your ICE profile.</p>
+            </div>
           </div>
         </div>
       </div>
