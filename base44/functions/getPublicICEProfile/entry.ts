@@ -4,11 +4,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
-    const { profileId, userName, fusionUser, fusionHost } = body;
+    const { profileId: rawProfileId, userName, fusionUser, fusionHost } = body;
 
-    if (!profileId) {
-      return Response.json({ error: 'profileId (fID) is required' }, { status: 400 });
-    }
+    // fID=0, empty, or missing → serve the demo profile (fusion_id "1")
+    const isDemoRequest = !rawProfileId || String(rawProfileId) === "0";
+    const profileId = isDemoRequest ? "1" : rawProfileId;
 
     // Use service role — no user auth needed for this public endpoint
     const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
@@ -16,7 +16,11 @@ Deno.serve(async (req) => {
 
     // Auto-create profile if none found — but only when the Fusion user
     // is the owner (fID === userId) or no Fusion user is present.
+    // Never auto-create for demo requests.
     if (!profile) {
+      if (isDemoRequest) {
+        return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
+      }
       const isOwner = !fusionUser || String(fusionUser.userId) === String(profileId);
 
       if (!isOwner) {
