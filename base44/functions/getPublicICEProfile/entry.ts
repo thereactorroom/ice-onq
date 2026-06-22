@@ -18,6 +18,10 @@ Deno.serve(async (req) => {
     } else {
       const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
       profile = profiles[0] || null;
+      // Fallback: if not found by fusion_id, try as a DB id (handles cases where isDbId flag is missing)
+      if (!profile && !isDemoRequest) {
+        profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
+      }
     }
 
     // Auto-create profile if none found — but only when the Fusion user
