@@ -153,7 +153,6 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button
               variant="destructive"
               disabled={deleting}
@@ -170,6 +169,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             >
               {deleting ? "Deleting..." : "Yes, Delete Profile"}
             </Button>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
