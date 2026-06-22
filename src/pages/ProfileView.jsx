@@ -22,6 +22,7 @@ import WalletCardPreview from "../components/WalletCardPreview";
 import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
 import InitiationScreen from "../components/InitiationScreen";
+import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -282,6 +283,7 @@ export default function ProfileView() {
   const params = new URLSearchParams(window.location.search);
   const rawFID = params.get("fID");
   const guardianFid = params.get("guardianFid");
+  const showSelector = params.get("showSelector") === "true";
   // No fID at all → Initiation Mode (public welcome screen)
   const isInitiationMode = !rawFID;
   // fID=0 → demo profile (read-only)
@@ -411,6 +413,24 @@ export default function ProfileView() {
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
+  }
+
+  // ── Profile Selector Mode: returning from a dependent profile ──
+  if (showSelector && rawFID) {
+    return (
+      <ProfileSelectorScreen
+        guardianFid={rawFID}
+        onBack={() => window.location.href = "/profile"}
+        onSelect={(result) => {
+          if (result.addDependent) {
+            window.location.href = "/profile";
+          } else {
+            const guardianParam = `&guardianFid=${rawFID}`;
+            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}`;
+          }
+        }}
+      />
+    );
   }
 
   // ── Initiation Mode: no fID supplied ──
@@ -634,7 +654,7 @@ export default function ProfileView() {
             )}
             {guardianFid && !isInitiationMode && (
               <button
-                onClick={() => window.history.back()}
+                onClick={() => window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="w-5 h-5" />
