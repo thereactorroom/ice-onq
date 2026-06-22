@@ -653,20 +653,7 @@ export default function ProfileView() {
               </div>
             )}
 
-            {isOwner && (
-              <DeleteProfileSection
-                profileDbId={profileDbId}
-                displayName={profile.display_name}
-                guardianFid={guardianFid}
-                onDeleted={() => {
-                  if (guardianFid) {
-                    window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`;
-                  } else {
-                    window.location.href = "/profile";
-                  }
-                }}
-              />
-            )}
+
           </div>
         )}
 

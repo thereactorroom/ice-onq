@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
+} from "@/components/ui/alert-dialog";
 
 // Shown after sign-in when a user has (or may have) multiple managed profiles
 export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect }) {
@@ -11,6 +15,8 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   const [error, setError] = useState("");
   const [primaryProfile, setPrimaryProfile] = useState(null);
   const [showAddDependent, setShowAddDependent] = useState(false);
+  const [manageProfile, setManageProfile] = useState(null); // { id, name } for delete dialog
+  const [deleting, setDeleting] = useState(false);
 
   function loadProfiles() {
     setLoading(true);
@@ -113,6 +119,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 statusBadge={statusBadge(p)}
                 fusionPending={p.fusion_link_pending}
                 onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, guardianFid, isDbId: !p.fusion_id })}
+                onManage={() => setManageProfile({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
               />
             ))}
 
@@ -135,6 +142,37 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
 
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!manageProfile} onOpenChange={(open) => { if (!open) setManageProfile(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete ICE Profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently deactivate <strong>{manageProfile?.name}</strong>. Anyone scanning the QR code will see a "Profile Deleted" message. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                await base44.functions.invoke("updatePublicICEProfile", {
+                  profileId: manageProfile.id,
+                  updates: { is_deleted: true, deleted_at: new Date().toISOString() },
+                });
+                setDeleting(false);
+                setManageProfile(null);
+                loadProfiles();
+              }}
+            >
+              {deleting ? "Deleting..." : "Yes, Delete Profile"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Sticky back */}
       <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full">
         <button
@@ -148,28 +186,36 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   );
 }
 
-function ProfileCard({ name, subtitle, isOwn, statusBadge, fusionPending, onClick }) {
+function ProfileCard({ name, subtitle, isOwn, statusBadge, fusionPending, onClick, onManage }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-left"
-    >
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <User className="w-6 h-6 text-primary" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-foreground truncate">{name}</p>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {statusBadge}
-          {fusionPending && (
-            <span className="flex items-center gap-1 text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
-              <Clock className="w-3 h-3" /> fusion link pending
-            </span>
-          )}
+    <div className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
+      <button onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <User className="w-6 h-6 text-primary" />
         </div>
-      </div>
-      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-    </button>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-foreground truncate">{name}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {statusBadge}
+            {fusionPending && (
+              <span className="flex items-center gap-1 text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+                <Clock className="w-3 h-3" /> fusion link pending
+              </span>
+            )}
+          </div>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+      </button>
+      {onManage && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onManage(); }}
+          className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+          title="Delete profile"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 }
