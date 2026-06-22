@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
 const FUSION_BRIDGES = {
-  "uat.fusiononq.com": "https://uat.fusiononq.com/js/fusion.bridge.js",
-  "fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js",
-  "app.fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js",
+  "uat.fusiononq.com": "https://uat.fusiononq.com/js/fusion.bridge.js?v=1.0",
+  "fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0",
+  "app.fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0",
 };
 
 export default function IframeDetector() {
