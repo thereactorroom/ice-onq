@@ -29,8 +29,24 @@ const AuthenticatedApp = () => {
     return null;
   }
 
+  // Detect fusiononq iframe — skip loading gate for optimistic UI
+  // Components render immediately with their own loading states (skeleton/spinner)
+  const isFusionIframe = (() => {
+    if (window.self === window.top) return false;
+    let host = "";
+    try {
+      host = window.parent.location.hostname;
+    } catch {
+      try {
+        host = new URL(document.referrer).hostname;
+      } catch { return false; }
+    }
+    return host.endsWith("fusiononq.com");
+  })();
+
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // (skipped for fusiononq iframes — optimistic UI)
+  if (!isFusionIframe && (isLoadingPublicSettings || isLoadingAuth)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -39,7 +55,8 @@ const AuthenticatedApp = () => {
   }
 
   // Only block for unregistered users — no forced login redirects
-  if (authError?.type === 'user_not_registered') {
+  // (skipped for fusiononq iframes)
+  if (!isFusionIframe && authError?.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
   }
 
