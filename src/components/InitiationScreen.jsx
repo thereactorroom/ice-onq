@@ -13,7 +13,13 @@ export default function InitiationScreen({ onViewDemo }) {
       <LoginFlow
         onBack={() => setShowLogin(false)}
         onSuccess={(result) => {
-          window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}`;
+          if (result.addDependent) {
+            // User chose "Add Dependent" from the profile selector — launch create flow as guardian
+            setShowLogin(false);
+            setShowCreate(true);
+          } else {
+            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}`;
+          }
         }}
       />
     );

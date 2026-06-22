@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Shield, ArrowLeft, Phone, MessageSquare, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import ProfileSelectorScreen from "./ProfileSelectorScreen";
 
-// Steps: 'mobile' → 'method' → 'otp' → 'fid' → done
+// Steps: 'mobile' → 'method' → 'otp' → 'fid' → 'select_profile'
 export default function LoginFlow({ onBack, onSuccess }) {
   const [step, setStep] = useState("mobile");
   const [mobile, setMobile] = useState("");
@@ -16,6 +17,24 @@ export default function LoginFlow({ onBack, onSuccess }) {
   function handleError(msg) {
     setError(msg);
     setLoading(false);
+  }
+
+  // ── Profile Selector (post-login) ──
+  if (step === "select_profile") {
+    return (
+      <ProfileSelectorScreen
+        guardianFid={fid}
+        onBack={() => setStep("fid")}
+        onSelect={(result) => {
+          if (result.addDependent) {
+            // Route back to initiation in "add dependent" mode
+            onSuccess({ addDependent: true, guardianFid: fid });
+          } else {
+            onSuccess({ fID: result.fID, owner: result.owner });
+          }
+        }}
+      />
+    );
   }
 
   // ── Step: Mobile entry ──
@@ -53,6 +72,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
             </a>
           </div>
         </div>
+        <BottomBack onBack={onBack} />
       </div>
     );
   }
@@ -92,6 +112,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
             Send Code
           </Button>
         </div>
+        <BottomBack onBack={() => setStep("mobile")} />
       </div>
     );
   }
@@ -130,6 +151,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
             Resend code
           </button>
         </div>
+        <BottomBack onBack={() => setStep("method")} />
       </div>
     );
   }
@@ -143,7 +165,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
           <div className="space-y-2">
             <KeyRound className="w-8 h-8 text-primary" />
             <h2 className="text-xl font-bold text-foreground">Enter your fusion ID</h2>
-            <p className="text-sm text-muted-foreground">Enter your fusion onQ user ID to access your ICE profile.</p>
+            <p className="text-sm text-muted-foreground">Enter your fusion onQ user ID to access your ICE profiles.</p>
           </div>
           <div className="space-y-3">
             <label className="text-xs text-muted-foreground uppercase tracking-wider block">fusion ID</label>
@@ -162,7 +184,6 @@ export default function LoginFlow({ onBack, onSuccess }) {
             onClick={() => {
               setError("");
               setLoading(true);
-              // Verify the FID exists by fetching the profile
               base44.functions.invoke("getPublicICEProfile", {
                 profileId: fid,
                 fusionUser: { userId: fid },
@@ -170,14 +191,16 @@ export default function LoginFlow({ onBack, onSuccess }) {
               })
                 .then(() => {
                   setLoading(false);
-                  onSuccess({ fID: fid, owner: true });
+                  // Go to profile selector — not directly to the profile
+                  setStep("select_profile");
                 })
                 .catch((e) => handleError(e?.response?.data?.error || e?.message || "Could not find profile."));
             }}
           >
-            {loading ? "Loading..." : "Access My Profile"}
+            {loading ? "Loading..." : "Access My Profiles"}
           </Button>
         </div>
+        <BottomBack onBack={() => setStep("otp")} />
       </div>
     );
   }
@@ -200,6 +223,19 @@ function Header({ onBack }) {
           <div className="text-white/70 text-xs mt-0.5">In Case of Emergency</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BottomBack({ onBack }) {
+  return (
+    <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full">
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back
+      </button>
     </div>
   );
 }

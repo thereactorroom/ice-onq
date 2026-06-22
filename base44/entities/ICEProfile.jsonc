@@ -6,6 +6,14 @@
       "type": "string",
       "title": "Fusion ID"
     },
+    "guardian_fid": {
+      "type": "string",
+      "title": "Guardian Fusion ID"
+    },
+    "dependent_relationship": {
+      "type": "string",
+      "title": "Relationship to Guardian"
+    },
     "display_name": {
       "type": "string",
       "title": "Display Name"
