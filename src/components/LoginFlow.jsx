@@ -27,10 +27,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
         onBack={() => setStep("fid")}
         onSelect={(result) => {
           if (result.addDependent) {
-            // Route back to initiation in "add dependent" mode
             onSuccess({ addDependent: true, guardianFid: fid });
           } else {
-            onSuccess({ fID: result.fID, owner: result.owner });
+            // Always pass guardianFid so ProfileView can show "Switch Profile" back button
+            onSuccess({ fID: result.fID, owner: result.owner, guardianFid: fid });
           }
         }}
       />

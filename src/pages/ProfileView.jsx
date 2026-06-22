@@ -281,6 +281,7 @@ export default function ProfileView() {
   const { user: authUser } = useAuth();
   const params = new URLSearchParams(window.location.search);
   const rawFID = params.get("fID");
+  const guardianFid = params.get("guardianFid");
   // No fID at all → Initiation Mode (public welcome screen)
   const isInitiationMode = !rawFID;
   // fID=0 → demo profile (read-only)
@@ -629,6 +630,15 @@ export default function ProfileView() {
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Back</span>
+              </button>
+            )}
+            {guardianFid && !isInitiationMode && (
+              <button
+                onClick={() => window.history.back()}
+                className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-[10px] font-medium">Profiles</span>
               </button>
             )}
             {window.__fusiononqBridge && (

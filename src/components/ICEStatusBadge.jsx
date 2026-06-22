@@ -3,11 +3,10 @@ import { CheckCircle, AlertTriangle, AlertCircle } from "lucide-react";
 export default function ICEStatusBadge({ profile, contacts = [], allergies = [], conditions = [], medications = [] }) {
   const hasContacts = contacts.length > 0;
   const hasMedicalInfo = allergies.length > 0 || conditions.length > 0 || medications.length > 0;
-  const hasAlerts = profile?.critical_alerts?.length > 0;
   const hasDoctor = !!profile?.doctor_name;
   const hasMedicalAid = !!profile?.medical_aid_name;
 
-  const sections = [hasContacts, hasMedicalInfo, hasAlerts, hasDoctor, hasMedicalAid];
+  const sections = [hasContacts, hasMedicalInfo, hasDoctor, hasMedicalAid];
   const completed = sections.filter(Boolean).length;
 
   if (completed === sections.length) {

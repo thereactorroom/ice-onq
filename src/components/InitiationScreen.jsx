@@ -18,7 +18,8 @@ export default function InitiationScreen({ onViewDemo }) {
             setShowLogin(false);
             setShowCreate(true);
           } else {
-            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}`;
+            const guardianParam = result.guardianFid ? `&guardianFid=${result.guardianFid}` : "";
+            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}`;
           }
         }}
       />
