@@ -108,6 +108,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
               isOwn
               statusBadge={statusBadge(primaryProfile)}
               onClick={() => onSelect({ fID: guardianFid, owner: true })}
+              onManage={primaryProfile ? () => setManageProfile({ id: primaryProfile.id, name: primaryProfile.display_name || "My Profile" }) : undefined}
             />
 
             {/* Dependent profiles */}
