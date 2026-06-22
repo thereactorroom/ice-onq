@@ -24,6 +24,7 @@ import HealthEditTab from "../components/HealthEditTab";
 import InitiationScreen from "../components/InitiationScreen";
 import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
 import DateInput from "../components/DateInput";
+import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -498,11 +499,7 @@ export default function ProfileView() {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+    return <ProfileViewSkeleton />;
   }
 
   if (error) {
