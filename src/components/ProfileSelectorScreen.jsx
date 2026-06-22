@@ -9,17 +9,25 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [primaryProfile, setPrimaryProfile] = useState(null);
+
   useEffect(() => {
-    base44.functions.invoke("listManagedProfiles", { guardianFid })
+    // Fetch the primary profile to get its real status
+    base44.functions.invoke("getPublicICEProfile", {
+      profileId: String(guardianFid),
+      fusionUser: { userId: String(guardianFid) },
+      fusionHost: window.location.origin,
+    })
       .then((res) => {
-        setProfiles(res.data.profiles || []);
+        setPrimaryProfile(res.data?.profile || null);
+        // Also try to load dependents — gracefully ignore if not ready
+        return base44.functions.invoke("listManagedProfiles", { guardianFid }).catch(() => ({ data: { profiles: [] } }));
+      })
+      .then((res) => {
+        setProfiles(res.data?.profiles || []);
         setLoading(false);
       })
-      .catch(() => {
-        // Fallback: if function doesn't exist yet, show just the primary profile slot
-        setProfiles([]);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [guardianFid]);
 
   function statusBadge(profile) {
@@ -72,11 +80,11 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
           <div className="space-y-3">
             {/* Primary (self) profile slot — always shown */}
             <ProfileCard
-              name="My Profile"
+              name={primaryProfile?.display_name || "My Profile"}
               subtitle="Your personal ICE record"
               fid={guardianFid}
               isOwn
-              statusBadge={statusBadge(profiles.find(p => p.fusion_id === String(guardianFid) && !p.guardian_fid))}
+              statusBadge={statusBadge(primaryProfile)}
               onClick={() => onSelect({ fID: guardianFid, owner: true })}
             />
 
