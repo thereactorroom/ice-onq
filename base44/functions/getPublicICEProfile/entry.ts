@@ -31,6 +31,10 @@ Deno.serve(async (req) => {
       if (isDemoRequest) {
         return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
       }
+      // If isDbId was set, we already tried a direct DB lookup — profile genuinely doesn't exist
+      if (isDbId) {
+        return Response.json({ notFound: true, profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' } });
+      }
       // Never auto-create without a verified Fusion user session
       const isOwner = fusionUser && String(fusionUser.userId) === String(profileId);
 
