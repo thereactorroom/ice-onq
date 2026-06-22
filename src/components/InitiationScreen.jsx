@@ -19,7 +19,8 @@ export default function InitiationScreen({ onViewDemo }) {
             setShowCreate(true);
           } else {
             const guardianParam = result.guardianFid ? `&guardianFid=${result.guardianFid}` : "";
-            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}`;
+            const dbIdParam = result.isDbId ? "&isDbId=true" : "";
+            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}${dbIdParam}`;
           }
         }}
       />

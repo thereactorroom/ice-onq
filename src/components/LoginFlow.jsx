@@ -30,7 +30,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
             onSuccess({ addDependent: true, guardianFid: fid });
           } else {
             // Always pass guardianFid so ProfileView can show "Switch Profile" back button
-            onSuccess({ fID: result.fID, owner: result.owner, guardianFid: fid });
+            onSuccess({ fID: result.fID, owner: result.owner, guardianFid: fid, isDbId: result.isDbId });
           }
         }}
       />
