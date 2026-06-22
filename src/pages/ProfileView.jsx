@@ -328,6 +328,7 @@ export default function ProfileView() {
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("medical");
   const medicalBackHandler = useRef(null);
+  const hasAutoOpenedEdit = useRef(false);
 
   useEffect(() => {
     // No fID = initiation mode; skip fusion detection entirely
@@ -395,7 +396,7 @@ export default function ProfileView() {
         setLoading(false);
         // If a new profile was just created (owner context, profile has no meaningful data yet)
         // auto-open edit mode so the user doesn't see a blank display
-        if (!forDemo && result.profile && isOwner) {
+        if (!forDemo && result.profile && isOwner && !hasAutoOpenedEdit.current) {
           // Auto-open edit mode for newly created dependents (isDbId flag)
           // or for profiles with no meaningful data yet
           const p = result.profile;
@@ -403,6 +404,7 @@ export default function ProfileView() {
             !p.hospital_name && (!result.contacts || result.contacts.length === 0) &&
             (!result.allergies || result.allergies.length === 0);
           if (isDbId || isEmpty) {
+            hasAutoOpenedEdit.current = true;
             setIsNewProfile(true);
             setMode("edit");
           }
