@@ -27,7 +27,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         fusionUser: { userId: String(guardianFid) },
         fusionHost: window.location.origin,
       }),
-      base44.entities.ICEProfile.filter({ guardian_fid: String(guardianFid) }),
+      base44.entities.ICEProfile.filter({ guardian_fid: String(guardianFid), is_deleted: false }),
     ])
       .then(([primaryRes, dependents]) => {
         setPrimaryProfile(primaryRes.data?.profile || null);
