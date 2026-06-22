@@ -153,8 +153,10 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90 border-0">Cancel</AlertDialogCancel>
             <Button
-              variant="destructive"
+              variant="outline"
+              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
               disabled={deleting}
               onClick={async () => {
                 setDeleting(true);
@@ -169,7 +171,6 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             >
               {deleting ? "Deleting..." : "Yes, Delete Profile"}
             </Button>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
