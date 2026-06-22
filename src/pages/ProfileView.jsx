@@ -92,14 +92,12 @@ function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
 }
 
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
-function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack, onDeleted }) {
+function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack }) {
   const [form, setForm] = useState({ ...profile });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [showBackDialog, setShowBackDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const dirtyRef = useRef(false);
 
@@ -247,48 +245,6 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
         <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Medical Info"}
       </Button>
 
-      {/* Delete Profile */}
-      <div className="border-t border-border pt-4 mt-2">
-        <button
-          onClick={() => setShowDeleteDialog(true)}
-          className="flex items-center gap-2 text-sm text-destructive hover:text-destructive/80 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-          Delete this ICE profile
-        </button>
-      </div>
-
-      {/* Delete confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete ICE Profile?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently deactivate <strong>{form.display_name || "this profile"}</strong>. Anyone scanning the QR code will see a "Profile Deleted" message. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              disabled={deleting}
-              onClick={async () => {
-                setDeleting(true);
-                await base44.functions.invoke("updatePublicICEProfile", {
-                  profileId: profileDbId,
-                  updates: { is_deleted: true, deleted_at: new Date().toISOString() },
-                });
-                setDeleting(false);
-                setShowDeleteDialog(false);
-                onDeleted();
-              }}
-            >
-              {deleting ? "Deleting..." : "Yes, Delete Profile"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Unsaved changes confirmation */}
       <AlertDialog open={showBackDialog} onOpenChange={(open) => {
         if (!open) setShowBackDialog(false);
@@ -322,6 +278,56 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+// ── DeleteProfileSection ──────────────────────────────────────────────────────
+function DeleteProfileSection({ profileDbId, displayName, guardianFid, onDeleted }) {
+  const [showDialog, setShowDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  return (
+    <>
+      <div className="border-t border-border pt-4 mt-2 pb-2">
+        <button
+          onClick={() => setShowDialog(true)}
+          className="flex items-center gap-2 text-sm text-destructive/70 hover:text-destructive transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete this ICE profile
+        </button>
+      </div>
+
+      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete ICE Profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently deactivate <strong>{displayName || "this profile"}</strong>. Anyone scanning the QR code will see a "Profile Deleted" message. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                await base44.functions.invoke("updatePublicICEProfile", {
+                  profileId: profileDbId,
+                  updates: { is_deleted: true, deleted_at: new Date().toISOString() },
+                });
+                setDeleting(false);
+                setShowDialog(false);
+                onDeleted();
+              }}
+            >
+              {deleting ? "Deleting..." : "Yes, Delete Profile"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -646,6 +652,21 @@ export default function ProfileView() {
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{profile.emergency_notes}</p>
               </div>
             )}
+
+            {isOwner && (
+              <DeleteProfileSection
+                profileDbId={profileDbId}
+                displayName={profile.display_name}
+                guardianFid={guardianFid}
+                onDeleted={() => {
+                  if (guardianFid) {
+                    window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`;
+                  } else {
+                    window.location.href = "/profile";
+                  }
+                }}
+              />
+            )}
           </div>
         )}
 
@@ -716,13 +737,6 @@ export default function ProfileView() {
             onSaved={handleMedicalSaved}
             onBack={() => { setMode("display"); fetchProfile(); }}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
-            onDeleted={() => {
-              if (guardianFid) {
-                window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`;
-              } else {
-                window.location.href = "/profile";
-              }
-            }}
           />
         )}
 
