@@ -284,6 +284,7 @@ export default function ProfileView() {
   const rawFID = params.get("fID");
   const guardianFid = params.get("guardianFid");
   const showSelector = params.get("showSelector") === "true";
+  const isDbId = params.get("isDbId") === "true";
   // No fID at all → Initiation Mode (public welcome screen)
   const isInitiationMode = !rawFID;
   // fID=0 → demo profile (read-only)
@@ -378,6 +379,7 @@ export default function ProfileView() {
   const fetchProfile = (forDemo = false) => {
     const pid = forDemo ? "0" : profileId;
     const payload = { profileId: pid, userName: urlUserName };
+    if (!forDemo && isDbId) payload.isDbId = true;
     if (!forDemo && isFusionIframe && fusionUser) {
       payload.fusionUser = fusionUser;
       payload.fusionHost = fusionHost;
@@ -390,11 +392,13 @@ export default function ProfileView() {
         // If a new profile was just created (owner context, profile has no meaningful data yet)
         // auto-open edit mode so the user doesn't see a blank display
         if (!forDemo && result.profile && isOwner) {
+          // Auto-open edit mode for newly created dependents (isDbId flag)
+          // or for profiles with no meaningful data yet
           const p = result.profile;
           const isEmpty = !p.blood_group && !p.medical_aid_name && !p.doctor_name &&
             !p.hospital_name && (!result.contacts || result.contacts.length === 0) &&
             (!result.allergies || result.allergies.length === 0);
-          if (isEmpty) {
+          if (isDbId || isEmpty) {
             setIsNewProfile(true);
             setMode("edit");
           }
@@ -422,12 +426,9 @@ export default function ProfileView() {
         guardianFid={rawFID}
         onBack={() => window.location.href = "/profile"}
         onSelect={(result) => {
-          if (result.addDependent) {
-            window.location.href = "/profile";
-          } else {
-            const guardianParam = `&guardianFid=${rawFID}`;
-            window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}`;
-          }
+          const guardianParam = `&guardianFid=${rawFID}`;
+          const dbIdParam = result.isDbId ? "&isDbId=true" : "";
+          window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}${dbIdParam}`;
         }}
       />
     );
@@ -537,6 +538,18 @@ export default function ProfileView() {
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
             <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} />
+
+            {/* Fusion link pending reminder */}
+            {profile.fusion_link_pending && (
+              <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">fusion onQ link pending</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">This profile's fusion identity has not been linked yet. The ICE record is active and functional. Link the fusion ID when available.</p>
+                </div>
+              </div>
+            )}
+
             <CriticalAlertsBanner alerts={[...new Set([
               ...(profile.critical_alerts || []),
               ...allergies.filter(a => a.is_critical_alert).map(a => `${a.name}${a.severity ? ` · ${a.severity}` : ''} Allergy`),

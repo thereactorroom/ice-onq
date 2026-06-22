@@ -2,33 +2,49 @@ import { useState, useEffect } from "react";
 import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import AddDependentForm from "./AddDependentForm";
 
 // Shown after sign-in when a user has (or may have) multiple managed profiles
 export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect }) {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [primaryProfile, setPrimaryProfile] = useState(null);
+  const [showAddDependent, setShowAddDependent] = useState(false);
 
-  useEffect(() => {
-    // Fetch the primary profile to get its real status
-    base44.functions.invoke("getPublicICEProfile", {
-      profileId: String(guardianFid),
-      fusionUser: { userId: String(guardianFid) },
-      fusionHost: window.location.origin,
-    })
-      .then((res) => {
-        setPrimaryProfile(res.data?.profile || null);
-        // Also try to load dependents — gracefully ignore if not ready
-        return base44.functions.invoke("listManagedProfiles", { guardianFid }).catch(() => ({ data: { profiles: [] } }));
-      })
-      .then((res) => {
-        setProfiles(res.data?.profiles || []);
+  function loadProfiles() {
+    setLoading(true);
+    // Fetch primary profile and dependents in parallel
+    Promise.all([
+      base44.functions.invoke("getPublicICEProfile", {
+        profileId: String(guardianFid),
+        fusionUser: { userId: String(guardianFid) },
+        fusionHost: window.location.origin,
+      }),
+      base44.entities.ICEProfile.filter({ guardian_fid: String(guardianFid) }),
+    ])
+      .then(([primaryRes, dependents]) => {
+        setPrimaryProfile(primaryRes.data?.profile || null);
+        setProfiles(dependents || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [guardianFid]);
+  }
+
+  useEffect(() => { loadProfiles(); }, [guardianFid]);
+
+  if (showAddDependent) {
+    return (
+      <AddDependentForm
+        guardianFid={guardianFid}
+        onBack={() => setShowAddDependent(false)}
+        onCreated={(newProfile) => {
+          // Go directly to editing the new dependent profile (by DB id)
+          onSelect({ fID: newProfile.id, owner: true, guardianFid, isDbId: true });
+        }}
+      />
+    );
+  }
 
   function statusBadge(profile) {
     if (!profile) {
@@ -89,22 +105,20 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             />
 
             {/* Dependent profiles */}
-            {profiles
-              .filter(p => p.guardian_fid === String(guardianFid))
-              .map((p) => (
-                <ProfileCard
-                  key={p.id}
-                  name={p.display_name || "Unnamed Dependent"}
-                  subtitle={p.dependent_relationship || "Dependent"}
-                  fid={p.fusion_id}
-                  statusBadge={statusBadge(p)}
-                  onClick={() => onSelect({ fID: p.fusion_id, owner: true })}
-                />
-              ))}
+            {profiles.map((p) => (
+              <ProfileCard
+                key={p.id}
+                name={p.display_name || "Unnamed Dependent"}
+                subtitle={p.dependent_relationship || "Dependent"}
+                statusBadge={statusBadge(p)}
+                fusionPending={p.fusion_link_pending}
+                onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, guardianFid, isDbId: !p.fusion_id })}
+              />
+            ))}
 
             {/* Add dependent CTA */}
             <button
-              onClick={() => onSelect({ addDependent: true, guardianFid })}
+              onClick={() => setShowAddDependent(true)}
               className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/40 bg-card transition-colors text-left"
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -134,7 +148,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   );
 }
 
-function ProfileCard({ name, subtitle, fid, isOwn, statusBadge, onClick }) {
+function ProfileCard({ name, subtitle, isOwn, statusBadge, fusionPending, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -146,7 +160,14 @@ function ProfileCard({ name, subtitle, fid, isOwn, statusBadge, onClick }) {
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm text-foreground truncate">{name}</p>
         <p className="text-xs text-muted-foreground">{subtitle}</p>
-        <div className="mt-1.5">{statusBadge}</div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {statusBadge}
+          {fusionPending && (
+            <span className="flex items-center gap-1 text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full">
+              <Clock className="w-3 h-3" /> fusion link pending
+            </span>
+          )}
+        </div>
       </div>
       <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
     </button>

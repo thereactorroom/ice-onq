@@ -6,6 +6,11 @@
       "type": "string",
       "title": "Fusion ID"
     },
+    "fusion_link_pending": {
+      "type": "boolean",
+      "title": "Fusion Link Pending",
+      "default": false
+    },
     "guardian_fid": {
       "type": "string",
       "title": "Guardian Fusion ID"
