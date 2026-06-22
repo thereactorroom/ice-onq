@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -92,12 +92,14 @@ function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
 }
 
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
-function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack }) {
+function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack, onDeleted }) {
   const [form, setForm] = useState({ ...profile });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [showBackDialog, setShowBackDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const dirtyRef = useRef(false);
 
@@ -244,6 +246,48 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
       <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
         <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Medical Info"}
       </Button>
+
+      {/* Delete Profile */}
+      <div className="border-t border-border pt-4 mt-2">
+        <button
+          onClick={() => setShowDeleteDialog(true)}
+          className="flex items-center gap-2 text-sm text-destructive hover:text-destructive/80 transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete this ICE profile
+        </button>
+      </div>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete ICE Profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently deactivate <strong>{form.display_name || "this profile"}</strong>. Anyone scanning the QR code will see a "Profile Deleted" message. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                await base44.functions.invoke("updatePublicICEProfile", {
+                  profileId: profileDbId,
+                  updates: { is_deleted: true, deleted_at: new Date().toISOString() },
+                });
+                setDeleting(false);
+                setShowDeleteDialog(false);
+                onDeleted();
+              }}
+            >
+              {deleting ? "Deleting..." : "Yes, Delete Profile"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Unsaved changes confirmation */}
       <AlertDialog open={showBackDialog} onOpenChange={(open) => {
@@ -467,6 +511,28 @@ export default function ProfileView() {
     );
   }
 
+  if (data.isDeleted) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-primary sticky top-0 z-50 shadow-lg">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-white" />
+            <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
+          </div>
+        </div>
+        <div className="max-w-lg mx-auto px-4 pt-16 pb-36 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <Trash2 className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">ICE Profile Deleted</h2>
+          <p className="text-muted-foreground text-sm max-w-xs">
+            This ICE profile has been permanently deleted by the owner and is no longer active.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (data.notFound || !data.profile) {
     return (
       <div className="min-h-screen bg-background">
@@ -650,6 +716,13 @@ export default function ProfileView() {
             onSaved={handleMedicalSaved}
             onBack={() => { setMode("display"); fetchProfile(); }}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
+            onDeleted={() => {
+              if (guardianFid) {
+                window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`;
+              } else {
+                window.location.href = "/profile";
+              }
+            }}
           />
         )}
 

@@ -71,6 +71,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Soft-delete check — return a specific flag so QR scans show "Profile Deleted"
+    if (profile.is_deleted) {
+      return Response.json({ isDeleted: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: profile.display_name || 'Unknown' } });
+    }
+
     const profileDbId = profile.id;
     const ownerEmail = profile.created_by;
 

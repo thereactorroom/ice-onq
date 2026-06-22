@@ -101,6 +101,15 @@
     "last_reviewed_date": {
       "type": "string",
       "title": "Last Reviewed Date"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "title": "Deleted",
+      "default": false
+    },
+    "deleted_at": {
+      "type": "string",
+      "title": "Deleted At"
     }
   },
   "required": [],
