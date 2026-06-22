@@ -2,21 +2,25 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import ManageContacts from './pages/ManageContacts';
-import EditProfile from './pages/EditProfile';
-import WalletCard from './pages/WalletCard';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-
-import ProfileView from './pages/ProfileView';
 import IframeDetector from './components/IframeDetector';
+
+// Eagerly load ProfileView — it's the primary page (iframe entry point)
+import ProfileView from './pages/ProfileView';
+
+// Lazy-load all other pages to reduce initial JS payload
+const Layout = lazy(() => import('./components/Layout'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ManageContacts = lazy(() => import('./pages/ManageContacts'));
+const EditProfile = lazy(() => import('./pages/EditProfile'));
+const WalletCard = lazy(() => import('./pages/WalletCard'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
@@ -63,21 +67,27 @@ const AuthenticatedApp = () => {
   return (
     <>
       <IframeDetector />
-      <Routes>
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
 
-        <Route path="/profile" element={<ProfileView />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/profile" replace />} />
-          <Route path="/contacts" element={<ManageContacts />} />
-          <Route path="/medical" element={<EditProfile />} />
-          <Route path="/wallet-card" element={<WalletCard />} />
-        </Route>
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
+          <Route path="/profile" element={<ProfileView />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<Navigate to="/profile" replace />} />
+            <Route path="/contacts" element={<ManageContacts />} />
+            <Route path="/medical" element={<EditProfile />} />
+            <Route path="/wallet-card" element={<WalletCard />} />
+          </Route>
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Suspense>
     </>
   );
 };
