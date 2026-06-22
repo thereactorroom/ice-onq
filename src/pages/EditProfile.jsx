@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Trash2, Pencil, Save, AlertTriangle, X, Check } from "lucide-react";
+import DateInput from "@/components/DateInput";
 import { toast } from "sonner";
 import { base44 as b44 } from "@/api/base44Client";
 
@@ -215,7 +216,7 @@ export default function EditProfile() {
               </div>
               <div className="space-y-1.5">
                 <Label>Date of Birth</Label>
-                <Input type="date" value={form.date_of_birth || ""} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} />
+                <DateInput value={form.date_of_birth || ""} onChange={(v) => setForm({ ...form, date_of_birth: v })} />
               </div>
               <div className="space-y-1.5">
                 <Label>Blood Group</Label>

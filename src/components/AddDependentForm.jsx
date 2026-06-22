@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Shield, ArrowLeft, Save, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import DateInput from "@/components/DateInput";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
 const RELATIONSHIPS = ["Child", "Spouse / Partner", "Parent", "Sibling", "Other"];
@@ -105,13 +106,7 @@ export default function AddDependentForm({ guardianFid, onBack, onCreated }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Date of Birth</label>
-                <input
-                  name="date_of_birth"
-                  type="date"
-                  value={form.date_of_birth}
-                  onChange={handleChange}
-                  className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
-                />
+                <DateInput value={form.date_of_birth} onChange={(v) => setForm((prev) => ({ ...prev, date_of_birth: v }))} />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Blood Group</label>

@@ -23,6 +23,7 @@ import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
 import InitiationScreen from "../components/InitiationScreen";
 import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
+import DateInput from "../components/DateInput";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -182,7 +183,10 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full Name (Medical)" name="display_name" value={form.display_name} onChange={handleChange} span2 placeholder="Legal / medical name" />
-          <Field label="Date of Birth" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} type="date" />
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Date of Birth</label>
+            <DateInput value={form.date_of_birth || ""} onChange={(v) => { setForm((prev) => ({ ...prev, date_of_birth: v })); setDirty(true); }} />
+          </div>
           <SelectField label="Blood Group" name="blood_group" value={form.blood_group} onChange={handleChange} options={BLOOD_GROUPS} />
         </div>
       </div>
