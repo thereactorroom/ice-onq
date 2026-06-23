@@ -743,6 +743,19 @@ export default function ProfileView() {
         <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
           <div className="flex justify-around py-2 max-w-lg mx-auto">
             <button
+              onClick={() => {
+                if (editTab === "medical" && medicalBackHandler.current) {
+                  medicalBackHandler.current();
+                } else {
+                  setMode("display"); fetchProfile();
+                }
+              }}
+              className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Back</span>
+            </button>
+            <button
               onClick={() => setEditTab("medical")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
                 editTab === "medical" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
@@ -768,19 +781,6 @@ export default function ProfileView() {
             >
               <span className="text-base leading-none">💊</span>
               <span className="text-[10px] font-medium">Health</span>
-            </button>
-            <button
-              onClick={() => {
-                if (editTab === "medical" && medicalBackHandler.current) {
-                  medicalBackHandler.current();
-                } else {
-                  setMode("display"); fetchProfile();
-                }
-              }}
-              className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Back</span>
             </button>
           </div>
         </nav>
