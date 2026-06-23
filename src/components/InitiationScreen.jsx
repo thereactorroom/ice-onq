@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock } from "lucide-react";
+import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock, Play, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LoginFlow from "./LoginFlow";
 import CreateProfileFlow from "./CreateProfileFlow";
@@ -102,31 +102,37 @@ export default function InitiationScreen({ onViewDemo }) {
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Action cards */}
         <div className="space-y-3 pb-6">
+          {/* Demo Card */}
           <button
             onClick={onViewDemo}
-            className="w-full flex items-center justify-center gap-3 h-14 rounded-xl bg-secondary border border-border shadow-sm hover:bg-secondary/80 transition-colors text-sm font-semibold text-foreground"
+            className="w-full flex items-center gap-4 bg-orange-500 border-2 border-orange-600 rounded-2xl p-5 text-left shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-transform"
           >
-            <Shield className="w-6 h-6 text-primary flex-shrink-0" />
-            See a Demo Profile in Action
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <Play className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-base font-bold text-white">See a Demo Profile in Action</p>
+              <p className="text-xs text-white/80 mt-0.5">Explore a sample ICE profile before creating yours</p>
+            </div>
           </button>
 
-          <div className="bg-card rounded-2xl border border-border p-5 text-center space-y-3">
-            <p className="text-base font-bold text-foreground">Create Your Free ICE Profile</p>
-            <p className="text-sm text-muted-foreground">
-              Your emergency information ready when it matters most.
-            </p>
-            <p className="text-xs text-muted-foreground font-medium">Securely powered by fusion onQ.</p>
-            <Button onClick={() => setShowCreate(true)} className="w-full gap-2 h-11 text-sm font-semibold">
-              <Shield className="w-4 h-4" />
-              Create Profile
-            </Button>
-            <div className="pt-1 space-y-0.5">
-              <p className="text-xs text-muted-foreground font-medium">Already have fusion onQ?</p>
-              <p className="text-xs text-muted-foreground">Sign in above to activate or manage your ICE profile.</p>
+          {/* Create Card */}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="w-full flex items-center gap-4 bg-primary border-2 border-primary rounded-2xl p-5 text-left shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+              <UserPlus className="w-6 h-6 text-white" />
             </div>
-          </div>
+            <div>
+              <p className="text-base font-bold text-white">Create Your Free ICE Profile</p>
+              <p className="text-xs text-white/80 mt-0.5">Securely powered by fusion onQ</p>
+            </div>
+          </button>
+
+          <p className="text-xs text-muted-foreground text-center pt-1">Already have fusion onQ? Sign in above to activate or manage your ICE profile.</p>
         </div>
       </div>
     </div>
