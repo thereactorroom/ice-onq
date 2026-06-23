@@ -641,17 +641,16 @@ export default function ProfileView() {
                 <button
                   onClick={() => {
                     const uri = "https://api.whatsapp.com/send/?phone=27727852417";
-                    // FusionBridge is a const in the bridge script's global scope (not on window)
-                    const hasFusion = typeof FusionBridge !== "undefined";
-                    const hasNative = typeof NativeBridge !== "undefined";
+                    const hasFusion = !!window.FusionBridge;
+                    const hasNative = !!window.NativeBridge;
                     console.log("[Bridge Debug] FusionBridge available:", hasFusion);
                     console.log("[Bridge Debug] NativeBridge available:", hasNative);
-                    if (hasFusion && typeof FusionBridge.openWhatsApp === "function") {
+                    if (hasFusion && typeof window.FusionBridge.openWhatsApp === "function") {
                       console.log("[Bridge Debug] Calling FusionBridge.openWhatsApp:", uri);
-                      FusionBridge.openWhatsApp(uri);
-                    } else if (hasNative && typeof NativeBridge.openWhatsApp === "function") {
+                      window.FusionBridge.openWhatsApp(uri);
+                    } else if (hasNative && typeof window.NativeBridge.openWhatsApp === "function") {
                       console.log("[Bridge Debug] Calling NativeBridge.openWhatsApp:", { uri });
-                      NativeBridge.openWhatsApp({ uri });
+                      window.NativeBridge.openWhatsApp({ uri });
                     } else {
                       console.log("[Bridge Debug] No bridge found, using postMessage fallback");
                       window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");

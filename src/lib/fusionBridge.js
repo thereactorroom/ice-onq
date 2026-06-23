@@ -38,8 +38,8 @@ export function fusionSMS(to, body) {
 export function fusionWhatsApp(phone, text) {
   const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   if (isInFusionIframe()) {
-    if (typeof FusionBridge !== "undefined" && typeof FusionBridge.openWhatsApp === "function") {
-      FusionBridge.openWhatsApp(uri);
+    if (window.FusionBridge && typeof window.FusionBridge.openWhatsApp === "function") {
+      window.FusionBridge.openWhatsApp(uri);
     } else {
       window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
     }
