@@ -132,11 +132,7 @@ export default function InitiationScreen({ onViewDemo }) {
             </div>
           </button>
 
-          <p className="text-xs text-muted-foreground text-center pt-1">
-            Already have fusion onQ?{" "}
-            <a href="https://fusiononq.com" target="_blank" rel="noopener noreferrer" className="underline text-primary hover:text-primary/80 transition-colors">Sign in above</a>
-            {" "}to activate or manage your ICE profile.
-          </p>
+          <p className="text-xs text-muted-foreground text-center pt-1">Already have fusion onQ? Sign in above to activate or manage your ICE profile.</p>
         </div>
       </div>
     </div>
