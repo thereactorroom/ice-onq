@@ -34,10 +34,14 @@ export function fusionSMS(to, body) {
 
 // Open WhatsApp — uses NativeBridge inside fusion iframe, else wa.me link
 export function fusionWhatsApp(phone, text) {
+  const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
-    const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.NativeBridge.openWhatsApp({ uri });
+  } else if (isInFusionIframe()) {
+    // Inside the iframe, WhatsApp blocks iframe embedding (X-Frame-Options),
+    // so open in a new browser tab instead of navigating the iframe.
+    window.open(uri, "_blank", "noopener,noreferrer");
   } else {
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    window.location.href = uri;
   }
 }
