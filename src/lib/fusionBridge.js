@@ -32,12 +32,12 @@ export function fusionSMS(to, body) {
   }
 }
 
-// Open WhatsApp — uses NativeBridge inside fusion iframe, else wa.me link
+// Open WhatsApp — uses NativeBridge inside fusion iframe, else opens wa.me in a new tab
 export function fusionWhatsApp(phone, text) {
   if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
     const uri = `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(text)}`;
     window.NativeBridge.openWhatsApp({ uri });
   } else {
-    window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   }
 }
