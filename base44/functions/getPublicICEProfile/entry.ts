@@ -22,9 +22,13 @@ Deno.serve(async (req) => {
     let profile = null;
 
     // Lookup by public_slug (used for shared links: /profile?s=...)
-    if (slug && !isDemoRequest) {
+    // Slug takes priority — even when no fID is present (isDemoRequest would be true otherwise)
+    if (slug) {
       const slugResults = await base44.asServiceRole.entities.ICEProfile.filter({ public_slug: slug });
       profile = slugResults[0] || null;
+      if (!profile) {
+        return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
+      }
     } else if (isDbId && !isDemoRequest) {
       profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
     } else {
