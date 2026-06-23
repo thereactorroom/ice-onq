@@ -104,14 +104,13 @@ export default function InitiationScreen({ onViewDemo }) {
 
         {/* Action buttons */}
         <div className="space-y-3 pb-6">
-          <Button
-            variant="outline"
-            className="w-full gap-2 h-12 text-sm font-semibold border-2"
+          <button
             onClick={onViewDemo}
+            className="w-full flex items-center justify-center gap-3 h-14 rounded-xl bg-secondary border border-border shadow-sm hover:bg-secondary/80 transition-colors text-sm font-semibold text-foreground"
           >
-            <Shield className="w-4 h-4" />
-            View Demo Profile
-          </Button>
+            <Shield className="w-6 h-6 text-primary flex-shrink-0" />
+            See a Demo Profile in Action
+          </button>
 
           <div className="bg-card rounded-2xl border border-border p-5 text-center space-y-3">
             <p className="text-base font-bold text-foreground">Create Your Free ICE Profile</p>
