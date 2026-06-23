@@ -16,7 +16,7 @@ const Layout = lazy(() => import('./components/Layout'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ManageContacts = lazy(() => import('./pages/ManageContacts'));
 const EditProfile = lazy(() => import('./pages/EditProfile'));
-const WalletCard = lazy(() => import('./pages/WalletCard'));
+const SharingView = lazy(() => import('./pages/SharingView'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -83,7 +83,7 @@ const AuthenticatedApp = () => {
             <Route path="/" element={<Navigate to="/profile" replace />} />
             <Route path="/contacts" element={<ManageContacts />} />
             <Route path="/medical" element={<EditProfile />} />
-            <Route path="/wallet-card" element={<WalletCard />} />
+            <Route path="/wallet-card" element={<SharingView />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>

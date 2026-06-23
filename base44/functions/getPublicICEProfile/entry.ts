@@ -1,58 +1,59 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Generate a cryptographically random slug (12 URL-safe chars)
+function generateSlug() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const arr = new Uint8Array(12);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => chars[b % chars.length]).join('');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
-    const { profileId: rawProfileId, userName, fusionUser, fusionHost, isDbId } = body;
+    const { profileId: rawProfileId, userName, fusionUser, fusionHost, isDbId, slug } = body;
 
     // fID=0, empty, or missing → serve the demo profile (fusion_id "0")
     const isDemoRequest = !rawProfileId || String(rawProfileId) === "0";
     const profileId = isDemoRequest ? "0" : rawProfileId;
 
     // Use service role — no user auth needed for this public endpoint
-    // Support lookup by DB id (for newly created dependents without a fusion_id yet)
     let profile = null;
-    if (isDbId && !isDemoRequest) {
+
+    // Lookup by public_slug (used for shared links: /profile?s=...)
+    if (slug && !isDemoRequest) {
+      const slugResults = await base44.asServiceRole.entities.ICEProfile.filter({ public_slug: slug });
+      profile = slugResults[0] || null;
+    } else if (isDbId && !isDemoRequest) {
       profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
     } else {
       const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
       profile = profiles[0] || null;
-      // Fallback: if not found by fusion_id, try as a DB id (handles cases where isDbId flag is missing)
+      // Fallback: try as a DB id if fusion_id lookup fails
       if (!profile && !isDemoRequest) {
         profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
       }
     }
 
-    // Auto-create profile if none found — but only when the Fusion user
-    // is the owner (fID === userId) or no Fusion user is present.
-    // Never auto-create for demo requests.
+    // Auto-create profile if none found
     if (!profile) {
       if (isDemoRequest) {
         return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
       }
-      // If isDbId was set, we already tried a direct DB lookup — profile genuinely doesn't exist
       if (isDbId) {
         return Response.json({ notFound: true, profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' } });
       }
-      // Never auto-create without a verified Fusion user session
       const isOwner = fusionUser && String(fusionUser.userId) === String(profileId);
-
       if (!isOwner) {
-        // Another Fusion user is viewing a non-existent profile — don't create
-        return Response.json({
-          profile: null,
-          profileDbId: null,
-          contacts: [],
-          allergies: [],
-          conditions: [],
-          medications: [],
-          user: { full_name: userName || 'Unknown' },
-          notFound: true,
-        });
+        return Response.json({ profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' }, notFound: true });
       }
 
-      const seedData = { fusion_id: profileId, pre_login_enabled: true };
+      const seedData = {
+        fusion_id: profileId,
+        pre_login_enabled: true,
+        public_slug: generateSlug(),
+      };
 
       if (fusionUser) {
         const displayName = [fusionUser.name, fusionUser.surname].filter(Boolean).join(' ');
@@ -68,22 +69,24 @@ Deno.serve(async (req) => {
       }
 
       profile = await base44.asServiceRole.entities.ICEProfile.create(seedData);
-    } else if (userName && !profile.display_name) {
-      // Only set display_name from URL if not already saved — never overwrite a saved medical name
-      profile = await base44.asServiceRole.entities.ICEProfile.update(profile.id, {
-        display_name: userName,
-      });
+    } else {
+      // Lazy updates: set display_name if missing; generate slug if missing
+      const updates = {};
+      if (userName && !profile.display_name) updates.display_name = userName;
+      if (!profile.public_slug) updates.public_slug = generateSlug();
+
+      if (Object.keys(updates).length > 0) {
+        profile = await base44.asServiceRole.entities.ICEProfile.update(profile.id, updates);
+      }
     }
 
-    // Soft-delete check — return a specific flag so QR scans show "Profile Deleted"
+    // Soft-delete check
     if (profile.is_deleted) {
       return Response.json({ isDeleted: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: profile.display_name || 'Unknown' } });
     }
 
     const profileDbId = profile.id;
-    const ownerEmail = profile.created_by;
 
-    // Fetch related records by profile_id
     const [contacts, allergies, conditions, medications] = await Promise.all([
       base44.asServiceRole.entities.ICEContact.filter({ profile_id: profileDbId }),
       base44.asServiceRole.entities.Allergy.filter({ profile_id: profileDbId }),

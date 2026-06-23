@@ -19,6 +19,7 @@ import ContactCard from "../components/ContactCard";
 import MedicalInfoDisplay from "../components/MedicalInfoDisplay";
 import DoctorHospitalInfo from "../components/DoctorHospitalInfo";
 import WalletCardPreview from "../components/WalletCardPreview";
+import SharingView from "./SharingView";
 import ManageContacts from "./ManageContacts";
 import HealthEditTab from "../components/HealthEditTab";
 import InitiationScreen from "../components/InitiationScreen";
@@ -337,11 +338,12 @@ export default function ProfileView() {
   const { user: authUser } = useAuth();
   const params = new URLSearchParams(window.location.search);
   const rawFID = params.get("fID");
+  const slugParam = params.get("s"); // public_slug based share link
   const guardianFid = params.get("guardianFid");
   const showSelector = params.get("showSelector") === "true";
   const isDbId = params.get("isDbId") === "true";
-  // No fID at all → Initiation Mode (public welcome screen)
-  const isInitiationMode = !rawFID;
+  // No fID and no slug → Initiation Mode (public welcome screen)
+  const isInitiationMode = !rawFID && !slugParam;
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
@@ -435,6 +437,7 @@ export default function ProfileView() {
   const fetchProfile = (forDemo = false) => {
     const pid = forDemo ? "0" : profileId;
     const payload = { profileId: pid, userName: urlUserName };
+    if (!forDemo && slugParam) payload.slug = slugParam;
     if (!forDemo && isDbId) payload.isDbId = true;
     if (!forDemo && isFusionIframe && fusionUser) {
       payload.fusionUser = fusionUser;
@@ -655,57 +658,7 @@ export default function ProfileView() {
         )}
 
         {!isEditMode && displayTab === "wallet" && (
-          <div className="space-y-6">
-            <WalletCardPreview profile={profile} contacts={sortedContacts} user={user} />
-
-            <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-              <div className="flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold">Emergency QR Code</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                This QR code links to your ICE onQ profile. Attach it to your phone case, cycling helmet, medical bracelet, or wallet.
-              </p>
-              <div className="flex justify-center py-4">
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-border">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/profile?fID=${profile.fusion_id || profileDbId}`)}&color=0F172A&bgcolor=FFFFFF`}
-                    alt="ICE QR Code"
-                    className="w-40 h-40"
-                  />
-                </div>
-              </div>
-              <div className="text-center text-xs text-muted-foreground">Scan to access emergency information</div>
-            </div>
-
-            <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
-              <h3 className="font-semibold">Potential Uses</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { icon: Smartphone, label: "Phone lock screen" },
-                  { icon: CreditCard, label: "Physical wallet card" },
-                  { icon: "🚴", label: "Cycling ID tag" },
-                  { icon: "🏃", label: "Running bib" },
-                  { icon: "🏥", label: "Medical bracelet" },
-                  { icon: "🚗", label: "Vehicle sticker" },
-                ].map((use, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 text-sm">
-                    {typeof use.icon === "string" ? (
-                      <span className="text-lg">{use.icon}</span>
-                    ) : (
-                      <use.icon className="w-4 h-4 text-muted-foreground" />
-                    )}
-                    <span className="text-foreground">{use.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-muted/50 rounded-2xl p-5 text-center space-y-2">
-              <p className="text-sm font-medium text-foreground">Coming Soon</p>
-              <p className="text-xs text-muted-foreground">Apple Wallet · Google Wallet · Printable Card · NFC Tag Support</p>
-            </div>
-          </div>
+          <SharingView profile={profile} contacts={sortedContacts} user={user} profileDbId={profileDbId} />
         )}
 
         {/* EDIT MODE */}
@@ -769,7 +722,7 @@ export default function ProfileView() {
             )}
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
-              { id: "wallet", label: "Wallet Card", icon: WalletIcon },
+              { id: "wallet", label: "Share", icon: WalletIcon },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

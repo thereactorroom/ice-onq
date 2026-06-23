@@ -6,6 +6,10 @@
       "type": "string",
       "title": "Fusion ID"
     },
+    "public_slug": {
+      "type": "string",
+      "title": "Public Share Slug"
+    },
     "fusion_link_pending": {
       "type": "boolean",
       "title": "Fusion Link Pending",
