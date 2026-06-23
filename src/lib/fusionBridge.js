@@ -1,3 +1,4 @@
+/* global FusionBridge, NativeBridge */
 // Detects if the app is running inside a fusiononq.com iframe
 export function isInFusionIframe() {
   if (window.self === window.top) return false;
@@ -32,12 +33,16 @@ export function fusionSMS(to, body) {
   }
 }
 
-// Open WhatsApp — inside fusion iframe, sends postMessage to parent (FusionBridge.openWhatsApp protocol);
+// Open WhatsApp — inside fusion iframe, uses FusionBridge if available, else postMessage to parent;
 // else wa.me link
 export function fusionWhatsApp(phone, text) {
   const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   if (isInFusionIframe()) {
-    window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
+    if (typeof FusionBridge !== "undefined" && typeof FusionBridge.openWhatsApp === "function") {
+      FusionBridge.openWhatsApp(uri);
+    } else {
+      window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
+    }
   } else {
     window.location.href = uri;
   }
