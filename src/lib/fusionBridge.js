@@ -1,5 +1,18 @@
-/* global FusionBridge, NativeBridge */
 // Detects if the app is running inside a fusiononq.com iframe
+
+// Bridge scripts (fusion.bridge.js, native.bridge.js) declare their objects with
+// `const` at the top level, which creates a global lexical binding that does NOT
+// attach to `window`. We use `new Function` to evaluate in the global scope so we
+// can access them, while keeping the name in a string to avoid lint errors.
+export function getGlobalBridge(name) {
+  try {
+    // eslint-disable-next-line no-new-func
+    return new Function(`return typeof ${name} !== 'undefined' ? ${name} : undefined`)();
+  } catch {
+    return undefined;
+  }
+}
+
 export function isInFusionIframe() {
   if (window.self === window.top) return false;
   let host = "";
@@ -17,8 +30,9 @@ export function isInFusionIframe() {
 
 // Call a phone number — uses NativeBridge inside fusion iframe, else tel: link
 export function fusionCall(tel) {
-  if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openPhone === "function") {
-    window.NativeBridge.openPhone({ tel });
+  const bridge = getGlobalBridge("NativeBridge");
+  if (isInFusionIframe() && bridge && typeof bridge.openPhone === "function") {
+    bridge.openPhone({ tel });
   } else {
     window.location.href = `tel:${tel}`;
   }
@@ -26,8 +40,9 @@ export function fusionCall(tel) {
 
 // Send SMS — uses NativeBridge inside fusion iframe, else sms: link
 export function fusionSMS(to, body) {
-  if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openSMS === "function") {
-    window.NativeBridge.openSMS({ to, body });
+  const bridge = getGlobalBridge("NativeBridge");
+  if (isInFusionIframe() && bridge && typeof bridge.openSMS === "function") {
+    bridge.openSMS({ to, body });
   } else {
     window.location.href = `sms:${to}?body=${encodeURIComponent(body)}`;
   }
@@ -38,8 +53,9 @@ export function fusionSMS(to, body) {
 export function fusionWhatsApp(phone, text) {
   const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   if (isInFusionIframe()) {
-    if (window.FusionBridge && typeof window.FusionBridge.openWhatsApp === "function") {
-      window.FusionBridge.openWhatsApp(uri);
+    const bridge = getGlobalBridge("FusionBridge");
+    if (bridge && typeof bridge.openWhatsApp === "function") {
+      bridge.openWhatsApp(uri);
     } else {
       window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
     }

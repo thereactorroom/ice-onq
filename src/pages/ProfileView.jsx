@@ -1,6 +1,6 @@
-/* global FusionBridge, NativeBridge */
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
+import { getGlobalBridge } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -641,16 +641,16 @@ export default function ProfileView() {
                 <button
                   onClick={() => {
                     const uri = "https://api.whatsapp.com/send/?phone=27727852417";
-                    const hasFusion = !!window.FusionBridge;
-                    const hasNative = !!window.NativeBridge;
-                    console.log("[Bridge Debug] FusionBridge available:", hasFusion);
-                    console.log("[Bridge Debug] NativeBridge available:", hasNative);
-                    if (hasFusion && typeof window.FusionBridge.openWhatsApp === "function") {
+                    const fusionBridge = getGlobalBridge("FusionBridge");
+                    const nativeBridge = getGlobalBridge("NativeBridge");
+                    console.log("[Bridge Debug] FusionBridge available:", !!fusionBridge);
+                    console.log("[Bridge Debug] NativeBridge available:", !!nativeBridge);
+                    if (fusionBridge && typeof fusionBridge.openWhatsApp === "function") {
                       console.log("[Bridge Debug] Calling FusionBridge.openWhatsApp:", uri);
-                      window.FusionBridge.openWhatsApp(uri);
-                    } else if (hasNative && typeof window.NativeBridge.openWhatsApp === "function") {
+                      fusionBridge.openWhatsApp(uri);
+                    } else if (nativeBridge && typeof nativeBridge.openWhatsApp === "function") {
                       console.log("[Bridge Debug] Calling NativeBridge.openWhatsApp:", { uri });
-                      window.NativeBridge.openWhatsApp({ uri });
+                      nativeBridge.openWhatsApp({ uri });
                     } else {
                       console.log("[Bridge Debug] No bridge found, using postMessage fallback");
                       window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
