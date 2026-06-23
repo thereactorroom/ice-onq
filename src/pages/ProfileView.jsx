@@ -615,7 +615,7 @@ export default function ProfileView() {
         {/* DISPLAY MODE */}
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
-            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} />
+            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} />
 
             {/* Fusion link pending reminder */}
             {profile.fusion_link_pending && (

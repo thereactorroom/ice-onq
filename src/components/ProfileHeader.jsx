@@ -1,7 +1,7 @@
 import { User } from "lucide-react";
 import ICEStatusBadge from "./ICEStatusBadge";
 
-export default function ProfileHeader({ user, profile, contacts, allergies, conditions, medications }) {
+export default function ProfileHeader({ user, profile, contacts, allergies, conditions, medications, isOwner, onNavigateEdit }) {
   const dob = profile?.date_of_birth;
   const age = dob ? Math.floor((new Date() - new Date(dob)) / 31557600000) : null;
 
@@ -27,7 +27,7 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
             </span>
           )}
         </div>
-        <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} />
+        <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={onNavigateEdit} />
       </div>
     </div>
   );
