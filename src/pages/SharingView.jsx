@@ -6,10 +6,11 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
   const [copied, setCopied] = useState(false);
 
   // Use public_slug for the share URL if available, otherwise fall back to DB id
-  const shareId = profile?.public_slug || profileDbId;
-  const shareUrl = shareId
-    ? `${window.location.origin}/profile?s=${shareId}`
-    : null;
+  const shareUrl = profile?.public_slug
+    ? `${window.location.origin}/profile?s=${profile.public_slug}`
+    : profileDbId
+      ? `${window.location.origin}/profile?fID=${profileDbId}&isDbId=true`
+      : null;
 
   const sortedContacts = [...(contacts || [])].sort((a, b) => {
     if (a.is_primary && !b.is_primary) return -1;
