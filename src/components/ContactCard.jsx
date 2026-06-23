@@ -1,5 +1,6 @@
 import { Phone, MessageSquare, MessageCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { fusionCall, fusionSMS, fusionWhatsApp } from "@/lib/fusionBridge";
 
 function cleanPhone(num) {
   return (num || "").replace(/[^+\d]/g, "");
@@ -7,12 +8,8 @@ function cleanPhone(num) {
 
 export default function ContactCard({ contact, userName }) {
   const phone = cleanPhone(contact.mobile);
-  const whatsappMsg = encodeURIComponent(
-    `I am with ${userName || "someone"}. I have accessed their ICE profile through ICE onQ.`
-  );
-  const smsMsg = encodeURIComponent(
-    `Emergency: I am with ${userName || "someone"}. Please call back urgently.`
-  );
+  const whatsappText = `I am with ${userName || "someone"}. I have accessed their ICE profile through ICE onQ.`;
+  const smsText = `Emergency: I am with ${userName || "someone"}. Please call back urgently.`;
 
   return (
     <div className={`bg-card rounded-2xl border p-4 ${contact.is_primary ? "border-emergency/30 shadow-md ring-1 ring-emergency/10" : "border-border"}`}>
@@ -32,20 +29,14 @@ export default function ContactCard({ contact, userName }) {
       </div>
       <p className="text-sm font-mono text-foreground mb-3">{contact.mobile}</p>
       <div className="flex gap-2 flex-wrap">
-        <Button size="sm" className="flex-1 bg-success hover:bg-success/90 text-white gap-1.5" asChild>
-          <a href={`tel:${phone}`}>
-            <Phone className="w-3.5 h-3.5" /> Call
-          </a>
+        <Button size="sm" className="flex-1 bg-success hover:bg-success/90 text-white gap-1.5" onClick={() => fusionCall(phone)}>
+          <Phone className="w-3.5 h-3.5" /> Call
         </Button>
-        <Button size="sm" variant="outline" className="flex-1 gap-1.5 text-green-600 border-green-200 hover:bg-green-50" asChild>
-          <a href={`https://wa.me/${phone}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
-            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-          </a>
+        <Button size="sm" variant="outline" className="flex-1 gap-1.5 text-green-600 border-green-200 hover:bg-green-50" onClick={() => fusionWhatsApp(phone, whatsappText)}>
+          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
         </Button>
-        <Button size="sm" variant="outline" className="flex-1 gap-1.5" asChild>
-          <a href={`sms:${phone}?body=${smsMsg}`}>
-            <MessageSquare className="w-3.5 h-3.5" /> SMS
-          </a>
+        <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={() => fusionSMS(phone, smsText)}>
+          <MessageSquare className="w-3.5 h-3.5" /> SMS
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Stethoscope, Building2, CreditCard, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { fusionCall } from "@/lib/fusionBridge";
 
 function InfoCard({ icon: Icon, title, color, children, isEmpty }) {
   return (
@@ -38,10 +39,8 @@ export default function DoctorHospitalInfo({ profile }) {
           {profile.doctor_practice && <p className="text-muted-foreground">{profile.doctor_practice}</p>}
           {profile.doctor_mobile && (
             <div className="pt-2">
-              <Button size="sm" variant="outline" className="gap-1.5 text-success border-success/30" asChild>
-                <a href={`tel:${docPhone}`}>
-                  <Phone className="w-3.5 h-3.5" /> Call Doctor
-                </a>
+              <Button size="sm" variant="outline" className="gap-1.5 text-success border-success/30" onClick={() => fusionCall(docPhone)}>
+                <Phone className="w-3.5 h-3.5" /> Call Doctor
               </Button>
             </div>
           )}
