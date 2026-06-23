@@ -634,6 +634,23 @@ export default function ProfileView() {
               ...conditions.filter(c => c.is_critical_alert).map(c => c.name),
               ...medications.filter(m => m.is_critical_alert).map(m => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}`),
             ])]} />
+            {rawFID === "127" && (
+              <div className="bg-card rounded-2xl border border-border p-4">
+                <h3 className="font-bold text-foreground mb-3 text-sm">NativeBridge Test</h3>
+                <button
+                  onClick={() => {
+                    if (window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
+                      window.NativeBridge.openWhatsApp({ uri: "https://api.whatsapp.com/send/?phone=27727852417" });
+                    } else {
+                      console.error("NativeBridge not available");
+                    }
+                  }}
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
+                >
+                  WhatsApp
+                </button>
+              </div>
+            )}
             {sortedContacts.length > 0 && (
               <div>
                 <h3 className="font-bold text-foreground mb-3">Emergency Contacts</h3>
