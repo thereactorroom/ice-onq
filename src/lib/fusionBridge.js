@@ -35,7 +35,7 @@ export function fusionSMS(to, body) {
 // Open WhatsApp — uses NativeBridge inside fusion iframe, else wa.me link
 export function fusionWhatsApp(phone, text) {
   if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
-    const uri = `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(text)}`;
+    const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     window.NativeBridge.openWhatsApp({ uri });
   } else {
     window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
