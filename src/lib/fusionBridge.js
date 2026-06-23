@@ -32,11 +32,12 @@ export function fusionSMS(to, body) {
   }
 }
 
-// Open WhatsApp — uses NativeBridge inside fusion iframe, else wa.me link
+// Open WhatsApp — inside fusion iframe, sends postMessage to parent (FusionBridge.openWhatsApp protocol);
+// else wa.me link
 export function fusionWhatsApp(phone, text) {
   const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-  if (isInFusionIframe() && window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
-    window.NativeBridge.openWhatsApp({ uri });
+  if (isInFusionIframe()) {
+    window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
   } else {
     window.location.href = uri;
   }

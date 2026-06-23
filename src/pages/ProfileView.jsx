@@ -639,17 +639,9 @@ export default function ProfileView() {
                 <h3 className="font-bold text-foreground mb-3 text-sm">NativeBridge Test</h3>
                 <button
                   onClick={() => {
-                    console.log("[Bridge Debug] window.NativeBridge:", window.NativeBridge);
-                    console.log("[Bridge Debug] window.FusionBridge:", window.FusionBridge);
-                    console.log("[Bridge Debug] window.__fusiononqBridge:", window.__fusiononqBridge);
-                    console.log("[Bridge Debug] Object keys with 'ridge':", Object.keys(window).filter(k => k.toLowerCase().includes("ridge")));
-                    if (window.NativeBridge && typeof window.NativeBridge.openWhatsApp === "function") {
-                      window.NativeBridge.openWhatsApp({ uri: "https://api.whatsapp.com/send/?phone=27727852417" });
-                    } else if (window.FusionBridge && typeof window.FusionBridge.openWhatsApp === "function") {
-                      window.FusionBridge.openWhatsApp({ uri: "https://api.whatsapp.com/send/?phone=27727852417" });
-                    } else {
-                      console.error("No bridge with openWhatsApp found. See debug logs above.");
-                    }
+                    const msg = { request: "openWhatsApp", payload: { uri: "https://api.whatsapp.com/send/?phone=27727852417" } };
+                    console.log("[Bridge Debug] postMessage to parent:", msg);
+                    window.top.postMessage(msg, "*");
                   }}
                   className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
                 >
