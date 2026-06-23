@@ -7,7 +7,7 @@ import { Plus, GripVertical, Pencil, Trash2, Star, Phone } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import EditContactDialog from "../components/EditContactDialog";
 
-export default function ManageContacts({ profileId: profileIdProp }) {
+export default function ManageContacts({ profileId: profileIdProp, fusionUserId }) {
   const qc = useQueryClient();
   const [editContact, setEditContact] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,8 +24,13 @@ export default function ManageContacts({ profileId: profileIdProp }) {
   const profileId = profileIdProp || profiles[0]?.id;
 
   const { data: contacts = [], isLoading } = useQuery({
-    queryKey: ["iceContacts", profileId],
-    queryFn: () => base44.entities.ICEContact.filter({ profile_id: profileId }, "priority", 50),
+    queryKey: ["iceContacts", profileId, fusionUserId],
+    queryFn: async () => {
+      const res = await base44.functions.invoke("manageICEContact", {
+        action: "list", profileId, fusionUserId,
+      });
+      return res.data.contacts;
+    },
     enabled: !!profileId,
   });
 
@@ -36,15 +41,29 @@ export default function ManageContacts({ profileId: profileIdProp }) {
   });
 
   const createMut = useMutation({
-    mutationFn: (data) => base44.entities.ICEContact.create({ ...data, profile_id: profileId, priority: contacts.length }),
+    mutationFn: async (data) => {
+      const res = await base44.functions.invoke("manageICEContact", {
+        action: "create", profileId, contactData: { ...data, priority: contacts.length }, fusionUserId,
+      });
+      return res.data.contact;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["iceContacts"] }),
   });
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ICEContact.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      const res = await base44.functions.invoke("manageICEContact", {
+        action: "update", profileId, contactId: id, contactData: data, fusionUserId,
+      });
+      return res.data.contact;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["iceContacts"] }),
   });
   const deleteMut = useMutation({
-    mutationFn: (id) => base44.entities.ICEContact.delete(id),
+    mutationFn: async (id) => {
+      await base44.functions.invoke("manageICEContact", {
+        action: "delete", profileId, contactId: id, fusionUserId,
+      });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["iceContacts"] }),
   });
 

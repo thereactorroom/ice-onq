@@ -663,7 +663,7 @@ export default function ProfileView() {
 
         {/* EDIT MODE */}
         {isEditMode && editTab === "contacts" && (
-          <ManageContacts profileId={profileDbId || profile?.id} />
+          <ManageContacts profileId={profileDbId || profile?.id} fusionUserId={fusionUser?.userId} />
         )}
 
         {isEditMode && editTab === "medical" && (
