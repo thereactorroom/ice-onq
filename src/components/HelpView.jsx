@@ -69,57 +69,60 @@ function HighlightedText({ text, activeCharIndex }) {
 
 function SpeechControls({ text }) {
   const [speaking, setSpeaking] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [prefetching, setPrefetching] = useState(true);
   const audioRef = useRef(null);
 
-  // Cleanup on unmount
+  // Pre-fetch audio as soon as text is available
   useEffect(() => {
+    if (!text) return;
+    setPrefetching(true);
+    base44.integrations.Core.GenerateSpeech({ text, voice: "river" })
+      .then((res) => {
+        const audio = new Audio(res.url);
+        audio.preload = "auto";
+        audio.onended = () => setSpeaking(false);
+        audio.onerror = () => setSpeaking(false);
+        audioRef.current = audio;
+        // Wait until enough is buffered before marking ready
+        audio.addEventListener("canplaythrough", () => setPrefetching(false), { once: true });
+        // Fallback in case canplaythrough doesn't fire (e.g. cached)
+        setTimeout(() => setPrefetching(false), 4000);
+      })
+      .catch(() => setPrefetching(false));
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [text]);
 
-  async function startSpeaking() {
-    setLoading(true);
-    try {
-      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: "river" });
-      const audio = new Audio(res.url);
-      audioRef.current = audio;
-      audio.onended = () => setSpeaking(false);
-      audio.onerror = () => setSpeaking(false);
-      await audio.play();
-      setSpeaking(true);
-    } catch {
-      setSpeaking(false);
-    } finally {
-      setLoading(false);
-    }
+  function startSpeaking() {
+    if (!audioRef.current) return;
+    audioRef.current.play();
+    setSpeaking(true);
   }
 
   function stopSpeaking() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-      audioRef.current = null;
     }
     setSpeaking(false);
   }
 
   return (
     <div className="space-y-3">
-      {/* Speech controls */}
       <div className="flex items-center gap-2">
         {!speaking ? (
           <button
             onClick={startSpeaking}
-            disabled={loading}
+            disabled={prefetching}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-            {loading ? "Preparing..." : "Read Aloud"}
+            {prefetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+            {prefetching ? "Preparing audio..." : "Read Aloud"}
           </button>
         ) : (
           <button
@@ -138,7 +141,6 @@ function SpeechControls({ text }) {
         )}
       </div>
 
-      {/* Text display */}
       <div className="bg-muted/50 rounded-xl p-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
         <HighlightedText text={text} activeCharIndex={-1} />
@@ -154,7 +156,6 @@ function AIAdvicePanel({ situation, profile, allergies, conditions, medications,
 
   // Stop speech when panel closes
   function handleClose() {
-    window.speechSynthesis.cancel();
     onClose();
   }
 
@@ -172,14 +173,15 @@ function AIAdvicePanel({ situation, profile, allergies, conditions, medications,
 
     const situationLabel = SITUATIONS.find(s => s.id === situation)?.label || situation;
 
-    const prompt = `You are an emergency first-aid assistant. A person is experiencing: "${situationLabel}".
-${medicalContext ? `\nThe patient's medical profile includes the following: ${medicalContext}.` : ""}
+    const prompt = `You are a calm, experienced emergency first-aid instructor. A bystander needs to help someone experiencing: "${situationLabel}".
+${medicalContext ? `\nThe patient's medical background: ${medicalContext}.` : ""}
 
-Provide clear, calm, numbered first-aid steps that a bystander can follow immediately while waiting for emergency services. 
-- Keep each step short and actionable.
-- Flag any specific interactions with the patient's medical profile if relevant.
-- End with a reminder to call emergency services if not already done.
-- Maximum 8 steps. Plain language only. No markdown headers.`;
+Write clear, numbered first-aid steps as full sentences with natural pacing — as if you are speaking them aloud to someone in distress. Use commas and full stops naturally so the text-to-speech audio flows smoothly without any jerkiness or unnatural pauses.
+- Each step must be one complete, calm sentence.
+- Use plain spoken English. No abbreviations, symbols, or markdown.
+- Note any relevant interactions with the patient's medical profile where applicable.
+- End with a sentence reminding the bystander to call emergency services if not already done.
+- Maximum 8 steps.`;
 
     try {
       const res = await base44.integrations.Core.InvokeLLM({ prompt });
