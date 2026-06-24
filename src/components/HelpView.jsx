@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Pause, Square } from "lucide-react";
+import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -69,62 +69,43 @@ function HighlightedText({ text, activeCharIndex }) {
 
 function SpeechControls({ text }) {
   const [speaking, setSpeaking] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [activeCharIndex, setActiveCharIndex] = useState(-1);
-  const utteranceRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const audioRef = useRef(null);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
     };
   }, []);
 
-  function startSpeaking() {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9; // Slightly slower for clarity in emergencies
-    utterance.pitch = 1;
-
-    utterance.onboundary = (event) => {
-      if (event.name === "word") {
-        setActiveCharIndex(event.charIndex);
-      }
-    };
-
-    utterance.onend = () => {
+  async function startSpeaking() {
+    setLoading(true);
+    try {
+      const res = await base44.integrations.Core.GenerateSpeech({ text, voice: "river" });
+      const audio = new Audio(res.url);
+      audioRef.current = audio;
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => setSpeaking(false);
+      await audio.play();
+      setSpeaking(true);
+    } catch {
       setSpeaking(false);
-      setPaused(false);
-      setActiveCharIndex(-1);
-    };
-
-    utterance.onerror = () => {
-      setSpeaking(false);
-      setPaused(false);
-      setActiveCharIndex(-1);
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-    setSpeaking(true);
-    setPaused(false);
-  }
-
-  function togglePause() {
-    if (paused) {
-      window.speechSynthesis.resume();
-      setPaused(false);
-    } else {
-      window.speechSynthesis.pause();
-      setPaused(true);
+    } finally {
+      setLoading(false);
     }
   }
 
   function stopSpeaking() {
-    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
     setSpeaking(false);
-    setPaused(false);
-    setActiveCharIndex(-1);
   }
 
   return (
@@ -134,30 +115,22 @@ function SpeechControls({ text }) {
         {!speaking ? (
           <button
             onClick={startSpeaking}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            <Play className="w-4 h-4 fill-current" />
-            Read Aloud
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+            {loading ? "Preparing..." : "Read Aloud"}
           </button>
         ) : (
-          <>
-            <button
-              onClick={togglePause}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              {paused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
-              {paused ? "Resume" : "Pause"}
-            </button>
-            <button
-              onClick={stopSpeaking}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted/80 transition-colors"
-            >
-              <Square className="w-4 h-4 fill-current" />
-              Stop
-            </button>
-          </>
+          <button
+            onClick={stopSpeaking}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted/80 transition-colors"
+          >
+            <Square className="w-4 h-4 fill-current" />
+            Stop
+          </button>
         )}
-        {speaking && !paused && (
+        {speaking && (
           <span className="flex items-center gap-1.5 text-xs text-primary animate-pulse">
             <span className="w-2 h-2 rounded-full bg-primary inline-block" />
             Reading...
@@ -165,10 +138,10 @@ function SpeechControls({ text }) {
         )}
       </div>
 
-      {/* Highlighted text */}
+      {/* Text display */}
       <div className="bg-muted/50 rounded-xl p-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
-        <HighlightedText text={text} activeCharIndex={activeCharIndex} />
+        <HighlightedText text={text} activeCharIndex={-1} />
       </div>
     </div>
   );
