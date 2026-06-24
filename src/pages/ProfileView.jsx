@@ -163,7 +163,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
       {/* Name */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
-        <p className="text-xs text-muted-foreground -mt-2">This name is used on all medical and emergency records.</p>
+        <p className="text-xs text-muted-foreground -mt-2">A clear, recent photo is critical for emergency identification purposes.</p>
 
         {/* Profile Photo */}
         <div className="flex items-center gap-4">
@@ -186,6 +186,7 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full Name (Medical)" name="display_name" value={form.display_name} onChange={handleChange} span2 placeholder="Legal / medical name" />
+          <p className="col-span-2 text-xs text-muted-foreground -mt-1">This name is used on all medical and emergency records.</p>
           <div>
             <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Date of Birth</label>
             <DateInput value={form.date_of_birth || ""} onChange={(v) => { setForm((prev) => ({ ...prev, date_of_birth: v })); setDirty(true); }} />
