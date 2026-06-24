@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Pause, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -28,10 +28,150 @@ function EmergencyCallButton() {
   );
 }
 
+// Highlighted text renderer — splits advice into words and highlights the active one
+function HighlightedText({ text, activeCharIndex }) {
+  if (!text) return null;
+
+  // Split into tokens preserving whitespace
+  const words = text.split(/(\s+)/);
+  let charPos = 0;
+
+  return (
+    <p className="text-sm text-foreground leading-relaxed">
+      {words.map((token, i) => {
+        const start = charPos;
+        charPos += token.length;
+        const isActive = activeCharIndex >= start && activeCharIndex < charPos && token.trim().length > 0;
+        return (
+          <span
+            key={i}
+            className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
+          >
+            {token}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
+function SpeechControls({ text }) {
+  const [speaking, setSpeaking] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [activeCharIndex, setActiveCharIndex] = useState(-1);
+  const utteranceRef = useRef(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  function startSpeaking() {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9; // Slightly slower for clarity in emergencies
+    utterance.pitch = 1;
+
+    utterance.onboundary = (event) => {
+      if (event.name === "word") {
+        setActiveCharIndex(event.charIndex);
+      }
+    };
+
+    utterance.onend = () => {
+      setSpeaking(false);
+      setPaused(false);
+      setActiveCharIndex(-1);
+    };
+
+    utterance.onerror = () => {
+      setSpeaking(false);
+      setPaused(false);
+      setActiveCharIndex(-1);
+    };
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+    setPaused(false);
+  }
+
+  function togglePause() {
+    if (paused) {
+      window.speechSynthesis.resume();
+      setPaused(false);
+    } else {
+      window.speechSynthesis.pause();
+      setPaused(true);
+    }
+  }
+
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+    setPaused(false);
+    setActiveCharIndex(-1);
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Speech controls */}
+      <div className="flex items-center gap-2">
+        {!speaking ? (
+          <button
+            onClick={startSpeaking}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Read Aloud
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={togglePause}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              {paused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+              {paused ? "Resume" : "Pause"}
+            </button>
+            <button
+              onClick={stopSpeaking}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted/80 transition-colors"
+            >
+              <Square className="w-4 h-4 fill-current" />
+              Stop
+            </button>
+          </>
+        )}
+        {speaking && !paused && (
+          <span className="flex items-center gap-1.5 text-xs text-primary animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-primary inline-block" />
+            Reading...
+          </span>
+        )}
+      </div>
+
+      {/* Highlighted text */}
+      <div className="bg-muted/50 rounded-xl p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
+        <HighlightedText text={text} activeCharIndex={activeCharIndex} />
+      </div>
+    </div>
+  );
+}
+
 function AIAdvicePanel({ situation, profile, allergies, conditions, medications, onClose }) {
   const [advice, setAdvice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
+
+  // Stop speech when panel closes
+  function handleClose() {
+    window.speechSynthesis.cancel();
+    onClose();
+  }
 
   async function fetchAdvice() {
     setLoading(true);
@@ -76,7 +216,7 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
             {situationInfo && <situationInfo.icon className={`w-5 h-5 ${situationInfo.color}`} />}
             <h3 className="font-bold text-foreground text-sm">{situationInfo?.label}</h3>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors">
+          <button onClick={handleClose} className="p-1 rounded-lg hover:bg-muted transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -106,10 +246,7 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
           )}
 
           {advice && !loading && (
-            <div className="bg-muted/50 rounded-xl p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{advice}</p>
-            </div>
+            <SpeechControls text={advice} />
           )}
         </div>
       </div>
