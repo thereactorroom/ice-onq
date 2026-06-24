@@ -28,20 +28,20 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
       </h2>
       <div className="flex items-center gap-3">
         <div
-          className={`relative w-16 h-16 rounded-full bg-muted border-2 border-border overflow-hidden flex-shrink-0 flex items-center justify-center ${profile?.profile_photo ? "cursor-pointer hover:scale-105 transition-transform" : ""}`}
+          className={`relative w-16 h-16 flex-shrink-0 ${profile?.profile_photo ? "cursor-pointer" : ""}`}
           onClick={() => profile?.profile_photo && setEnlarged(true)}
           title={profile?.profile_photo ? "Tap to enlarge" : undefined}
         >
-          {profile?.profile_photo ? (
-            <>
+          <div className="w-16 h-16 rounded-full bg-muted border-2 border-border overflow-hidden flex items-center justify-center">
+            {profile?.profile_photo ? (
               <img src={profile.profile_photo} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-full">
-                <ZoomIn className="w-4 h-4 text-white" />
-              </div>
-            </>
-          ) : (
-            <User className="w-7 h-7 text-muted-foreground" />
-          )}
+            ) : (
+              <User className="w-7 h-7 text-muted-foreground" />
+            )}
+          </div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+            <ZoomIn className="w-3 h-3 text-white" />
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground flex-1">
           {dob && <span>DOB: {new Date(dob).toLocaleDateString()}</span>}
