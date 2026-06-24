@@ -221,8 +221,8 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
   const situationInfo = SITUATIONS.find(s => s.id === situation);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-      <div className="bg-card rounded-2xl border border-border w-full max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center px-4 pt-4 pb-20 sm:pb-4">
+      <div className="bg-card rounded-2xl border border-border w-full max-w-lg h-full sm:h-auto sm:max-h-[85vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             {situationInfo && <situationInfo.icon className={`w-5 h-5 ${situationInfo.color}`} />}
