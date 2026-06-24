@@ -14,7 +14,7 @@ const SITUATIONS = [
   { id: "stroke", label: "Possible Stroke", icon: Brain, color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-200" },
 ];
 
-const EMERGENCY_NUMBER = "112"; // Universal emergency number (works in ZA)
+const EMERGENCY_NUMBER = "112";
 
 function EmergencyCallButton() {
   return (
@@ -71,7 +71,6 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
       <div className="bg-card rounded-2xl border border-border w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             {situationInfo && <situationInfo.icon className={`w-5 h-5 ${situationInfo.color}`} />}
@@ -82,12 +81,9 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Emergency call always visible at top */}
           <EmergencyCallButton />
 
-          {/* Disclaimer */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800">
@@ -95,7 +91,6 @@ Provide clear, calm, numbered first-aid steps that a bystander can follow immedi
             </p>
           </div>
 
-          {/* AI Advice */}
           {!started && (
             <Button onClick={fetchAdvice} className="w-full gap-2" variant="outline">
               <Shield className="w-4 h-4" />
@@ -127,7 +122,6 @@ export default function HelpView({ profile, allergies, conditions, medications }
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Emergency Call — always at the top */}
       <div className="bg-card rounded-2xl border-2 border-red-200 p-4 space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Phone className="w-5 h-5 text-red-600" />
@@ -137,7 +131,6 @@ export default function HelpView({ profile, allergies, conditions, medications }
         <EmergencyCallButton />
       </div>
 
-      {/* AI First-Aid Advisor */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-primary" />
@@ -161,7 +154,6 @@ export default function HelpView({ profile, allergies, conditions, medications }
         </div>
       </div>
 
-      {/* AI Advice Panel (modal) */}
       {selectedSituation && (
         <AIAdvicePanel
           situation={selectedSituation}

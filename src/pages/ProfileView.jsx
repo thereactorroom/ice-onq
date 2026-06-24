@@ -27,7 +27,7 @@ import InitiationScreen from "../components/InitiationScreen";
 import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
 import DateInput from "../components/DateInput";
 import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
-import HelpView from "../components/HelpView";
+import HelpView from "../components/HelpView.jsx";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
