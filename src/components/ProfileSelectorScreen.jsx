@@ -201,11 +201,9 @@ function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending,
               : <User className="w-6 h-6 text-primary" />
             }
           </div>
-          {photo && (
-            <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-white border border-border flex items-center justify-center shadow-sm">
-              <ZoomIn className="w-2.5 h-2.5 text-muted-foreground" />
-            </div>
-          )}
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+            <ZoomIn className="w-3 h-3 text-white" />
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{name}</p>
