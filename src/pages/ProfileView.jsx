@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { getGlobalBridge } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2 } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -27,6 +27,7 @@ import InitiationScreen from "../components/InitiationScreen";
 import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
 import DateInput from "../components/DateInput";
 import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
+import HelpView from "../components/HelpView";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -345,6 +346,7 @@ export default function ProfileView() {
   const { user: authUser } = useAuth();
   const params = new URLSearchParams(window.location.search);
   const rawFID = params.get("fID");
+  const isDevMode = params.get("DevMode") === "True";
   const slugParam = params.get("s"); // public_slug based share link
   const guardianFid = params.get("guardianFid");
   const showSelector = params.get("showSelector") === "true";
@@ -695,6 +697,10 @@ export default function ProfileView() {
           <SharingView profile={profile} contacts={sortedContacts} user={user} profileDbId={profileDbId} />
         )}
 
+        {!isEditMode && displayTab === "help" && (
+          <HelpView profile={profile} allergies={allergies} conditions={conditions} medications={medications} />
+        )}
+
         {/* EDIT MODE */}
         {isEditMode && editTab === "contacts" && (
           <ManageContacts profileId={profileDbId || profile?.id} fusionUserId={fusionUser?.userId} />
@@ -757,6 +763,7 @@ export default function ProfileView() {
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "wallet", label: "Share", icon: WalletIcon },
+              ...(isDevMode ? [{ id: "help", label: "Help", icon: HelpCircle }] : []),
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
