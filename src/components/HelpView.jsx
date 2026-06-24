@@ -28,30 +28,42 @@ function EmergencyCallButton() {
   );
 }
 
-// Highlighted text renderer — splits advice into words and highlights the active one
+// Highlighted text renderer — splits into numbered steps, each on its own paragraph
 function HighlightedText({ text, activeCharIndex }) {
   if (!text) return null;
 
-  // Split into tokens preserving whitespace
-  const words = text.split(/(\s+)/);
-  let charPos = 0;
+  // Split on numbered steps like "1. " "2. " etc., keeping the delimiter
+  const steps = text.split(/(?=\d+\.\s)/).filter(s => s.trim());
+
+  // If no numbered steps detected, fall back to single block
+  const segments = steps.length > 1 ? steps : [text];
+
+  let globalCharPos = 0;
 
   return (
-    <p className="text-sm text-foreground leading-relaxed">
-      {words.map((token, i) => {
-        const start = charPos;
-        charPos += token.length;
-        const isActive = activeCharIndex >= start && activeCharIndex < charPos && token.trim().length > 0;
-        return (
-          <span
-            key={i}
-            className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
-          >
-            {token}
-          </span>
+    <div className="space-y-3">
+      {segments.map((step, si) => {
+        const tokens = step.split(/(\s+)/);
+        const stepEl = (
+          <p key={si} className="text-sm text-foreground leading-relaxed">
+            {tokens.map((token, ti) => {
+              const start = globalCharPos;
+              globalCharPos += token.length;
+              const isActive = activeCharIndex >= start && activeCharIndex < globalCharPos && token.trim().length > 0;
+              return (
+                <span
+                  key={ti}
+                  className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
+                >
+                  {token}
+                </span>
+              );
+            })}
+          </p>
         );
+        return stepEl;
       })}
-    </p>
+    </div>
   );
 }
 
