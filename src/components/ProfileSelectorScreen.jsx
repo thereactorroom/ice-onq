@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, MoreVertical, Trash2 } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, MoreVertical, Trash2, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
@@ -194,11 +194,18 @@ function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending,
   return (
     <div className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
       <button onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {photo
-            ? <img src={photo} alt={name} className="w-full h-full object-cover" />
-            : <User className="w-6 h-6 text-primary" />
-          }
+        <div className="relative w-12 h-12 flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            {photo
+              ? <img src={photo} alt={name} className="w-full h-full object-cover" />
+              : <User className="w-6 h-6 text-primary" />
+            }
+          </div>
+          {photo && (
+            <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-white border border-border flex items-center justify-center shadow-sm">
+              <ZoomIn className="w-2.5 h-2.5 text-muted-foreground" />
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{name}</p>
