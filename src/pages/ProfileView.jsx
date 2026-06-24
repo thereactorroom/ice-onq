@@ -163,7 +163,12 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
       {/* Name */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
-        <p className="text-xs text-muted-foreground -mt-2">A clear, recent photo is critical for emergency identification purposes.</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2.5 -mt-1">
+          <span className="text-amber-500 text-base leading-none flex-shrink-0 mt-0.5">⚠️</span>
+          <p className="text-xs text-amber-900 leading-relaxed">
+            A <strong>clear, recent photo</strong> is critical for emergency identification by first responders.
+          </p>
+        </div>
 
         {/* Profile Photo */}
         <div className="flex items-center gap-4">
