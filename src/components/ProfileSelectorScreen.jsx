@@ -104,6 +104,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
             <ProfileCard
               name={primaryProfile?.display_name || "My Profile"}
               subtitle="Your personal ICE record"
+              photo={primaryProfile?.profile_photo}
               fid={guardianFid}
               isOwn
               statusBadge={statusBadge(primaryProfile)}
@@ -117,6 +118,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 key={p.id}
                 name={p.display_name || "Unnamed Dependent"}
                 subtitle={p.dependent_relationship || "Dependent"}
+                photo={p.profile_photo}
                 statusBadge={statusBadge(p)}
                 fusionPending={p.fusion_link_pending}
                 onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, guardianFid, isDbId: !p.fusion_id })}
@@ -188,12 +190,15 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   );
 }
 
-function ProfileCard({ name, subtitle, isOwn, statusBadge, fusionPending, onClick, onManage }) {
+function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending, onClick, onManage }) {
   return (
     <div className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
       <button onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <User className="w-6 h-6 text-primary" />
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          {photo
+            ? <img src={photo} alt={name} className="w-full h-full object-cover" />
+            : <User className="w-6 h-6 text-primary" />
+          }
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{name}</p>
