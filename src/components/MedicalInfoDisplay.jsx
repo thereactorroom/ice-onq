@@ -21,9 +21,9 @@ function Section({ icon: Icon, title, color, reviewedDate, children }) {
           </div>
           <h3 className="font-semibold text-foreground text-sm">{title}</h3>
         </div>
-        {formatted && (
-          <span className="text-[10px] text-muted-foreground">Updated {formatted}</span>
-        )}
+        <span className={`text-[10px] font-medium ${formatted ? "text-muted-foreground" : "text-warning"}`}>
+          {formatted ? `Updated ${formatted}` : "Not reviewed"}
+        </span>
       </div>
       {children}
     </div>
