@@ -230,7 +230,7 @@ Write clear, numbered first-aid steps as full sentences with natural pacing — 
           </div>
 
           {!started && (
-            <Button onClick={fetchAdvice} className="w-full gap-2" variant="outline">
+            <Button onClick={fetchAdvice} className="w-full gap-2">
               <Shield className="w-4 h-4" />
               Get First-Aid Guidance
             </Button>
