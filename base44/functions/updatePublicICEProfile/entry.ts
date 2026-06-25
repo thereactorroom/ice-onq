@@ -41,7 +41,8 @@ Deno.serve(async (req) => {
       'doctor_name', 'doctor_practice', 'doctor_mobile', 'doctor_practice_number',
       'hospital_name', 'hospital_location', 'profile_photo',
       'fusion_id', 'fusion_link_pending', 'dependent_relationship', 'guardian_fid',
-      'is_deleted', 'deleted_at'
+      'is_deleted', 'deleted_at',
+      'profile_photo_updated', 'allergies_reviewed_date', 'conditions_reviewed_date', 'medications_reviewed_date'
     ];
 
     const safeUpdates = {};
