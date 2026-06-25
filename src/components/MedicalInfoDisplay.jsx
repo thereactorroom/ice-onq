@@ -1,13 +1,29 @@
 import { Pill, AlertTriangle, Activity } from "lucide-react";
 
-function Section({ icon: Icon, title, color, children }) {
+function formatDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}/${m}/${day}`;
+}
+
+function Section({ icon: Icon, title, color, reviewedDate, children }) {
+  const formatted = formatDate(reviewedDate);
   return (
     <div className="bg-card rounded-2xl border border-border p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
-          <Icon className="w-4 h-4" />
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
+            <Icon className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-foreground text-sm">{title}</h3>
         </div>
-        <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+        {formatted && (
+          <span className="text-[10px] text-muted-foreground">Updated {formatted}</span>
+        )}
       </div>
       {children}
     </div>
@@ -23,10 +39,10 @@ function Tag({ label, sub, critical }) {
   );
 }
 
-export default function MedicalInfoDisplay({ allergies = [], conditions = [], medications = [] }) {
+export default function MedicalInfoDisplay({ allergies = [], conditions = [], medications = [], profile = {} }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <Section icon={AlertTriangle} title="Allergies" color="bg-red-100 text-red-600">
+      <Section icon={AlertTriangle} title="Allergies" color="bg-red-100 text-red-600" reviewedDate={profile.allergies_reviewed_date}>
         {allergies.length === 0 ? (
           <p className="text-sm text-muted-foreground">No allergies recorded</p>
         ) : (
@@ -38,7 +54,7 @@ export default function MedicalInfoDisplay({ allergies = [], conditions = [], me
         )}
       </Section>
 
-      <Section icon={Activity} title="Chronic Conditions" color="bg-blue-100 text-blue-600">
+      <Section icon={Activity} title="Chronic Conditions" color="bg-blue-100 text-blue-600" reviewedDate={profile.conditions_reviewed_date}>
         {conditions.length === 0 ? (
           <p className="text-sm text-muted-foreground">No conditions recorded</p>
         ) : (
@@ -50,7 +66,7 @@ export default function MedicalInfoDisplay({ allergies = [], conditions = [], me
         )}
       </Section>
 
-      <Section icon={Pill} title="Medications" color="bg-purple-100 text-purple-600">
+      <Section icon={Pill} title="Medications" color="bg-purple-100 text-purple-600" reviewedDate={profile.medications_reviewed_date}>
         {medications.length === 0 ? (
           <p className="text-sm text-muted-foreground">No medications recorded</p>
         ) : (
