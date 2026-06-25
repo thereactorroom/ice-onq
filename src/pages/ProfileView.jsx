@@ -800,13 +800,19 @@ export default function ProfileView() {
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "wallet", label: "Share", icon: WalletIcon },
-              ...(isDevMode ? [{ id: "help", label: "Help", icon: HelpCircle }] : []),
-            ].map(({ id, label, icon: Icon }) => (
+              ...(isDevMode ? [{ id: "help", label: "Help", icon: HelpCircle, accent: true }] : []),
+            ].map(({ id, label, icon: Icon, accent }) => (
               <button
                 key={id}
                 onClick={() => setDisplayTabScrollTop(id)}
                 className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-lg transition-colors ${
-                  displayTab === id ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
+                  accent
+                    ? displayTab === id
+                      ? "text-emergency bg-emergency/10"
+                      : "text-emergency/70 hover:text-emergency"
+                    : displayTab === id
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-primary"
                 }`}
               >
                 <Icon className="w-5 h-5" />
