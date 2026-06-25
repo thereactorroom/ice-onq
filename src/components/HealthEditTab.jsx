@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, Pencil, X, Save } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+function formatDate(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+}
 
 // ── small inline form dialog ──────────────────────────────────────────────────
 function ItemDialog({ title, fields, initial, onSave, onClose }) {
@@ -61,9 +68,10 @@ function ItemDialog({ title, fields, initial, onSave, onClose }) {
 }
 
 // ── generic section ───────────────────────────────────────────────────────────
-function Section({ title, icon, items, fields, entityName, profileId, profileDbId, reviewedField, renderTag }) {
+function Section({ title, icon, items, fields, entityName, profileId, profileDbId, reviewedField, reviewedDate, onReviewed, renderTag }) {
   const qc = useQueryClient();
-  const [dialog, setDialog] = useState(null); // null | { mode: 'add'|'edit', item?: {} }
+  const [dialog, setDialog] = useState(null);
+  const [stamping, setStamping] = useState(false);
 
   const create = useMutation({
     mutationFn: (data) => base44.entities[entityName].create({ ...data, profile_id: profileId }),
@@ -78,20 +86,31 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
     onSuccess: () => qc.invalidateQueries({ queryKey: [entityName, profileId] }),
   });
 
+  async function stampReviewed(isoDate) {
+    if (!profileDbId || !reviewedField) return;
+    await base44.functions.invoke("updatePublicICEProfile", {
+      profileId: profileDbId,
+      updates: { [reviewedField]: isoDate },
+    });
+    if (onReviewed) onReviewed(reviewedField, isoDate);
+  }
+
   async function handleSave(form) {
     if (dialog.item?.id) {
       await update.mutateAsync({ id: dialog.item.id, data: form });
     } else {
       await create.mutateAsync(form);
     }
-    // Stamp the reviewed date for this section
-    if (profileDbId && reviewedField) {
-      await base44.functions.invoke("updatePublicICEProfile", {
-        profileId: profileDbId,
-        updates: { [reviewedField]: new Date().toISOString() },
-      });
-    }
+    await stampReviewed(new Date().toISOString());
   }
+
+  async function handleMarkReviewed() {
+    setStamping(true);
+    await stampReviewed(new Date().toISOString());
+    setStamping(false);
+  }
+
+  const formatted = formatDate(reviewedDate);
 
   return (
     <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
@@ -104,6 +123,19 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
           onClick={() => setDialog({ mode: "add" })}>
           <Plus className="w-3 h-3" /> Add
         </Button>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className={`text-[10px] font-medium ${formatted ? "text-muted-foreground" : "text-warning"}`}>
+          {formatted ? `Last reviewed: ${formatted}` : "Not yet reviewed"}
+        </span>
+        <button
+          onClick={handleMarkReviewed}
+          disabled={stamping}
+          className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 text-[10px] font-semibold transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-2.5 h-2.5 ${stamping ? "animate-spin" : ""}`} />
+          {stamping ? "Saving..." : "Mark as Reviewed"}
+        </button>
       </div>
 
       {items.length === 0 && (
@@ -140,7 +172,7 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
-export default function HealthEditTab({ profileId, profileDbId }) {
+export default function HealthEditTab({ profileId, profileDbId, reviewedDates = {}, onReviewed }) {
   const { data: allergies = [] } = useQuery({
     queryKey: ["Allergy", profileId],
     queryFn: () => base44.entities.Allergy.filter({ profile_id: profileId }),
@@ -167,6 +199,8 @@ export default function HealthEditTab({ profileId, profileDbId }) {
         profileId={profileId}
         profileDbId={profileDbId}
         reviewedField="allergies_reviewed_date"
+        reviewedDate={reviewedDates.allergies_reviewed_date}
+        onReviewed={onReviewed}
         fields={[
           { name: "name", label: "Allergy Name" },
           { name: "severity", label: "Severity", options: ["Mild", "Moderate", "Severe", "Life-Threatening"] },
@@ -183,6 +217,8 @@ export default function HealthEditTab({ profileId, profileDbId }) {
         profileId={profileId}
         profileDbId={profileDbId}
         reviewedField="conditions_reviewed_date"
+        reviewedDate={reviewedDates.conditions_reviewed_date}
+        onReviewed={onReviewed}
         fields={[
           { name: "name", label: "Condition Name" },
           { name: "notes", label: "Notes" },
@@ -199,6 +235,8 @@ export default function HealthEditTab({ profileId, profileDbId }) {
         profileId={profileId}
         profileDbId={profileDbId}
         reviewedField="medications_reviewed_date"
+        reviewedDate={reviewedDates.medications_reviewed_date}
+        onReviewed={onReviewed}
         fields={[
           { name: "name", label: "Medication Name" },
           { name: "dosage", label: "Dosage" },

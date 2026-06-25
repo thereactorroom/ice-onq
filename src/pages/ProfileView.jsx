@@ -689,7 +689,7 @@ export default function ProfileView() {
                 </div>
               </div>
             )}
-            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} profile={profile} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} isOwner={isOwner} />
+            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} profile={profile} />
             <DoctorHospitalInfo profile={profile} />
             {profile.emergency_notes && (
               <div className="bg-card rounded-2xl border border-border p-4">
@@ -727,7 +727,16 @@ export default function ProfileView() {
         )}
 
         {isEditMode && editTab === "health" && (
-          <HealthEditTab profileId={profileDbId || profile?.id} profileDbId={profileDbId} />
+          <HealthEditTab
+            profileId={profileDbId || profile?.id}
+            profileDbId={profileDbId}
+            reviewedDates={{
+              allergies_reviewed_date: profile?.allergies_reviewed_date,
+              conditions_reviewed_date: profile?.conditions_reviewed_date,
+              medications_reviewed_date: profile?.medications_reviewed_date,
+            }}
+            onReviewed={(field, value) => handleMedicalSaved({ [field]: value })}
+          />
         )}
       </div>
 
