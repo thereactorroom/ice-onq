@@ -18,6 +18,53 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
     return (a.priority || 0) - (b.priority || 0);
   });
 
+  async function handleDownloadQR(url, ownerName) {
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(url)}&color=0F172A&bgcolor=FFFFFF`;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const padding = 40;
+      const qrSize = 600;
+      const topTextHeight = 60;
+      const bottomTextHeight = 60;
+      const canvasW = qrSize + padding * 2;
+      const canvasH = qrSize + topTextHeight + bottomTextHeight + padding * 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext("2d");
+
+      // White background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      // "ICE onQ" at top
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "bold 36px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("ICE onQ", canvasW / 2, padding + 38);
+
+      // QR code
+      ctx.drawImage(img, padding, topTextHeight + padding, qrSize, qrSize);
+
+      // Owner name at bottom
+      ctx.fillStyle = "#0F172A";
+      ctx.font = "28px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(ownerName, canvasW / 2, topTextHeight + padding + qrSize + 48);
+
+      canvas.toBlob((blob) => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `ICE-QR-${(ownerName || "profile").replace(/\s+/g, "-")}.png`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }, "image/png");
+    };
+    img.src = qrImageUrl;
+  }
+
   async function handleCopyLink() {
     if (!shareUrl) return;
     await navigator.clipboard.writeText(shareUrl);
@@ -79,16 +126,13 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
           {/* Download QR — highlighted tile */}
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
             <p className="text-xs text-muted-foreground text-center">Download the QR code for printing and physical deployment</p>
-            <a
-              href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(shareUrl)}&color=0F172A&bgcolor=FFFFFF`}
-              download={`ICE-QR-${(profile?.display_name || user?.full_name || "profile").replace(/\s+/g, "-")}.png`}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => handleDownloadQR(shareUrl, profile?.display_name || user?.full_name || "")}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
             >
               <Download className="w-4 h-4" />
               Download QR Code
-            </a>
+            </button>
           </div>
         </div>
       )}
