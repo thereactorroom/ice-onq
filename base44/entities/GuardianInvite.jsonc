@@ -1,0 +1,55 @@
+{
+  "name": "GuardianInvite",
+  "type": "object",
+  "properties": {
+    "dependent_profile_id": {
+      "type": "string",
+      "title": "Dependent Profile ID"
+    },
+    "dependent_name": {
+      "type": "string",
+      "title": "Dependent Name"
+    },
+    "inviter_fusion_id": {
+      "type": "string",
+      "title": "Inviter Fusion ID"
+    },
+    "inviter_name": {
+      "type": "string",
+      "title": "Inviter Name"
+    },
+    "invitee_email": {
+      "type": "string",
+      "title": "Invitee Email"
+    },
+    "invitee_fusion_id": {
+      "type": "string",
+      "title": "Invitee Fusion ID"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    },
+    "token": {
+      "type": "string",
+      "title": "Invite Token"
+    }
+  },
+  "required": [
+    "dependent_profile_id",
+    "invitee_email",
+    "inviter_fusion_id"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {}
+  }
+}

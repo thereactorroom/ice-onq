@@ -1,0 +1,41 @@
+{
+  "name": "ProfileGuardian",
+  "type": "object",
+  "properties": {
+    "dependent_profile_id": {
+      "type": "string",
+      "title": "Dependent Profile ID"
+    },
+    "guardian_fusion_id": {
+      "type": "string",
+      "title": "Guardian Fusion ID"
+    },
+    "guardian_name": {
+      "type": "string",
+      "title": "Guardian Name"
+    },
+    "guardian_email": {
+      "type": "string",
+      "title": "Guardian Email"
+    },
+    "relationship": {
+      "type": "string",
+      "title": "Relationship"
+    },
+    "is_primary": {
+      "type": "boolean",
+      "title": "Primary Guardian",
+      "default": false
+    }
+  },
+  "required": [
+    "dependent_profile_id",
+    "guardian_fusion_id"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {}
+  }
+}

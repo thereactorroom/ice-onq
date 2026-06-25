@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, MoreVertical, Trash2, ZoomIn } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
+import ManageGuardians from "./ManageGuardians";
+import PendingInviteBanner from "./PendingInviteBanner";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
@@ -11,16 +13,24 @@ import {
 // Shown after sign-in when a user has (or may have) multiple managed profiles
 export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect }) {
   const [profiles, setProfiles] = useState([]);
+  const [sharedProfiles, setSharedProfiles] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [primaryProfile, setPrimaryProfile] = useState(null);
   const [showAddDependent, setShowAddDependent] = useState(false);
-  const [manageProfile, setManageProfile] = useState(null); // { id, name } for delete dialog
+  const [manageProfile, setManageProfile] = useState(null);
+  const [manageGuardians, setManageGuardians] = useState(null); // { id, name }
   const [deleting, setDeleting] = useState(false);
+  // Try to get the current user's email for invite lookup
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    base44.auth.me().then(u => setUserEmail(u?.email || "")).catch(() => {});
+  }, []);
 
   function loadProfiles() {
     setLoading(true);
-    // Fetch primary profile and dependents in parallel
     Promise.all([
       base44.functions.invoke("getPublicICEProfile", {
         profileId: String(guardianFid),
@@ -28,16 +38,22 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         fusionHost: window.location.origin,
       }),
       base44.entities.ICEProfile.filter({ guardian_fid: String(guardianFid), is_deleted: false }),
+      base44.functions.invoke("getGuardianInvites", {
+        fusionId: String(guardianFid),
+        email: userEmail,
+      }),
     ])
-      .then(([primaryRes, dependents]) => {
+      .then(([primaryRes, dependents, inviteRes]) => {
         setPrimaryProfile(primaryRes.data?.profile || null);
         setProfiles(dependents || []);
+        setSharedProfiles(inviteRes.data?.sharedProfiles || []);
+        setPendingInvites(inviteRes.data?.pendingInvites || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }
 
-  useEffect(() => { loadProfiles(); }, [guardianFid]);
+  useEffect(() => { loadProfiles(); }, [guardianFid, userEmail]);
 
   if (showAddDependent) {
     return (
@@ -94,6 +110,18 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
           <p className="text-sm text-muted-foreground">Select a profile to view or manage.</p>
         </div>
 
+        {/* Pending guardian invites */}
+        {pendingInvites.map((inv) => (
+          <PendingInviteBanner
+            key={inv.id}
+            invite={inv}
+            acceptingFusionId={String(guardianFid)}
+            acceptingName={primaryProfile?.display_name || ""}
+            acceptingEmail={userEmail}
+            onAccepted={() => loadProfiles()}
+          />
+        ))}
+
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -112,7 +140,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
               onManage={primaryProfile ? () => setManageProfile({ id: primaryProfile.id, name: primaryProfile.display_name || "My Profile" }) : undefined}
             />
 
-            {/* Dependent profiles */}
+            {/* Dependent profiles I created */}
             {profiles.map((p) => (
               <ProfileCard
                 key={p.id}
@@ -123,8 +151,27 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 fusionPending={p.fusion_link_pending}
                 onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, guardianFid, isDbId: !p.fusion_id })}
                 onManage={() => setManageProfile({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
+                onManageGuardians={() => setManageGuardians({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
               />
             ))}
+
+            {/* Shared profiles (co-guardian) */}
+            {sharedProfiles.length > 0 && (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground pt-2">Shared with me</p>
+                {sharedProfiles.map((p) => (
+                  <ProfileCard
+                    key={p.id}
+                    name={p.display_name || "Shared Dependent"}
+                    subtitle="Co-Guardian"
+                    photo={p.profile_photo}
+                    statusBadge={statusBadge(p)}
+                    isShared
+                    onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, isDbId: !p.fusion_id })}
+                  />
+                ))}
+              </>
+            )}
 
             {/* Add dependent CTA */}
             <button
@@ -144,6 +191,17 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
+
+      {/* Manage guardians modal */}
+      {manageGuardians && (
+        <ManageGuardians
+          dependentProfileId={manageGuardians.id}
+          dependentName={manageGuardians.name}
+          inviterFusionId={String(guardianFid)}
+          inviterName={primaryProfile?.display_name || ""}
+          onClose={() => { setManageGuardians(null); loadProfiles(); }}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!manageProfile} onOpenChange={(open) => { if (!open) setManageProfile(null); }}>
@@ -190,9 +248,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   );
 }
 
-function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending, onClick, onManage }) {
+function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusionPending, onClick, onManage, onManageGuardians }) {
   return (
-    <div className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
+    <div className="w-full flex items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
       <button onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
         <div className="relative w-12 h-12 flex-shrink-0">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
@@ -206,7 +264,10 @@ function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending,
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-foreground truncate">{name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="font-semibold text-sm text-foreground truncate">{name}</p>
+            {isShared && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium shrink-0">shared</span>}
+          </div>
           <p className="text-xs text-muted-foreground">{subtitle}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {statusBadge}
@@ -219,15 +280,26 @@ function ProfileCard({ name, subtitle, photo, isOwn, statusBadge, fusionPending,
         </div>
         <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       </button>
-      {onManage && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onManage(); }}
-          className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
-          title="Delete profile"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
+      <div className="flex flex-col gap-1 flex-shrink-0">
+        {onManageGuardians && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onManageGuardians(); }}
+            className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            title="Manage co-guardians"
+          >
+            <Users className="w-4 h-4" />
+          </button>
+        )}
+        {onManage && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onManage(); }}
+            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Delete profile"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

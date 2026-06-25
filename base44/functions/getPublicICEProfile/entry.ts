@@ -49,7 +49,11 @@ Deno.serve(async (req) => {
         return Response.json({ notFound: true, profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' } });
       }
       const isOwner = fusionUser && String(fusionUser.userId) === String(profileId);
-      if (!isOwner) {
+      // Also allow co-guardians to trigger auto-create for profiles they manage
+      const isCoGuardian = fusionUser
+        ? (await base44.asServiceRole.entities.ProfileGuardian.filter({ guardian_fusion_id: String(fusionUser.userId) })).length > 0
+        : false;
+      if (!isOwner && !isCoGuardian) {
         return Response.json({ profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' }, notFound: true });
       }
 

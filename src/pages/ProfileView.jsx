@@ -28,6 +28,7 @@ import ProfileSelectorScreen from "../components/ProfileSelectorScreen";
 import DateInput from "../components/DateInput";
 import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
 import HelpView from "../components/HelpView.jsx";
+import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -351,8 +352,10 @@ export default function ProfileView() {
   const guardianFid = params.get("guardianFid");
   const showSelector = params.get("showSelector") === "true";
   const isDbId = params.get("isDbId") === "true";
+  const acceptInviteToken = params.get("acceptInvite");
   // No fID and no slug → Initiation Mode (public welcome screen)
-  const isInitiationMode = !rawFID && !slugParam;
+  // Exception: if there's an acceptInvite token, show a simple acceptance screen
+  const isInitiationMode = !rawFID && !slugParam && !acceptInviteToken;
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
@@ -486,6 +489,11 @@ export default function ProfileView() {
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
+  }
+
+  // ── Accept Guardian Invite Mode ──
+  if (acceptInviteToken) {
+    return <AcceptInviteScreen token={acceptInviteToken} fusionUser={fusionUser} authUser={authUser} />;
   }
 
   // ── Profile Selector Mode: returning from a dependent profile ──
