@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square } from "lucide-react";
+import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -28,45 +28,22 @@ function EmergencyCallButton() {
   );
 }
 
-// Highlighted text renderer — parses strict "1. Step text." numbered format
-function HighlightedText({ text, activeCharIndex }) {
+function StepsList({ text }) {
   if (!text) return null;
-
-  // Parse strictly numbered lines: "1. ...", "2. ..." etc.
   const numbered = text.match(/^\d+\.\s+.+$/gm);
-  const segments = numbered && numbered.length > 1
+  const steps = numbered && numbered.length > 1
     ? numbered.map(line => line.replace(/^\d+\.\s+/, '').trim())
     : text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
-
-  let globalCharPos = 0;
-
   return (
     <div className="space-y-4">
-      {segments.map((step, si) => {
-        const tokens = step.split(/(\s+)/);
-        return (
-          <div key={si} className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-              {si + 1}
-            </span>
-            <p className="text-sm text-foreground leading-relaxed flex-1">
-              {tokens.map((token, ti) => {
-                const start = globalCharPos;
-                globalCharPos += token.length;
-                const isActive = activeCharIndex >= start && activeCharIndex < globalCharPos && token.trim().length > 0;
-                return (
-                  <span
-                    key={ti}
-                    className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
-                  >
-                    {token}
-                  </span>
-                );
-              })}
-            </p>
-          </div>
-        );
-      })}
+      {steps.map((step, i) => (
+        <div key={i} className="flex gap-3">
+          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+            {i + 1}
+          </span>
+          <p className="text-sm text-foreground leading-relaxed flex-1">{step}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -74,7 +51,6 @@ function HighlightedText({ text, activeCharIndex }) {
 function SpeechControls({ text }) {
   const [speaking, setSpeaking] = useState(false);
   const [prefetching, setPrefetching] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(-1);
   const audioRef = useRef(null);
 
   // Pre-fetch audio as soon as text is available
@@ -105,18 +81,7 @@ function SpeechControls({ text }) {
 
   function startSpeaking() {
     if (!audioRef.current) return;
-    const onTimeUpdate = () => {
-      const audio = audioRef.current;
-      if (!audio || !audio.duration) return;
-      const pct = audio.currentTime / audio.duration;
-      setActiveIndex(Math.floor(pct * text.length));
-    };
-    audioRef.current.addEventListener("timeupdate", onTimeUpdate);
-    audioRef.current.onended = () => {
-      setSpeaking(false);
-      setActiveIndex(-1);
-      audioRef.current.removeEventListener("timeupdate", onTimeUpdate);
-    };
+    audioRef.current.onended = () => setSpeaking(false);
     audioRef.current.play();
     setSpeaking(true);
   }
@@ -127,7 +92,6 @@ function SpeechControls({ text }) {
       audioRef.current.currentTime = 0;
     }
     setSpeaking(false);
-    setActiveIndex(-1);
   }
 
   return (
@@ -161,7 +125,7 @@ function SpeechControls({ text }) {
 
       <div className="bg-muted/50 rounded-xl p-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
-        <HighlightedText text={text} activeCharIndex={activeIndex} />
+        <StepsList text={text} />
       </div>
     </div>
   );
