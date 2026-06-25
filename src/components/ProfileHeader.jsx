@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { User, ZoomIn, RefreshCw } from "lucide-react";
+import { User, ZoomIn } from "lucide-react";
 import ICEStatusBadge from "./ICEStatusBadge";
-import { base44 } from "@/api/base44Client";
 
-function formatDate(iso) {
+function photoAge(iso) {
   if (!iso) return null;
   const d = new Date(iso);
   if (isNaN(d)) return null;
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}/${m}/${day}`;
+  const years = (new Date() - d) / 31557600000;
+  if (years < 1) return "< 1 year ago";
+  return `${Math.floor(years)}Y ago`;
 }
 
 function formatDob(raw) {
@@ -27,21 +25,8 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
   const dob = profile?.date_of_birth;
   const age = dob ? Math.floor((new Date() - new Date(dob)) / 31557600000) : null;
   const [enlarged, setEnlarged] = useState(false);
-  const [stamping, setStamping] = useState(false);
 
-  const photoDate = formatDate(profile?.profile_photo_updated);
-
-  async function handleMarkPhotoReviewed() {
-    if (!profileDbId || !onProfileUpdated) return;
-    setStamping(true);
-    const now = new Date().toISOString();
-    await base44.functions.invoke("updatePublicICEProfile", {
-      profileId: profileDbId,
-      updates: { profile_photo_updated: now },
-    });
-    onProfileUpdated({ profile_photo_updated: now });
-    setStamping(false);
-  }
+  const photoLabel = photoAge(profile?.profile_photo_updated);
 
   return (
     <div className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
@@ -81,20 +66,9 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
               <ZoomIn className="w-3 h-3 text-white" />
             </div>
           </div>
-          <span className={`text-[9px] font-medium leading-none ${photoDate ? "text-muted-foreground" : "text-warning"}`}>
-            {photoDate || "No date"}
+          <span className={`text-[9px] font-medium leading-none ${photoLabel ? "text-muted-foreground" : "text-warning"}`}>
+            {photoLabel ? `Last Updated ${photoLabel}` : "No photo date"}
           </span>
-          {isOwner && (
-            <button
-              onClick={handleMarkPhotoReviewed}
-              disabled={stamping}
-              title="Mark photo as reviewed"
-              className="mt-0.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 text-[9px] font-semibold transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-2.5 h-2.5 ${stamping ? "animate-spin" : ""}`} />
-              {stamping ? "..." : "Refresh"}
-            </button>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground flex-1">
