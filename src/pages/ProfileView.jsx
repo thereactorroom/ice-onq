@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { getGlobalBridge } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -182,13 +182,32 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
               <User className="w-8 h-8 text-muted-foreground" />
             )}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 space-y-2">
             <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold cursor-pointer hover:bg-primary/90 transition-colors">
               <Upload className="w-3.5 h-3.5" />
               {uploadingPhoto ? "Uploading..." : form.profile_photo ? "Change Photo" : "Upload Photo"}
               <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploadingPhoto} />
             </label>
-            <p className="text-[10px] text-muted-foreground mt-1.5">Images are automatically resized to 400×400</p>
+            <p className="text-[10px] text-muted-foreground">Images are automatically resized to 400×400</p>
+            <div className="flex items-center justify-between">
+              <span className={`text-[10px] font-medium ${form.profile_photo_updated ? "text-muted-foreground" : "text-warning"}`}>
+                {form.profile_photo_updated
+                  ? `Last reviewed: ${new Date(form.profile_photo_updated).toLocaleDateString("en-CA").replace(/-/g, "/")}`
+                  : "Not yet reviewed"}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const now = new Date().toISOString();
+                  setForm((prev) => ({ ...prev, profile_photo_updated: now }));
+                  setDirty(true);
+                }}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 text-[10px] font-semibold transition-colors"
+              >
+                <RefreshCw className="w-2.5 h-2.5" />
+                Mark as Reviewed
+              </button>
+            </div>
           </div>
         </div>
 
