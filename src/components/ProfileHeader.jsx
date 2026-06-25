@@ -47,7 +47,7 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
       <h2 className="text-lg font-bold text-foreground">
         {profile?.display_name || user?.full_name || "Your Name"}
       </h2>
-      <div className="flex items-center gap-3">
+      <div className="flex items-end gap-3">
         {/* Photo + date label + button */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <div
