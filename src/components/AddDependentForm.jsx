@@ -30,19 +30,23 @@ export default function AddDependentForm({ guardianFid, onBack, onCreated }) {
     setSaving(true);
     setError("");
     try {
-      // Create the ICEProfile record immediately, linked to the guardian
-      const profile = await base44.entities.ICEProfile.create({
-        display_name: form.display_name,
-        date_of_birth: form.date_of_birth || undefined,
-        blood_group: form.blood_group || undefined,
-        dependent_relationship: form.dependent_relationship || undefined,
-        guardian_fid: String(guardianFid),
-        fusion_link_pending: true,
-        pre_login_enabled: true,
+      // Use backend function (service role) to bypass RLS in iframe contexts
+      const res = await base44.functions.invoke("updatePublicICEProfile", {
+        create: {
+          display_name: form.display_name,
+          date_of_birth: form.date_of_birth || undefined,
+          blood_group: form.blood_group || undefined,
+          dependent_relationship: form.dependent_relationship || undefined,
+          guardian_fid: String(guardianFid),
+          fusion_link_pending: true,
+          pre_login_enabled: true,
+        },
       });
+      const profile = res.data?.profile;
+      if (!profile) throw new Error(res.data?.error || "No profile returned");
       onCreated(profile);
     } catch (e) {
-      setError(e?.message || "Could not create profile. Please try again.");
+      setError(e?.response?.data?.error || e?.message || "Could not create profile. Please try again.");
       setSaving(false);
     }
   }

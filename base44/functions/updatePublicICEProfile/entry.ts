@@ -3,7 +3,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { profileId, updates } = await req.json();
+    const { profileId, updates, create } = await req.json();
+
+    // CREATE mode — no profileId needed
+    if (create) {
+      const allowedCreate = [
+        'display_name', 'date_of_birth', 'blood_group', 'dependent_relationship',
+        'guardian_fid', 'fusion_link_pending', 'pre_login_enabled',
+        'fusion_id', 'profile_photo', 'emergency_notes',
+      ];
+      const safeCreate = {};
+      for (const key of allowedCreate) {
+        if (key in create) safeCreate[key] = create[key];
+      }
+      const newProfile = await base44.asServiceRole.entities.ICEProfile.create(safeCreate);
+      return Response.json({ success: true, profile: newProfile });
+    }
 
     if (!profileId || !updates) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
