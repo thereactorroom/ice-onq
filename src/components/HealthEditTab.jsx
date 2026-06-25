@@ -61,7 +61,7 @@ function ItemDialog({ title, fields, initial, onSave, onClose }) {
 }
 
 // ── generic section ───────────────────────────────────────────────────────────
-function Section({ title, icon, items, fields, entityName, profileId, renderTag }) {
+function Section({ title, icon, items, fields, entityName, profileId, profileDbId, reviewedField, renderTag }) {
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(null); // null | { mode: 'add'|'edit', item?: {} }
 
@@ -83,6 +83,13 @@ function Section({ title, icon, items, fields, entityName, profileId, renderTag 
       await update.mutateAsync({ id: dialog.item.id, data: form });
     } else {
       await create.mutateAsync(form);
+    }
+    // Stamp the reviewed date for this section
+    if (profileDbId && reviewedField) {
+      await base44.functions.invoke("updatePublicICEProfile", {
+        profileId: profileDbId,
+        updates: { [reviewedField]: new Date().toISOString() },
+      });
     }
   }
 
@@ -133,7 +140,7 @@ function Section({ title, icon, items, fields, entityName, profileId, renderTag 
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
-export default function HealthEditTab({ profileId }) {
+export default function HealthEditTab({ profileId, profileDbId }) {
   const { data: allergies = [] } = useQuery({
     queryKey: ["Allergy", profileId],
     queryFn: () => base44.entities.Allergy.filter({ profile_id: profileId }),
@@ -158,6 +165,8 @@ export default function HealthEditTab({ profileId }) {
         items={allergies}
         entityName="Allergy"
         profileId={profileId}
+        profileDbId={profileDbId}
+        reviewedField="allergies_reviewed_date"
         fields={[
           { name: "name", label: "Allergy Name" },
           { name: "severity", label: "Severity", options: ["Mild", "Moderate", "Severe", "Life-Threatening"] },
@@ -172,6 +181,8 @@ export default function HealthEditTab({ profileId }) {
         items={conditions}
         entityName="ChronicCondition"
         profileId={profileId}
+        profileDbId={profileDbId}
+        reviewedField="conditions_reviewed_date"
         fields={[
           { name: "name", label: "Condition Name" },
           { name: "notes", label: "Notes" },
@@ -186,6 +197,8 @@ export default function HealthEditTab({ profileId }) {
         items={medications}
         entityName="Medication"
         profileId={profileId}
+        profileDbId={profileDbId}
+        reviewedField="medications_reviewed_date"
         fields={[
           { name: "name", label: "Medication Name" },
           { name: "dosage", label: "Dosage" },

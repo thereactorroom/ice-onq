@@ -131,7 +131,8 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
     try {
       const compressed = await compressImage(file);
       const result = await base44.integrations.Core.UploadFile({ file: compressed });
-      setForm((prev) => ({ ...prev, profile_photo: result.file_url }));
+      const now = new Date().toISOString();
+      setForm((prev) => ({ ...prev, profile_photo: result.file_url, profile_photo_updated: now }));
       setDirty(true);
     } catch (err) {
       console.error("Photo upload failed:", err);
@@ -632,7 +633,7 @@ export default function ProfileView() {
         {/* DISPLAY MODE */}
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
-            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} />
+            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} />
 
             {/* Fusion link pending reminder */}
             {profile.fusion_link_pending && (
@@ -688,7 +689,7 @@ export default function ProfileView() {
                 </div>
               </div>
             )}
-            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} profile={profile} />
+            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} profile={profile} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} isOwner={isOwner} />
             <DoctorHospitalInfo profile={profile} />
             {profile.emergency_notes && (
               <div className="bg-card rounded-2xl border border-border p-4">
@@ -726,7 +727,7 @@ export default function ProfileView() {
         )}
 
         {isEditMode && editTab === "health" && (
-          <HealthEditTab profileId={profileDbId || profile?.id} />
+          <HealthEditTab profileId={profileDbId || profile?.id} profileDbId={profileDbId} />
         )}
       </div>
 
