@@ -32,8 +32,8 @@ function EmergencyCallButton() {
 function HighlightedText({ text, activeCharIndex }) {
   if (!text) return null;
 
-  // Split on numbered steps like "1. " "2. " etc., keeping the delimiter
-  const steps = text.split(/(?=\d+\.\s)/).filter(s => s.trim());
+  // Split on sentence endings for prose-style text
+  const steps = text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
 
   // If no numbered steps detected, fall back to single block
   const segments = steps.length > 1 ? steps : [text];
@@ -70,6 +70,7 @@ function HighlightedText({ text, activeCharIndex }) {
 function SpeechControls({ text }) {
   const [speaking, setSpeaking] = useState(false);
   const [prefetching, setPrefetching] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const audioRef = useRef(null);
 
   // Pre-fetch audio as soon as text is available
@@ -100,6 +101,15 @@ function SpeechControls({ text }) {
 
   function startSpeaking() {
     if (!audioRef.current) return;
+    const onTimeUpdate = () => {
+      setActiveIndex(Math.floor(audioRef.current.currentTime * 15));
+    };
+    audioRef.current.addEventListener("timeupdate", onTimeUpdate);
+    audioRef.current.onended = () => {
+      setSpeaking(false);
+      setActiveIndex(-1);
+      audioRef.current.removeEventListener("timeupdate", onTimeUpdate);
+    };
     audioRef.current.play();
     setSpeaking(true);
   }
@@ -110,6 +120,7 @@ function SpeechControls({ text }) {
       audioRef.current.currentTime = 0;
     }
     setSpeaking(false);
+    setActiveIndex(-1);
   }
 
   return (
@@ -143,7 +154,7 @@ function SpeechControls({ text }) {
 
       <div className="bg-muted/50 rounded-xl p-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">First-Aid Steps</p>
-        <HighlightedText text={text} activeCharIndex={-1} />
+        <HighlightedText text={text} activeCharIndex={activeIndex} />
       </div>
     </div>
   );
