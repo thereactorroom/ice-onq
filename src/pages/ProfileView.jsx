@@ -688,7 +688,7 @@ export default function ProfileView() {
                 </div>
               </div>
             )}
-            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} />
+            <MedicalInfoDisplay allergies={allergies} conditions={conditions} medications={medications} profile={profile} />
             <DoctorHospitalInfo profile={profile} />
             {profile.emergency_notes && (
               <div className="bg-card rounded-2xl border border-border p-4">
