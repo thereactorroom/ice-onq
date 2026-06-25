@@ -71,16 +71,20 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground flex-1">
-          {dob && <span>DOB: {formatDob(dob)}</span>}
-          {age !== null && <span>Age: {age}</span>}
-          {profile?.blood_group && profile.blood_group !== "Unknown" && (
-            <span className="px-2 py-0.5 rounded-full bg-emergency/10 text-emergency text-xs font-semibold">
-              {profile.blood_group}
-            </span>
-          )}
+        <div className="flex flex-col gap-1 flex-1">
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            {dob && <span>DOB: {formatDob(dob)}</span>}
+            {age !== null && <span>Age: {age}</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            {profile?.blood_group && profile.blood_group !== "Unknown" && (
+              <span className="px-2 py-0.5 rounded-full bg-emergency/10 text-emergency text-xs font-semibold">
+                {profile.blood_group}
+              </span>
+            )}
+            <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={onNavigateEdit} />
+          </div>
         </div>
-        <ICEStatusBadge profile={profile} contacts={contacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={onNavigateEdit} />
       </div>
     </div>
   );
