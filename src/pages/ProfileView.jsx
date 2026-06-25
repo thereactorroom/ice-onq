@@ -807,9 +807,7 @@ export default function ProfileView() {
                 onClick={() => setDisplayTabScrollTop(id)}
                 className={`flex flex-col items-center gap-0.5 px-6 py-1 rounded-lg transition-colors ${
                   accent
-                    ? displayTab === id
-                      ? "text-emergency bg-emergency/10"
-                      : "text-emergency/70 hover:text-emergency"
+                    ? "text-red-600 bg-red-50"
                     : displayTab === id
                       ? "text-primary bg-primary/10"
                       : "text-muted-foreground hover:text-primary"
