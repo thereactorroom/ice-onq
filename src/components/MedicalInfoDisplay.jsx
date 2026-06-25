@@ -14,16 +14,16 @@ function Section({ icon: Icon, color, title, reviewedDate, children }) {
   const formatted = formatDate(reviewedDate);
   return (
     <div className="bg-card rounded-2xl border border-border p-4">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+      <div className="flex items-start gap-2 mb-3">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
+          <Icon className="w-4 h-4" />
         </div>
-        <span className={`text-[10px] font-medium ${formatted ? "text-muted-foreground" : "text-warning"}`}>
-          {formatted ? `Updated ${formatted}` : "Not reviewed"}
-        </span>
+        <div className="flex flex-col min-w-0">
+          <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+          <span className={`text-[10px] font-medium ${formatted ? "text-muted-foreground" : "text-warning"}`}>
+            {formatted ? `Updated ${formatted}` : "Not reviewed"}
+          </span>
+        </div>
       </div>
       {children}
     </div>
