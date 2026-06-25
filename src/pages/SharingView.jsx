@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { QrCode, Smartphone, CreditCard, Copy, Check, Link } from "lucide-react";
+import { QrCode, Smartphone, CreditCard, Copy, Check, Link, Download } from "lucide-react";
 import WalletCardPreview from "../components/WalletCardPreview";
 
 export default function SharingView({ profile, contacts, user, profileDbId }) {
@@ -68,12 +68,28 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
           <p className="text-sm text-muted-foreground">
             This QR code links to your ICE onQ profile. Attach it to your phone case, cycling helmet, medical bracelet, or wallet.
           </p>
-          <div className="flex justify-center py-4">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-border">
-              <img src={qrUrl} alt="ICE QR Code" className="w-40 h-40" />
+          <div className="flex justify-center py-2">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-border flex flex-col items-center gap-2">
+              <img src={qrUrl} alt="ICE QR Code" className="w-44 h-44" />
+              <p className="text-sm font-semibold text-foreground text-center">{profile?.display_name || user?.full_name || ""}</p>
             </div>
           </div>
           <div className="text-center text-xs text-muted-foreground">Scan to access emergency information</div>
+
+          {/* Download QR — highlighted tile */}
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
+            <p className="text-xs text-muted-foreground text-center">Download the QR code for printing and physical deployment</p>
+            <a
+              href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(shareUrl)}&color=0F172A&bgcolor=FFFFFF`}
+              download={`ICE-QR-${(profile?.display_name || user?.full_name || "profile").replace(/\s+/g, "-")}.png`}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download QR Code
+            </a>
+          </div>
         </div>
       )}
 
