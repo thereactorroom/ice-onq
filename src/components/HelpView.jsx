@@ -28,40 +28,44 @@ function EmergencyCallButton() {
   );
 }
 
-// Highlighted text renderer — splits into numbered steps, each on its own paragraph
+// Highlighted text renderer — parses strict "1. Step text." numbered format
 function HighlightedText({ text, activeCharIndex }) {
   if (!text) return null;
 
-  // Split on sentence endings for prose-style text
-  const steps = text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
-
-  // If no numbered steps detected, fall back to single block
-  const segments = steps.length > 1 ? steps : [text];
+  // Parse strictly numbered lines: "1. ...", "2. ..." etc.
+  const numbered = text.match(/^\d+\.\s+.+$/gm);
+  const segments = numbered && numbered.length > 1
+    ? numbered.map(line => line.replace(/^\d+\.\s+/, '').trim())
+    : text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
 
   let globalCharPos = 0;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {segments.map((step, si) => {
         const tokens = step.split(/(\s+)/);
-        const stepEl = (
-          <p key={si} className="text-sm text-foreground leading-relaxed">
-            {tokens.map((token, ti) => {
-              const start = globalCharPos;
-              globalCharPos += token.length;
-              const isActive = activeCharIndex >= start && activeCharIndex < globalCharPos && token.trim().length > 0;
-              return (
-                <span
-                  key={ti}
-                  className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
-                >
-                  {token}
-                </span>
-              );
-            })}
-          </p>
+        return (
+          <div key={si} className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
+              {si + 1}
+            </span>
+            <p className="text-sm text-foreground leading-relaxed flex-1">
+              {tokens.map((token, ti) => {
+                const start = globalCharPos;
+                globalCharPos += token.length;
+                const isActive = activeCharIndex >= start && activeCharIndex < globalCharPos && token.trim().length > 0;
+                return (
+                  <span
+                    key={ti}
+                    className={isActive ? "bg-yellow-300 text-yellow-900 rounded px-0.5 font-semibold transition-colors" : "transition-colors"}
+                  >
+                    {token}
+                  </span>
+                );
+              })}
+            </p>
+          </div>
         );
-        return stepEl;
       })}
     </div>
   );
@@ -102,7 +106,10 @@ function SpeechControls({ text }) {
   function startSpeaking() {
     if (!audioRef.current) return;
     const onTimeUpdate = () => {
-      setActiveIndex(Math.floor(audioRef.current.currentTime * 15));
+      const audio = audioRef.current;
+      if (!audio || !audio.duration) return;
+      const pct = audio.currentTime / audio.duration;
+      setActiveIndex(Math.floor(pct * text.length));
     };
     audioRef.current.addEventListener("timeupdate", onTimeUpdate);
     audioRef.current.onended = () => {
@@ -187,12 +194,11 @@ function AIAdvicePanel({ situation, profile, allergies, conditions, medications,
     const prompt = `You are a calm, experienced emergency first-aid instructor. A bystander needs to help someone experiencing: "${situationLabel}".
 ${medicalContext ? `\nThe patient's medical background: ${medicalContext}.` : ""}
 
-Write clear, numbered first-aid steps as full sentences with natural pacing — as if you are speaking them aloud to someone in distress. Use commas and full stops naturally so the text-to-speech audio flows smoothly without any jerkiness or unnatural pauses.
-- Each step must be one complete, calm sentence.
-- Use plain spoken English. No abbreviations, symbols, or markdown.
+Write exactly 6 to 8 numbered first-aid steps. Format each step strictly as: "1. [Step text]." on its own line.
+- Each step must be one complete, calm sentence written for spoken delivery.
+- Use plain spoken English. No abbreviations, symbols, markdown, or extra headings — only the numbered lines.
 - Note any relevant interactions with the patient's medical profile where applicable.
-- End with a sentence reminding the bystander to call emergency services if not already done.
-- Maximum 8 steps.`;
+- The final step must remind the bystander to call emergency services if not already done.`;
 
     try {
       const res = await base44.integrations.Core.InvokeLLM({ prompt });
@@ -239,7 +245,7 @@ Write clear, numbered first-aid steps as full sentences with natural pacing — 
           {loading && (
             <div className="flex items-center justify-center py-8 gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Generating guidance...</span>
+              <span className="text-sm text-muted-foreground">Personalising emergency guidance...</span>
             </div>
           )}
 
