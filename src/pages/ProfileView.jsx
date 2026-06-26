@@ -387,8 +387,11 @@ export default function ProfileView() {
     launchMode = (rawFID && rawFID !== "0") ? "View" : "New";
   }
 
-  // Launch=Profile with an fID → show the Profile Selector screen
-  const isSelectorMode = launchParam === "Profile" && !!rawFID && rawFID !== "0";
+  // Launch=Profile with fID > 0 and Owner=true → show the Profile Selector screen
+  const isSelectorMode =
+    launchParam === "Profile" &&
+    !!rawFID && rawFID !== "0" &&
+    ownerParam?.toLowerCase() === "true";
 
   // No fID and no slug → Initiation Mode (public welcome screen)
   // Exception: if there's an acceptInvite token, show a simple acceptance screen
