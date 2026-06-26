@@ -380,7 +380,12 @@ export default function ProfileView() {
   // Launch=Profile → Profile with owner/edit access
   // Missing/blank/unrecognized → defaults to New (Initiation)
   const launchParam = params.get("Launch");
-  const launchMode = ["New", "View", "Profile"].includes(launchParam) ? launchParam : "New";
+  let launchMode;
+  if (["New", "View", "Profile"].includes(launchParam)) {
+    launchMode = launchParam;
+  } else {
+    launchMode = (rawFID && rawFID !== "0") ? "View" : "New";
+  }
 
   // No fID and no slug → Initiation Mode (public welcome screen)
   // Exception: if there's an acceptInvite token, show a simple acceptance screen
