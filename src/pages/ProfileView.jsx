@@ -422,7 +422,8 @@ export default function ProfileView() {
   const [error, setError] = useState(null);
 
   // mode: 'display' | 'edit'
-  const [mode, setMode] = useState("display");
+  // Launch=Profile → open directly in edit mode
+  const [mode, setMode] = useState(launchParam === "Profile" ? "edit" : "display");
   // display sub-view: 'overview' | 'wallet'
   const [displayTab, setDisplayTab] = useState("overview");
 
