@@ -403,8 +403,8 @@ export default function ProfileView() {
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
   // Launch=Profile → treat as owner; Launch=View → force read-only regardless of other params
-  const launchForcesOwner = launchMode === "Profile";
-  const launchForcesView  = launchMode === "View";
+  const launchForcesOwner = launchParam === "Profile";
+  const launchForcesView  = launchParam === "View";
   const [isOwner, setIsOwner] = useState(
     !launchForcesView && (launchForcesOwner || ownerParam?.toLowerCase() === "true")
   );
@@ -415,7 +415,7 @@ export default function ProfileView() {
   useEffect(() => {
     if (isDemoMode || isInitiationMode || launchForcesView) return;
     if (launchForcesOwner || authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
-  }, [authUser]);
+  }, [authUser, launchForcesOwner, launchForcesView]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
