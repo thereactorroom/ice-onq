@@ -373,9 +373,19 @@ export default function ProfileView() {
   const showSelector = params.get("showSelector") === "true";
   const isDbId = params.get("isDbId") === "true";
   const acceptInviteToken = params.get("acceptInvite");
+
+  // Launch parameter routing:
+  // Launch=New  → Initiation screen (default)
+  // Launch=View → Profile in read-only/view mode
+  // Launch=Profile → Profile with owner/edit access
+  // Missing/blank/unrecognized → defaults to New (Initiation)
+  const launchParam = params.get("Launch");
+  const launchMode = ["New", "View", "Profile"].includes(launchParam) ? launchParam : "New";
+
   // No fID and no slug → Initiation Mode (public welcome screen)
   // Exception: if there's an acceptInvite token, show a simple acceptance screen
-  const isInitiationMode = !rawFID && !slugParam && !acceptInviteToken;
+  // Also forced to Initiation if Launch=New (or defaulted)
+  const isInitiationMode = (!rawFID && !slugParam && !acceptInviteToken) || launchMode === "New";
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
@@ -387,14 +397,19 @@ export default function ProfileView() {
   const [fusionHost, setFusionHost] = useState(null);
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
-  const [isOwner, setIsOwner] = useState(ownerParam?.toLowerCase() === "true");
+  // Launch=Profile → treat as owner; Launch=View → force read-only regardless of other params
+  const launchForcesOwner = launchMode === "Profile";
+  const launchForcesView  = launchMode === "View";
+  const [isOwner, setIsOwner] = useState(
+    !launchForcesView && (launchForcesOwner || ownerParam?.toLowerCase() === "true")
+  );
   // Track if this is a brand-new profile (first-time user → auto edit mode)
   const [isNewProfile, setIsNewProfile] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
 
   useEffect(() => {
-    if (isDemoMode || isInitiationMode) return;
-    if (authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
+    if (isDemoMode || isInitiationMode || launchForcesView) return;
+    if (launchForcesOwner || authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
   }, [authUser]);
 
   const [data, setData] = useState(null);
