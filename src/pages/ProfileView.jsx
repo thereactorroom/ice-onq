@@ -386,7 +386,8 @@ export default function ProfileView() {
   if (["New", "View", "Profile"].includes(launchParam)) {
     launchMode = launchParam;
   } else {
-    launchMode = (rawFID && rawFID !== "0") ? "View" : "New";
+    // If a slug or fID is present, default to View; only default to New if nothing is provided
+    launchMode = (rawFID && rawFID !== "0") || slugParam ? "View" : "New";
   }
 
   // Launch=Profile with fID > 0 and Owner=true → show the Profile Selector screen
