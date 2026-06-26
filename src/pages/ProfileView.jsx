@@ -380,6 +380,8 @@ export default function ProfileView() {
   // Launch=Profile → Profile with owner/edit access
   // Missing/blank/unrecognized → defaults to New (Initiation)
   const launchParam = params.get("Launch");
+  const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
+
   let launchMode;
   if (["New", "View", "Profile"].includes(launchParam)) {
     launchMode = launchParam;
@@ -402,7 +404,6 @@ export default function ProfileView() {
   const profileId = rawFID || "0";
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
-  const ownerParam = params.get("Owner") || params.get("owner") || params.get("OWNER");
   const [isFusionIframe, setIsFusionIframe] = useState(false);
   const [fusionUser, setFusionUser] = useState(null);
   const [fusionHost, setFusionHost] = useState(null);
