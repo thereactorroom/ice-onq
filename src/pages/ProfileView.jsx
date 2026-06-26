@@ -444,6 +444,8 @@ export default function ProfileView() {
   useEffect(() => {
     // No fID = initiation mode; skip fusion detection entirely
     if (isInitiationMode) return;
+    // Selector mode: no fusion detection needed
+    if (isSelectorMode) { setDetectionDone(true); return; }
 
     const isIframe = window.self !== window.top;
 
@@ -527,6 +529,8 @@ export default function ProfileView() {
 
   // Wait for fusion detection to complete before fetching
   useEffect(() => {
+    // Selector mode: no profile fetch needed — just show the selector
+    if (isSelectorMode) { setLoading(false); return; }
     // Initiation mode: don't fetch anything until user chooses View Demo
     if (isInitiationMode && !showDemo) { setLoading(false); return; }
     if (showDemo) { fetchProfile(true); return; }
