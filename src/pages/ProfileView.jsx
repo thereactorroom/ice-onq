@@ -387,6 +387,9 @@ export default function ProfileView() {
     launchMode = (rawFID && rawFID !== "0") ? "View" : "New";
   }
 
+  // Launch=Profile with an fID → show the Profile Selector screen
+  const isSelectorMode = launchParam === "Profile" && !!rawFID && rawFID !== "0";
+
   // No fID and no slug → Initiation Mode (public welcome screen)
   // Exception: if there's an acceptInvite token, show a simple acceptance screen
   // Also forced to Initiation if Launch=New (or defaulted)
@@ -422,8 +425,7 @@ export default function ProfileView() {
   const [error, setError] = useState(null);
 
   // mode: 'display' | 'edit'
-  // Launch=Profile → open directly in edit mode
-  const [mode, setMode] = useState(launchParam === "Profile" ? "edit" : "display");
+  const [mode, setMode] = useState("display");
   // display sub-view: 'overview' | 'wallet'
   const [displayTab, setDisplayTab] = useState("overview");
 
@@ -535,6 +537,21 @@ export default function ProfileView() {
   // ── Accept Guardian Invite Mode ──
   if (acceptInviteToken) {
     return <AcceptInviteScreen token={acceptInviteToken} fusionUser={fusionUser} authUser={authUser} />;
+  }
+
+  // ── Profile Selector Mode: Launch=Profile with an fID ──
+  if (isSelectorMode) {
+    return (
+      <ProfileSelectorScreen
+        guardianFid={rawFID}
+        onBack={() => window.history.back()}
+        onSelect={(result) => {
+          const guardianParam = `&guardianFid=${rawFID}`;
+          const dbIdParam = result.isDbId ? "&isDbId=true" : "";
+          window.location.href = `/profile?fID=${result.fID}&Launch=View${guardianParam}${dbIdParam}`;
+        }}
+      />
+    );
   }
 
   // ── Profile Selector Mode: returning from a dependent profile ──
