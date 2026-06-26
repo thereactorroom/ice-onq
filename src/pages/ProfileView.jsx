@@ -546,7 +546,7 @@ export default function ProfileView() {
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
-          window.location.href = `/profile?fID=${result.fID}&owner=${result.owner}${guardianParam}${dbIdParam}`;
+          window.location.href = `/profile?fID=${result.fID}&Launch=Profile${guardianParam}${dbIdParam}`;
         }}
       />
     );
