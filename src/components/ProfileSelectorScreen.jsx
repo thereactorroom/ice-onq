@@ -149,7 +149,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 photo={p.profile_photo}
                 statusBadge={statusBadge(p)}
                 fusionPending={p.fusion_link_pending}
-                onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, guardianFid, isDbId: !p.fusion_id })}
+                onClick={() => onSelect({ fID: p.fusion_id || p.id, isDbId: !p.fusion_id, guardianFid })}
                 onManage={() => setManageProfile({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
                 onManageGuardians={() => setManageGuardians({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
               />

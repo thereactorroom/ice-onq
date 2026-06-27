@@ -720,16 +720,7 @@ export default function ProfileView() {
           <div className="space-y-4">
             <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} />
 
-            {/* Fusion link pending reminder */}
-            {profile.fusion_link_pending && (
-              <div className="bg-warning/10 border border-warning/30 rounded-xl p-3 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-foreground">fusion onQ link pending</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">This profile's fusion identity has not been linked yet. The ICE record is active and functional. Link the fusion ID when available.</p>
-                </div>
-              </div>
-            )}
+
 
             <CriticalAlertsBanner alerts={[...new Set([
               ...(profile.critical_alerts || []),
