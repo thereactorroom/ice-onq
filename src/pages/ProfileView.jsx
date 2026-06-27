@@ -513,13 +513,8 @@ export default function ProfileView() {
         // If a new profile was just created (owner context, profile has no meaningful data yet)
         // auto-open edit mode so the user doesn't see a blank display
         if (!forDemo && result.profile && isOwner && !hasAutoOpenedEdit.current) {
-          // Auto-open edit mode for newly created dependents (isDbId flag)
-          // or for profiles with no meaningful data yet
-          const p = result.profile;
-          const isEmpty = !p.blood_group && !p.medical_aid_name && !p.doctor_name &&
-            !p.hospital_name && (!result.contacts || result.contacts.length === 0) &&
-            (!result.allergies || result.allergies.length === 0);
-          if (isDbId || isEmpty) {
+          // Auto-open edit mode only for brand-new dependents (isDbId flag = just created)
+          if (isDbId) {
             hasAutoOpenedEdit.current = true;
             setIsNewProfile(true);
             setMode("edit");
