@@ -22,12 +22,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Dependent profile not found.' }, { status: 404 });
     }
 
-    // Check not already a guardian
+    // Check not already a guardian (via ProfileGuardian record OR as the primary owner via guardian_fid)
+    const isPrimaryOwner = String(profile.guardian_fid) === String(acceptingFusionId);
     const existing = await base44.asServiceRole.entities.ProfileGuardian.filter({
       dependent_profile_id: invite.dependent_profile_id,
       guardian_fusion_id: String(acceptingFusionId),
     });
-    if (existing.length > 0) {
+    if (isPrimaryOwner || existing.length > 0) {
       // Already a guardian — just mark invite accepted
       await base44.asServiceRole.entities.GuardianInvite.update(invite.id, {
         status: 'accepted',
