@@ -62,7 +62,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         onBack={() => setShowAddDependent(false)}
         onCreated={(newProfile) => {
           // Go directly to editing the new dependent profile (by DB id)
-          onSelect({ fID: newProfile.id, owner: true, guardianFid, isDbId: true });
+          onSelect({ fID: newProfile.id, owner: true, guardianFid, isDbId: true, newProfile: true });
         }}
       />
     );

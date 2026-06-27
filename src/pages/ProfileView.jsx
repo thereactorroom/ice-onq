@@ -513,8 +513,9 @@ export default function ProfileView() {
         // If a new profile was just created (owner context, profile has no meaningful data yet)
         // auto-open edit mode so the user doesn't see a blank display
         if (!forDemo && result.profile && isOwner && !hasAutoOpenedEdit.current) {
-          // Auto-open edit mode only for brand-new dependents (isDbId flag = just created)
-          if (isDbId) {
+          // Auto-open edit mode only for brand-new dependents (newProfile=true in URL)
+          const isNewlyCreated = params.get("newProfile") === "true";
+          if (isNewlyCreated) {
             hasAutoOpenedEdit.current = true;
             setIsNewProfile(true);
             setMode("edit");
@@ -552,8 +553,10 @@ export default function ProfileView() {
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
+          const newProfileParam = result.newProfile ? "&newProfile=true" : "";
           // Launch=View shows display/overview mode; Owner=True enables the Edit Profile button
-          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}`;
+          // newProfile=true triggers auto-open edit mode for just-created profiles
+          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}${newProfileParam}`;
         }}
       />
     );
