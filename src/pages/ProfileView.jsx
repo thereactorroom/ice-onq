@@ -619,6 +619,17 @@ export default function ProfileView() {
             This ICE profile has been permanently deleted by the owner and is no longer active.
           </p>
         </div>
+        <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
+          <div className="flex justify-around py-2 max-w-lg mx-auto">
+            <button
+              onClick={() => window.history.back()}
+              className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-[10px] font-medium">Back</span>
+            </button>
+          </div>
+        </nav>
       </div>
     );
   }
