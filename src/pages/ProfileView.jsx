@@ -410,9 +410,9 @@ export default function ProfileView() {
   const [fusionHost, setFusionHost] = useState(null);
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
-  // Launch=Profile → treat as owner; Launch=View → force read-only regardless of other params
+  // Launch=Profile → treat as owner; Launch=View → display mode, but Owner=True can still enable editing
   const launchForcesOwner = launchParam === "Profile";
-  const launchForcesView  = launchParam === "View";
+  const launchForcesView  = launchParam === "View" && ownerParam?.toLowerCase() !== "true";
   const [isOwner, setIsOwner] = useState(
     !launchForcesView && (launchForcesOwner || ownerParam?.toLowerCase() === "true")
   );
@@ -552,7 +552,8 @@ export default function ProfileView() {
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
-          window.location.href = `/profile?fID=${result.fID}&Launch=View${guardianParam}${dbIdParam}`;
+          // Launch=View shows display/overview mode; Owner=True enables the Edit Profile button
+          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}`;
         }}
       />
     );
