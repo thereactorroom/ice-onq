@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle } from "lucide-react";
+import HelpView from "./HelpView.jsx";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
@@ -12,6 +13,8 @@ import {
 
 // Shown after sign-in when a user has (or may have) multiple managed profiles
 export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect }) {
+  const isDevMode = new URLSearchParams(window.location.search).get("DevMode") === "True";
+  const [showHelp, setShowHelp] = useState(false);
   const [profiles, setProfiles] = useState([]);
   const [sharedProfiles, setSharedProfiles] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
@@ -53,6 +56,30 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   }
 
   useEffect(() => { loadProfiles(); }, [guardianFid, userEmail]);
+
+  if (showHelp) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="bg-primary shadow-lg sticky top-0 z-50">
+          <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
+            <Shield className="w-6 h-6 text-white" />
+            <div>
+              <div className="font-bold text-white tracking-wider leading-none">ICE onQ</div>
+              <div className="text-white/70 text-xs mt-0.5">First Aid Help</div>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-4">
+          <HelpView profile={null} allergies={[]} conditions={[]} medications={[]} />
+        </div>
+        <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full">
+          <button onClick={() => setShowHelp(false)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (showAddDependent) {
     return (
@@ -235,13 +262,22 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
       </AlertDialog>
 
       {/* Sticky back */}
-      <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full">
+      <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           ← Back
         </button>
+        {isDevMode && (
+          <button
+            onClick={() => setShowHelp(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Help
+          </button>
+        )}
       </div>
     </div>
   );

@@ -546,6 +546,7 @@ export default function ProfileView() {
 
   // ── Profile Selector Mode: Launch=Profile with an fID ──
   if (isSelectorMode) {
+    const devModeParam = isDevMode ? "&DevMode=True" : "";
     return (
       <ProfileSelectorScreen
         guardianFid={rawFID}
@@ -556,7 +557,7 @@ export default function ProfileView() {
           const newProfileParam = result.newProfile ? "&newProfile=true" : "";
           // Launch=View shows display/overview mode; Owner=True enables the Edit Profile button
           // newProfile=true triggers auto-open edit mode for just-created profiles
-          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}${newProfileParam}`;
+          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}${newProfileParam}${devModeParam}`;
         }}
       />
     );
