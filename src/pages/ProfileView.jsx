@@ -390,11 +390,15 @@ export default function ProfileView() {
     launchMode = (rawFID && rawFID !== "0") || slugParam ? "View" : "New";
   }
 
+  // Declare ownerExplicitlyFalse before isSelectorMode so it can be used in that check
+  const ownerExplicitlyFalse = ownerParam?.toLowerCase() === "false";
+
   // Launch=Profile with fID > 0 and Owner=true → show the Profile Selector screen
   const isSelectorMode =
     launchParam === "Profile" &&
     !!rawFID && rawFID !== "0" &&
-    ownerParam?.toLowerCase() === "true";
+    ownerParam?.toLowerCase() === "true" &&
+    !ownerExplicitlyFalse;
 
   // No fID and no slug → Initiation Mode (public welcome screen)
   // Exception: if there's an acceptInvite token, show a simple acceptance screen
@@ -411,19 +415,19 @@ export default function ProfileView() {
   const [fusionReady, setFusionReady] = useState(false);
   const [detectionDone, setDetectionDone] = useState(false);
   // Launch=Profile → treat as owner; Launch=View → display mode, but Owner=True can still enable editing
-  const launchForcesOwner = launchParam === "Profile";
+  const launchForcesOwner = launchParam === "Profile" && !ownerExplicitlyFalse;
   const launchForcesView  = launchParam === "View" && ownerParam?.toLowerCase() !== "true";
   const [isOwner, setIsOwner] = useState(
-    !launchForcesView && (launchForcesOwner || ownerParam?.toLowerCase() === "true")
+    !ownerExplicitlyFalse && !launchForcesView && (launchForcesOwner || ownerParam?.toLowerCase() === "true")
   );
   // Track if this is a brand-new profile (first-time user → auto edit mode)
   const [isNewProfile, setIsNewProfile] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
 
   useEffect(() => {
-    if (isDemoMode || isInitiationMode || launchForcesView) return;
+    if (isDemoMode || isInitiationMode || launchForcesView || ownerExplicitlyFalse) return;
     if (launchForcesOwner || authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
-  }, [authUser, launchForcesOwner, launchForcesView]);
+  }, [authUser, launchForcesOwner, launchForcesView, ownerExplicitlyFalse]);
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -478,7 +482,7 @@ export default function ProfileView() {
             console.log("[FusionBridge] getUser:", userData);
             setFusionUser(userData);
             const fID = new URLSearchParams(window.location.search).get("fID");
-            if (fID && String(userData?.userId) === fID) {
+            if (fID && String(userData?.userId) === fID && !ownerExplicitlyFalse) {
               setIsOwner(true);
             }
             setFusionReady(true);
@@ -857,7 +861,7 @@ export default function ProfileView() {
             {[
               { id: "overview", label: "Overview", icon: LayoutDashboard },
               { id: "wallet", label: "Share", icon: WalletIcon },
-              ...(isDevMode ? [{ id: "help", label: "Help", icon: HelpCircle, accent: true }] : []),
+              { id: "help", label: "Help", icon: HelpCircle, accent: true },
             ].map(({ id, label, icon: Icon, accent }) => (
               <button
                 key={id}
