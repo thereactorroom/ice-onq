@@ -10,6 +10,11 @@ Deno.serve(async (req) => {
       ? await base44.asServiceRole.entities.GuardianInvite.filter({ invitee_email: email.toLowerCase(), status: 'pending' })
       : [];
 
+    // Dependent profiles this user created (guardian_fid match)
+    const dependentProfiles = fusionId
+      ? await base44.asServiceRole.entities.ICEProfile.filter({ guardian_fid: String(fusionId), is_deleted: false })
+      : [];
+
     // Co-guardianships this user already has (via ProfileGuardian)
     const guardianships = fusionId
       ? await base44.asServiceRole.entities.ProfileGuardian.filter({ guardian_fusion_id: String(fusionId) })
@@ -35,6 +40,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       pendingInvites: pendingByEmail,
+      dependentProfiles,
       sharedProfiles: sharedProfiles.filter(Boolean),
       dependentGuardians,
       dependentInvites,
