@@ -95,6 +95,20 @@ Deno.serve(async (req) => {
 
     const profileDbId = profile.id;
 
+    // Determine if the requesting authenticated user is the owner of this profile
+    let isOwner = false;
+    try {
+      const authUser = await base44.auth.me();
+      if (authUser && profile.created_by && profile.created_by === authUser.email) {
+        isOwner = true;
+      }
+    } catch { /* unauthenticated — isOwner stays false */ }
+
+    // Also count as owner if the fusion session user matches the profile's fusion_id
+    if (!isOwner && fusionUser && profile.fusion_id && String(fusionUser.userId) === String(profile.fusion_id)) {
+      isOwner = true;
+    }
+
     const [contacts, allergies, conditions, medications] = await Promise.all([
       base44.asServiceRole.entities.ICEContact.filter({ profile_id: profileDbId }),
       base44.asServiceRole.entities.Allergy.filter({ profile_id: profileDbId }),
@@ -105,6 +119,7 @@ Deno.serve(async (req) => {
     return Response.json({
       profile,
       profileDbId,
+      isOwner,
       contacts: contacts || [],
       allergies: allergies || [],
       conditions: conditions || [],

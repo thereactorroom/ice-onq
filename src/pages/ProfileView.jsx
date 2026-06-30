@@ -514,10 +514,25 @@ export default function ProfileView() {
         const result = res.data;
         setData(result);
         setLoading(false);
-        // If a new profile was just created (owner context, profile has no meaningful data yet)
-        // auto-open edit mode so the user doesn't see a blank display
-        if (!forDemo && result.profile && isOwner && !hasAutoOpenedEdit.current) {
-          // Auto-open edit mode only for brand-new dependents (newProfile=true in URL)
+
+        // Owner detection via profile data: if the logged-in user (or fusion session user)
+        // matches the profile's fusion_id, grant owner access — even when arriving via QR scan
+        // (slug URL). Only skip this if Owner=False was explicitly passed.
+        if (!forDemo && !ownerExplicitlyFalse && result.profile) {
+          const profileFusionId = result.profile.fusion_id;
+          const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
+          // Check against fusion session user
+          if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
+            setIsOwner(true);
+          }
+          // Check against Base44 auth user via profileDbId ownership (server returns isOwner flag)
+          if (result.isOwner) {
+            setIsOwner(true);
+          }
+        }
+
+        // Auto-open edit mode only for brand-new dependents (newProfile=true in URL)
+        if (!forDemo && result.profile && !hasAutoOpenedEdit.current) {
           const isNewlyCreated = params.get("newProfile") === "true";
           if (isNewlyCreated) {
             hasAutoOpenedEdit.current = true;
