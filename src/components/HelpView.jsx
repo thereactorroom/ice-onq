@@ -14,7 +14,7 @@ const SITUATIONS = [
   { id: "stroke", label: "Possible Stroke", icon: Brain, color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-200" },
 ];
 
-const EMERGENCY_NUMBER = "112";
+const EMERGENCY_NUMBER = "082911";
 
 function EmergencyCallButton() {
   return (
@@ -23,7 +23,7 @@ function EmergencyCallButton() {
       className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 rounded-2xl shadow-lg transition-colors"
     >
       <Phone className="w-6 h-6 fill-white" />
-      Call Emergency Services (112)
+      Call Emergency Services (082911)
     </a>
   );
 }
@@ -168,7 +168,7 @@ Write exactly 6 to 8 numbered first-aid steps. Format each step strictly as: "1.
       const res = await base44.integrations.Core.InvokeLLM({ prompt });
       setAdvice(res);
     } catch (err) {
-      setAdvice("Unable to load advice right now. Please call emergency services immediately: 112.");
+      setAdvice("Unable to load advice right now. Please call emergency services immediately: 082911.");
     } finally {
       setLoading(false);
     }
