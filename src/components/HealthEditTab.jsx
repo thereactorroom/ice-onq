@@ -1,8 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, Pencil, X, Save, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function formatDate(iso) {
   if (!iso) return null;
@@ -12,9 +22,11 @@ function formatDate(iso) {
 }
 
 // ── small inline form dialog ──────────────────────────────────────────────────
-function ItemDialog({ title, fields, initial, onSave, onClose }) {
+function ItemDialog({ title, fields, initial, onSave, onDelete, onClose }) {
   const [form, setForm] = useState(initial || {});
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const isEditing = !!initial?.id;
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -30,40 +42,71 @@ function ItemDialog({ title, fields, initial, onSave, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-24" onClick={onClose}>
-      <div className="bg-card rounded-2xl border border-border w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm">{title}</h3>
-          <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {fields.map(({ name, label, type = "text", options }) => (
-            <div key={name}>
-              <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">{label}</label>
-              {options ? (
-                <select name={name} value={form[name] || ""} onChange={handleChange}
-                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
-                  <option value="">Select...</option>
-                  {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-              ) : type === "checkbox" ? (
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" name={name} checked={!!form[name]} onChange={handleChange} className="rounded" />
-                  <span>Mark as critical alert</span>
-                </label>
-              ) : (
-                <input type={type} name={name} value={form[name] || ""} onChange={handleChange}
-                  placeholder={label}
-                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
-              )}
+    <>
+      <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-24" onClick={onClose}>
+        <div className="bg-card rounded-2xl border border-border w-full max-w-sm p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm">{title}</h3>
+            <button onClick={onClose}><X className="w-4 h-4 text-muted-foreground" /></button>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {fields.map(({ name, label, type = "text", options }) => (
+              <div key={name}>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">{label}</label>
+                {options ? (
+                  <select name={name} value={form[name] || ""} onChange={handleChange}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary">
+                    <option value="">Select...</option>
+                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : type === "checkbox" ? (
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" name={name} checked={!!form[name]} onChange={handleChange} className="rounded" />
+                    <span>Mark as critical alert</span>
+                  </label>
+                ) : (
+                  <input type={type} name={name} value={form[name] || ""} onChange={handleChange}
+                    placeholder={label}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                )}
+              </div>
+            ))}
+            <Button type="submit" disabled={saving} className="w-full gap-2">
+              <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save"}
+            </Button>
+          </form>
+          {isEditing && (
+            <div className="border-t border-border pt-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-2 text-sm text-destructive/70 hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete this entry
+              </button>
             </div>
-          ))}
-          <Button type="submit" disabled={saving} className="w-full gap-2">
-            <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save"}
-          </Button>
-        </form>
+          )}
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove this entry. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant="destructive" onClick={() => { setShowDeleteConfirm(false); onDelete(initial.id); onClose(); }}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -151,9 +194,6 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
             <button onClick={() => setDialog({ mode: "edit", item })} className="opacity-60 hover:opacity-100">
               <Pencil className="w-3 h-3" />
             </button>
-            <button onClick={() => remove.mutate(item.id)} className="opacity-60 hover:opacity-100">
-              <Trash2 className="w-3 h-3" />
-            </button>
           </div>
         ))}
       </div>
@@ -164,6 +204,7 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
           fields={fields}
           initial={dialog.item || {}}
           onSave={handleSave}
+          onDelete={(id) => remove.mutate(id)}
           onClose={() => setDialog(null)}
         />
       )}
