@@ -144,12 +144,8 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave,
               <Label>Primary Contact</Label>
               <Switch checked={form.is_primary} onCheckedChange={(v) => setForm({ ...form, is_primary: v })} />
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit" className="flex-1" disabled={saving}>{saving ? "Saving..." : "Save Contact"}</Button>
-            </div>
             {contact && onDelete && (
-              <div className="border-t border-border pt-3">
+              <div className="flex items-center justify-between pt-1">
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
@@ -160,6 +156,10 @@ export default function EditContactDialog({ open, onOpenChange, contact, onSave,
                 </button>
               </div>
             )}
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1" disabled={saving}>{saving ? "Saving..." : "Save Contact"}</Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
