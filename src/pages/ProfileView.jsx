@@ -772,6 +772,24 @@ export default function ProfileView() {
                 >
                   WhatsApp
                 </button>
+                <button
+                  onClick={() => {
+                    const switchToFid = "32";
+                    console.log("[Bridge Debug] Switching profile from 127 to", switchToFid);
+                    setData(null);
+                    setLoading(true);
+                    base44.functions.invoke("getPublicICEProfile", { profileId: switchToFid, userName: urlUserName })
+                      .then((res) => {
+                        const result = res.data;
+                        setData(result);
+                        setLoading(false);
+                      })
+                      .catch(() => { setError("Could not load profile."); setLoading(false); });
+                  }}
+                  className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Switch
+                </button>
               </div>
             )}
             {sortedContacts.length > 0 && (
