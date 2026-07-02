@@ -423,6 +423,7 @@ export default function ProfileView() {
   // Track if this is a brand-new profile (first-time user → auto edit mode)
   const [isNewProfile, setIsNewProfile] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [activeFid, setActiveFid] = useState(profileId);
 
   useEffect(() => {
     if (isDemoMode || isInitiationMode || launchForcesView || ownerExplicitlyFalse) return;
@@ -747,7 +748,7 @@ export default function ProfileView() {
               ...conditions.filter(c => c.is_critical_alert).map(c => c.name),
               ...medications.filter(m => m.is_critical_alert).map(m => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}`),
             ])]} />
-            {rawFID === "127" && (
+            {activeFid === "127" && (
               <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
                 <h3 className="font-bold text-foreground text-sm">Bridge Test</h3>
                 <button
@@ -776,6 +777,7 @@ export default function ProfileView() {
                   onClick={() => {
                     const switchToFid = "32";
                     console.log("[Bridge Debug] Switching profile from 127 to", switchToFid);
+                    setActiveFid(switchToFid);
                     setData(null);
                     setLoading(true);
                     base44.functions.invoke("getPublicICEProfile", { profileId: switchToFid, userName: urlUserName })
