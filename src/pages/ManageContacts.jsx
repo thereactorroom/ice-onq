@@ -3,15 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
-import { Plus, GripVertical, Pencil, Trash2, Star, Phone } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, GripVertical, Pencil, Star, Phone } from "lucide-react";
 import EditContactDialog from "../components/EditContactDialog";
 
 export default function ManageContacts({ profileId: profileIdProp, fusionUserId }) {
   const qc = useQueryClient();
   const [editContact, setEditContact] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
 
   const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
 
@@ -144,9 +142,6 @@ export default function ManageContacts({ profileId: profileIdProp, fusionUserId 
                           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditContact(contact); setDialogOpen(true); }}>
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(contact.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
                         </div>
                       </div>
                     )}
@@ -159,22 +154,9 @@ export default function ManageContacts({ profileId: profileIdProp, fusionUserId 
         </DragDropContext>
       )}
 
-      <EditContactDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editContact} onSave={handleSave} />
+      <EditContactDialog open={dialogOpen} onOpenChange={setDialogOpen} contact={editContact} onSave={handleSave} onDelete={(id) => { deleteMut.mutate(id); }} />
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Contact</AlertDialogTitle>
-            <AlertDialogDescription>This contact will be permanently removed from your emergency list.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => { deleteMut.mutate(deleteId); setDeleteId(null); }}>
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </div>
   );
 }
