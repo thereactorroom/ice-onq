@@ -559,6 +559,54 @@ export default function ProfileView() {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
   }
 
+  function switchProfile(targetFid) {
+    console.log("[FusionBridge] Jumping to profile:", targetFid);
+    setActiveFid(targetFid);
+    setData(null);
+    setLoading(true);
+    const payload = { profileId: targetFid, userName: urlUserName };
+    if (isFusionIframe && fusionUser) {
+      payload.fusionUser = fusionUser;
+      payload.fusionHost = fusionHost;
+    }
+    base44.functions.invoke("getPublicICEProfile", payload)
+      .then((res) => {
+        const result = res.data;
+        setData(result);
+        setLoading(false);
+
+        if (!ownerExplicitlyFalse && result.profile) {
+          const profileFusionId = result.profile.fusion_id;
+          const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
+          if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
+            setIsOwner(true);
+          }
+          if (result.isOwner) {
+            setIsOwner(true);
+          }
+        }
+      })
+      .catch(() => { setError("Could not load profile."); setLoading(false); });
+  }
+
+  // ── FusionBridge listener: jump to a profile when host sends { jump: "fusionId" } ──
+  useEffect(() => {
+    if (!isFusionIframe) return;
+
+    const fusionBridge = getGlobalBridge("FusionBridge");
+    if (!fusionBridge || typeof fusionBridge.listener !== "function") return;
+
+    console.log("[FusionBridge] Registering listener");
+    fusionBridge.listener(function(event) {
+      console.log("[FusionBridge] Received event:", event);
+      let data = event;
+      if (event?.detail) data = event.detail;
+      if (data && typeof data === "object" && data.jump) {
+        switchProfile(String(data.jump));
+      }
+    });
+  }, [isFusionIframe, fusionUser, fusionHost, urlUserName]);
+
   // ── Accept Guardian Invite Mode ──
   if (acceptInviteToken) {
     return <AcceptInviteScreen token={acceptInviteToken} fusionUser={fusionUser} authUser={authUser} />;
@@ -774,20 +822,7 @@ export default function ProfileView() {
                   WhatsApp
                 </button>
                 <button
-                  onClick={() => {
-                    const switchToFid = "32";
-                    console.log("[Bridge Debug] Switching profile from 127 to", switchToFid);
-                    setActiveFid(switchToFid);
-                    setData(null);
-                    setLoading(true);
-                    base44.functions.invoke("getPublicICEProfile", { profileId: switchToFid, userName: urlUserName })
-                      .then((res) => {
-                        const result = res.data;
-                        setData(result);
-                        setLoading(false);
-                      })
-                      .catch(() => { setError("Could not load profile."); setLoading(false); });
-                  }}
+                  onClick={() => switchProfile("32")}
                   className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
                   Switch
