@@ -564,6 +564,8 @@ export default function ProfileView() {
     setActiveFid(targetFid);
     setData(null);
     setLoading(true);
+    // Switching profiles = viewing, not owning — clear owner status
+    setIsOwner(false);
     const payload = { profileId: targetFid, userName: urlUserName };
     if (isFusionIframe && fusionUser) {
       payload.fusionUser = fusionUser;
