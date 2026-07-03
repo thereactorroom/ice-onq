@@ -590,21 +590,36 @@ export default function ProfileView() {
   }
 
   // ── FusionBridge listener: jump to a profile when host sends { jump: "fusionId" } ──
+  function handleBridgeEvent(raw) {
+    console.log("[FusionBridge] Received event:", raw);
+    let data = raw;
+    // Unwrap MessageEvent
+    if (raw?.data !== undefined) data = raw.data;
+    // Unwrap detail (CustomEvent)
+    if (data?.detail !== undefined) data = data.detail;
+    // Parse JSON string
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch { /* not JSON */ }
+    }
+    if (data && typeof data === "object" && data.jump) {
+      switchProfile(String(data.jump));
+    }
+  }
+
   useEffect(() => {
     if (!isFusionIframe) return;
 
+    // 1) Register with FusionBridge.listener (host may call callback directly)
     const fusionBridge = getGlobalBridge("FusionBridge");
-    if (!fusionBridge || typeof fusionBridge.listener !== "function") return;
+    if (fusionBridge && typeof fusionBridge.listener === "function") {
+      console.log("[FusionBridge] Registering listener");
+      fusionBridge.listener(handleBridgeEvent);
+    }
 
-    console.log("[FusionBridge] Registering listener");
-    fusionBridge.listener(function(event) {
-      console.log("[FusionBridge] Received event:", event);
-      let data = event;
-      if (event?.detail) data = event.detail;
-      if (data && typeof data === "object" && data.jump) {
-        switchProfile(String(data.jump));
-      }
-    });
+    // 2) Also listen for postMessage — the host may deliver data through window messages
+    window.addEventListener("message", handleBridgeEvent);
+
+    return () => window.removeEventListener("message", handleBridgeEvent);
   }, [isFusionIframe, fusionUser, fusionHost, urlUserName]);
 
   // ── Accept Guardian Invite Mode ──
