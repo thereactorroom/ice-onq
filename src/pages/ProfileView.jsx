@@ -400,10 +400,9 @@ export default function ProfileView() {
     ownerParam?.toLowerCase() === "true" &&
     !ownerExplicitlyFalse;
 
-  // No fID and no slug → Initiation Mode (public welcome screen)
-  // Exception: if there's an acceptInvite token, show a simple acceptance screen
-  // Also forced to Initiation if Launch=New (or defaulted)
-  const isInitiationMode = (!rawFID && !slugParam && !acceptInviteToken) || launchMode === "New";
+  // [DISABLED] Auto-creation / Initiation Mode — now controlled by URL params
+  // const isInitiationMode = (!rawFID && !slugParam && !acceptInviteToken) || launchMode === "New";
+  const isInitiationMode = false;
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
@@ -482,10 +481,11 @@ export default function ProfileView() {
             const userData = res.data.user;
             console.log("[FusionBridge] getUser:", userData);
             setFusionUser(userData);
-            const fID = new URLSearchParams(window.location.search).get("fID");
-            if (fID && String(userData?.userId) === fID && !ownerExplicitlyFalse) {
-              setIsOwner(true);
-            }
+            // [DISABLED] Ownership inference via fID/userId comparison — now controlled by URL params
+            // const fID = new URLSearchParams(window.location.search).get("fID");
+            // if (fID && String(userData?.userId) === fID && !ownerExplicitlyFalse) {
+            //   setIsOwner(true);
+            // }
             setFusionReady(true);
             setDetectionDone(true);
           })
@@ -516,20 +516,17 @@ export default function ProfileView() {
         setData(result);
         setLoading(false);
 
-        // Owner detection via profile data: if the logged-in user (or fusion session user)
-        // matches the profile's fusion_id, grant owner access — even when arriving via QR scan
-        // (slug URL). Only skip this if Owner=False was explicitly passed.
-        if (!forDemo && !ownerExplicitlyFalse && result.profile) {
-          const profileFusionId = result.profile.fusion_id;
-          const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
-          // Check against fusion session user
-          if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
-            setIsOwner(true);
-          }
-          // Check against Base44 auth user via profileDbId ownership (server returns isOwner flag)
-          if (result.isOwner) {
-            setIsOwner(true);
-          }
+        // [DISABLED] Ownership inference via fID/userId comparison — now controlled by URL params
+        // if (!forDemo && !ownerExplicitlyFalse && result.profile) {
+        //   const profileFusionId = result.profile.fusion_id;
+        //   const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
+        //   if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
+        //     setIsOwner(true);
+        //   }
+        // }
+        // Server-side ownership flag still active (result.isOwner)
+        if (!forDemo && !ownerExplicitlyFalse && result.profile && result.isOwner) {
+          setIsOwner(true);
         }
 
         // Auto-open edit mode only for brand-new dependents (newProfile=true in URL)
@@ -577,15 +574,15 @@ export default function ProfileView() {
         setData(result);
         setLoading(false);
 
-        if (!ownerExplicitlyFalse && result.profile) {
-          const profileFusionId = result.profile.fusion_id;
-          const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
-          if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
-            setIsOwner(true);
-          }
-          if (result.isOwner) {
-            setIsOwner(true);
-          }
+        // [DISABLED] Ownership inference via fID/userId comparison — now controlled by URL params
+        // const profileFusionId = result.profile.fusion_id;
+        // const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
+        // if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
+        //   setIsOwner(true);
+        // }
+        // Server-side ownership flag still active (result.isOwner)
+        if (!ownerExplicitlyFalse && result.profile && result.isOwner) {
+          setIsOwner(true);
         }
       })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
