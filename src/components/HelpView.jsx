@@ -133,8 +133,13 @@ function SpeechControls({ text }) {
 
 function AIAdvicePanel({ situation, profile, allergies, conditions, medications, onClose }) {
   const [advice, setAdvice] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [started, setStarted] = useState(true);
+
+  // Auto-load guidance when the panel opens
+  useEffect(() => {
+    fetchAdvice();
+  }, []);
 
   // Stop speech when panel closes
   function handleClose() {
@@ -199,18 +204,11 @@ Write exactly 6 to 8 numbered first-aid steps. Format each step strictly as: "1.
             </p>
           </div>
 
-          {!started && (
-            <Button onClick={fetchAdvice} className="w-full gap-2">
-              <Shield className="w-4 h-4" />
-              Get First-Aid Guidance
-            </Button>
-          )}
-
           {loading && (
-            <div className="flex items-center justify-center py-8 gap-3">
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Personalising emergency guidance...</span>
-            </div>
+            <Button disabled className="w-full gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading first aid guidance
+            </Button>
           )}
 
           {advice && !loading && (
