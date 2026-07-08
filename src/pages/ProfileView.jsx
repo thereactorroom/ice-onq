@@ -425,7 +425,9 @@ export default function ProfileView() {
 
   useEffect(() => {
     if (isDemoMode || isInitiationMode || launchForcesView || ownerExplicitlyFalse) return;
-    if (launchForcesOwner || authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
+    // [DISABLED] Ownership inference via authUser — now controlled by URL params only
+    // if (launchForcesOwner || authUser || ownerParam?.toLowerCase() === "true") setIsOwner(true);
+    if (launchForcesOwner || ownerParam?.toLowerCase() === "true") setIsOwner(true);
   }, [authUser, launchForcesOwner, launchForcesView, ownerExplicitlyFalse]);
 
   const [data, setData] = useState(null);
@@ -515,18 +517,10 @@ export default function ProfileView() {
         setData(result);
         setLoading(false);
 
-        // [DISABLED] Ownership inference via fID/userId comparison — now controlled by URL params
-        // if (!forDemo && !ownerExplicitlyFalse && result.profile) {
-        //   const profileFusionId = result.profile.fusion_id;
-        //   const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
-        //   if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
-        //     setIsOwner(true);
-        //   }
+        // [DISABLED] All ownership inference — now controlled by URL params only
+        // if (!forDemo && !ownerExplicitlyFalse && result.profile && result.isOwner) {
+        //   setIsOwner(true);
         // }
-        // Server-side ownership flag still active (result.isOwner)
-        if (!forDemo && !ownerExplicitlyFalse && result.profile && result.isOwner) {
-          setIsOwner(true);
-        }
 
         // Auto-open edit mode only for brand-new dependents (newProfile=true in URL)
         if (!forDemo && result.profile && !hasAutoOpenedEdit.current) {
@@ -573,16 +567,10 @@ export default function ProfileView() {
         setData(result);
         setLoading(false);
 
-        // [DISABLED] Ownership inference via fID/userId comparison — now controlled by URL params
-        // const profileFusionId = result.profile.fusion_id;
-        // const sessionFusionId = fusionUser?.userId ? String(fusionUser.userId) : null;
-        // if (sessionFusionId && profileFusionId && sessionFusionId === String(profileFusionId)) {
+        // [DISABLED] All ownership inference — now controlled by URL params only
+        // if (!ownerExplicitlyFalse && result.profile && result.isOwner) {
         //   setIsOwner(true);
         // }
-        // Server-side ownership flag still active (result.isOwner)
-        if (!ownerExplicitlyFalse && result.profile && result.isOwner) {
-          setIsOwner(true);
-        }
       })
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   }
