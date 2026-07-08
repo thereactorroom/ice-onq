@@ -362,6 +362,88 @@ function DeleteProfileSection({ profileDbId, displayName, guardianFid, onDeleted
   );
 }
 
+// ── UpdateContextDialog ──────────────────────────────────────────────────────
+function UpdateContextDialog({ open, onOpenChange, currentFid }) {
+  const [fid, setFid] = useState(currentFid || "");
+  const [owner, setOwner] = useState(false);
+  const [launch, setLaunch] = useState("View");
+
+  useEffect(() => {
+    if (open) {
+      setFid(currentFid || "");
+      const params = new URLSearchParams(window.location.search);
+      setOwner(params.get("Owner")?.toLowerCase() === "true");
+      setLaunch(params.get("Launch") || "View");
+    }
+  }, [open, currentFid]);
+
+  function handleApply() {
+    const url = new URL(window.location.href);
+    url.searchParams.set("fID", String(fid));
+    url.searchParams.set("Owner", owner ? "True" : "False");
+    url.searchParams.set("Launch", launch);
+    window.location.href = url.toString();
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>updateContext Bridge Test</AlertDialogTitle>
+          <AlertDialogDescription>
+            Simulate an <code className="text-xs bg-muted px-1 rounded">{"{ updateContext: {...} }"}</code> bridge event by setting URL parameters below.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* fID */}
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">fID (number)</label>
+            <input
+              type="number"
+              value={fid}
+              onChange={(e) => setFid(e.target.value)}
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+            />
+          </div>
+
+          {/* Owner toggle */}
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">Owner</label>
+            <button
+              type="button"
+              onClick={() => setOwner((v) => !v)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${owner ? "bg-primary" : "bg-muted"}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${owner ? "translate-x-6" : ""}`} />
+            </button>
+            <span className={`text-xs font-medium ${owner ? "text-primary" : "text-muted-foreground"}`}>{owner ? "True" : "False"}</span>
+          </div>
+
+          {/* Launch dropdown */}
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Launch</label>
+            <select
+              value={launch}
+              onChange={(e) => setLaunch(e.target.value)}
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+            >
+              <option value="New">New</option>
+              <option value="View">View</option>
+              <option value="Profile">Profile</option>
+            </select>
+          </div>
+        </div>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleApply}>Apply</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 // ── Main ProfileView ──────────────────────────────────────────────────────────
 export default function ProfileView() {
   const { user: authUser } = useAuth();
@@ -447,6 +529,7 @@ export default function ProfileView() {
   const [editTab, setEditTab] = useState("medical");
   const medicalBackHandler = useRef(null);
   const hasAutoOpenedEdit = useRef(false);
+  const [showContextDialog, setShowContextDialog] = useState(false);
 
   useEffect(() => {
     // No fID = initiation mode; skip fusion detection entirely
@@ -589,6 +672,13 @@ export default function ProfileView() {
     }
     if (data && typeof data === "object" && data.jump) {
       switchProfile(String(data.jump));
+    } else if (data && typeof data === "object" && data.updateContext) {
+      const url = new URL(window.location.href);
+      Object.entries(data.updateContext).forEach(([key, value]) => {
+        if (value === null || value === undefined) url.searchParams.delete(key);
+        else url.searchParams.set(key, String(value));
+      });
+      window.location.href = url.toString();
     }
   }
 
@@ -828,6 +918,12 @@ export default function ProfileView() {
                 >
                   Switch
                 </button>
+                <button
+                  onClick={() => setShowContextDialog(true)}
+                  className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/90 transition-colors"
+                >
+                  updateContext
+                </button>
               </div>
             )}
             {sortedContacts.length > 0 && (
@@ -999,6 +1095,8 @@ export default function ProfileView() {
           </div>
         </nav>
       )}
+
+      <UpdateContextDialog open={showContextDialog} onOpenChange={setShowContextDialog} currentFid={activeFid} />
     </div>
   );
 }
