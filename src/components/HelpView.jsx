@@ -20,7 +20,7 @@ function EmergencyCallButton() {
   return (
     <a
       href={`tel:${EMERGENCY_NUMBER}`}
-      className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 rounded-2xl shadow-lg transition-colors"
+      className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 px-8 rounded-2xl shadow-lg transition-colors"
     >
       <Phone className="w-6 h-6 fill-white" />
       Call Emergency Services (082911)
