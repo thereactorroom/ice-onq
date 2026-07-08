@@ -400,9 +400,8 @@ export default function ProfileView() {
     ownerParam?.toLowerCase() === "true" &&
     !ownerExplicitlyFalse;
 
-  // [DISABLED] Auto-creation / Initiation Mode — now controlled by URL params
-  // const isInitiationMode = (!rawFID && !slugParam && !acceptInviteToken) || launchMode === "New";
-  const isInitiationMode = false;
+  // No fID/slug/invite → show intro screen (demo, login, register). No auto-creation.
+  const isInitiationMode = !rawFID && !slugParam && !acceptInviteToken;
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
