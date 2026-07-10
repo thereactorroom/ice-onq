@@ -68,17 +68,32 @@ export function fusionSMS(to, body) {
   }
 }
 
-// Download a file by URL — uses NativeBridge.download inside fusion iframe, else browser download
+// Download a file by URL — tries NativeBridge.download / FusionBridge.download,
+// then postMessage, then browser download as last resort
 export function fusionDownload(url, filename) {
-  if (isInFusionIframe()) {
-    const bridge = getGlobalBridge("NativeBridge");
-    if (bridge && typeof bridge.download === "function") {
-      bridge.download({ url });
-      return true;
-    }
+  const nativeBridge = getGlobalBridge("NativeBridge");
+  const fusionBridge = getGlobalBridge("FusionBridge");
+
+  console.log("[fusionDownload] url:", url);
+  console.log("[fusionDownload] NativeBridge:", !!nativeBridge, "download:", typeof nativeBridge?.download);
+  console.log("[fusionDownload] FusionBridge:", !!fusionBridge, "download:", typeof fusionBridge?.download);
+
+  if (nativeBridge && typeof nativeBridge.download === "function") {
+    nativeBridge.download({ url });
+    return true;
+  }
+  if (fusionBridge && typeof fusionBridge.download === "function") {
+    fusionBridge.download({ url });
+    return true;
+  }
+
+  const inIframe = window.self !== window.top;
+  if (inIframe) {
+    console.log("[fusionDownload] No bridge found, posting message to parent");
     window.top.postMessage({ request: "download", payload: { url } }, "*");
     return true;
   }
+
   // Fallback: browser download
   const link = document.createElement("a");
   link.href = url;

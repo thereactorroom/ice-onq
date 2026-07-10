@@ -4,7 +4,7 @@ import { Shield, User, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
-import { fusionDownload, isInFusionIframe } from "@/lib/fusionBridge";
+import { fusionDownload, getGlobalBridge } from "@/lib/fusionBridge";
 
 export default function WalletCardPreview({ user, profile, primaryContact }) {
   const cardRef = useRef(null);
@@ -17,7 +17,9 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
     const blob = await res.blob();
     const filename = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
 
-    if (isInFusionIframe()) {
+    const nativeBridge = getGlobalBridge("NativeBridge");
+    const fusionBridge = getGlobalBridge("FusionBridge");
+    if (typeof nativeBridge?.download === "function" || typeof fusionBridge?.download === "function") {
       // NativeBridge.download needs a real URL — upload the canvas image first
       const file = new File([blob], filename, { type: "image/png" });
       const uploadRes = await base44.integrations.Core.UploadFile({ file });
