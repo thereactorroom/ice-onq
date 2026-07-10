@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { Shield, User, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
+import { fusionDownload, isInFusionIframe } from "@/lib/fusionBridge";
 
 export default function WalletCardPreview({ user, profile, primaryContact }) {
   const cardRef = useRef(null);
@@ -11,12 +13,21 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
     if (!cardRef.current) return;
     const canvas = await html2canvas(cardRef.current, { scale: 3, useCORS: true, backgroundColor: null });
     const dataUrl = canvas.toDataURL("image/png");
-    // Convert data URL to Blob for reliable downloads on all platforms incl. iOS 13+
     const res = await fetch(dataUrl);
     const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
     const filename = `ICE-Card-${(user?.full_name || "profile").replace(/\s+/g, "-")}.png`;
 
+    if (isInFusionIframe()) {
+      // NativeBridge.download needs a real URL — upload the canvas image first
+      const file = new File([blob], filename, { type: "image/png" });
+      const uploadRes = await base44.integrations.Core.UploadFile({ file });
+      fusionDownload(uploadRes.file_url);
+      toast.success("Download ready!");
+      return;
+    }
+
+    // Browser fallback
+    const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = blobUrl;
     link.download = filename;

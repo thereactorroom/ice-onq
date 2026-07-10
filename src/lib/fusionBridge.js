@@ -68,6 +68,27 @@ export function fusionSMS(to, body) {
   }
 }
 
+// Download a file by URL — uses NativeBridge.download inside fusion iframe, else browser download
+export function fusionDownload(url, filename) {
+  if (isInFusionIframe()) {
+    const bridge = getGlobalBridge("NativeBridge");
+    if (bridge && typeof bridge.download === "function") {
+      bridge.download({ url });
+      return true;
+    }
+    window.top.postMessage({ request: "download", payload: { url } }, "*");
+    return true;
+  }
+  // Fallback: browser download
+  const link = document.createElement("a");
+  link.href = url;
+  if (filename) link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  return true;
+}
+
 // Open WhatsApp — inside fusion iframe, uses FusionBridge if available, else postMessage to parent;
 // else wa.me link
 export function fusionWhatsApp(phone, text) {

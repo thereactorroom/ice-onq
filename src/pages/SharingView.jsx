@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { QrCode, Smartphone, CreditCard, Copy, Check, Link, Download } from "lucide-react";
 import WalletCardPreview from "../components/WalletCardPreview";
+import { fusionDownload, isInFusionIframe } from "@/lib/fusionBridge";
 
 export default function SharingView({ profile, contacts, user, profileDbId }) {
   const [copied, setCopied] = useState(false);
@@ -20,6 +21,13 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
 
   async function handleDownloadQR(url, ownerName) {
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(url)}&color=0F172A&bgcolor=FFFFFF`;
+
+    // Inside Fusion: pass the QR image URL directly to the native download bridge
+    if (isInFusionIframe()) {
+      fusionDownload(qrImageUrl);
+      return;
+    }
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
