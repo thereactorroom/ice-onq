@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { getGlobalBridge, isInFusionIframe, fusionDownload } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -907,23 +907,7 @@ export default function ProfileView() {
               <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
                 <h3 className="font-bold text-foreground text-sm">Bridge Test</h3>
                 <button
-                  onClick={() => {
-                    const uri = "https://api.whatsapp.com/send/?phone=27727852417";
-                    const fusionBridge = getGlobalBridge("FusionBridge");
-                    const nativeBridge = getGlobalBridge("NativeBridge");
-                    console.log("[Bridge Debug] FusionBridge available:", !!fusionBridge);
-                    console.log("[Bridge Debug] NativeBridge available:", !!nativeBridge);
-                    if (fusionBridge && typeof fusionBridge.openWhatsApp === "function") {
-                      console.log("[Bridge Debug] Calling FusionBridge.openWhatsApp:", uri);
-                      fusionBridge.openWhatsApp(uri);
-                    } else if (nativeBridge && typeof nativeBridge.openWhatsApp === "function") {
-                      console.log("[Bridge Debug] Calling NativeBridge.openWhatsApp:", { uri });
-                      nativeBridge.openWhatsApp({ uri });
-                    } else {
-                      console.log("[Bridge Debug] No bridge found, using postMessage fallback");
-                      window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
-                    }
-                  }}
+                  onClick={() => fusionWhatsApp("27727852417", "Test message from ICE onQ")}
                   className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors"
                 >
                   WhatsApp

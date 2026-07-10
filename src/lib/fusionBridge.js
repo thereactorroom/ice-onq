@@ -102,18 +102,27 @@ export function fusionDownload(url, filename) {
   return true;
 }
 
-// Open WhatsApp — inside fusion iframe, uses FusionBridge if available, else postMessage to parent;
-// else wa.me link
+// Open WhatsApp — tries NativeBridge.openWhatsApp (routes through openBrowser) first,
+// then FusionBridge.openWhatsApp, then direct postMessage, else wa.me link
 export function fusionWhatsApp(phone, text) {
   const uri = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-  if (isInFusionIframe()) {
-    const bridge = getGlobalBridge("FusionBridge");
-    if (bridge && typeof bridge.openWhatsApp === "function") {
-      bridge.openWhatsApp(uri);
-    } else {
-      window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
-    }
-  } else {
-    window.location.href = uri;
+
+  const nativeBridge = getGlobalBridge("NativeBridge");
+  if (nativeBridge && typeof nativeBridge.openWhatsApp === "function") {
+    nativeBridge.openWhatsApp({ uri });
+    return;
   }
+
+  const fusionBridge = getGlobalBridge("FusionBridge");
+  if (fusionBridge && typeof fusionBridge.openWhatsApp === "function") {
+    fusionBridge.openWhatsApp(uri);
+    return;
+  }
+
+  if (window.self !== window.top) {
+    window.top.postMessage({ request: "openWhatsApp", payload: { uri } }, "*");
+    return;
+  }
+
+  window.location.href = uri;
 }
