@@ -13,8 +13,22 @@ export function getGlobalBridge(name) {
   }
 }
 
+const FUSION_IFRAME_KEY = "__ice_onq_fusion_iframe";
+
 export function isInFusionIframe() {
-  if (window.self === window.top) return false;
+  // sessionStorage survives same-tab navigations — after the first internal
+  // navigation, document.referrer becomes the previous base44 page URL (not
+  // the fusion parent), so re-detecting from scratch would return false.
+  try {
+    const cached = sessionStorage.getItem(FUSION_IFRAME_KEY);
+    if (cached !== null) return cached === "true";
+  } catch {}
+
+  if (window.self === window.top) {
+    try { sessionStorage.setItem(FUSION_IFRAME_KEY, "false"); } catch {}
+    return false;
+  }
+
   let host = "";
   try {
     host = window.parent.location.hostname;
@@ -22,10 +36,16 @@ export function isInFusionIframe() {
     try {
       host = new URL(document.referrer).hostname;
     } catch {
-      return false;
+      // Cross-origin iframe with no usable referrer — fall back to bridge globals
+      const hasBridge = !!window.__fusiononqBridge || !!getGlobalBridge("FusionBridge");
+      try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(hasBridge)); } catch {}
+      return hasBridge;
     }
   }
-  return host.endsWith("fusiononq.com");
+
+  const result = host.endsWith("fusiononq.com");
+  try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(result)); } catch {}
+  return result;
 }
 
 // Call a phone number — uses NativeBridge inside fusion iframe, else tel: link
