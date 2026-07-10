@@ -68,33 +68,31 @@ export function fusionSMS(to, body) {
   }
 }
 
-// Download a file by URL — tries NativeBridge.download / FusionBridge.download,
-// then postMessage, then browser download as last resort
+// Download a file by URL — tries NativeBridge.download (native app + browser fallback),
+// then FusionBridge.send (postMessage to parent), then direct postMessage, then browser download
 export function fusionDownload(url, filename) {
   const nativeBridge = getGlobalBridge("NativeBridge");
   const fusionBridge = getGlobalBridge("FusionBridge");
 
-  console.log("[fusionDownload] url:", url);
-  console.log("[fusionDownload] NativeBridge:", !!nativeBridge, "download:", typeof nativeBridge?.download);
-  console.log("[fusionDownload] FusionBridge:", !!fusionBridge, "download:", typeof fusionBridge?.download);
-
+  // NativeBridge.download handles native (window.CommunicationBridge) with browser fallback
   if (nativeBridge && typeof nativeBridge.download === "function") {
     nativeBridge.download({ url });
     return true;
   }
-  if (fusionBridge && typeof fusionBridge.download === "function") {
-    fusionBridge.download({ url });
+
+  // FusionBridge has no download() — use send() to post a download request to the parent
+  if (fusionBridge && typeof fusionBridge.send === "function") {
+    fusionBridge.send({ request: "download", payload: { url } });
     return true;
   }
 
-  const inIframe = window.self !== window.top;
-  if (inIframe) {
-    console.log("[fusionDownload] No bridge found, posting message to parent");
+  // Direct postMessage fallback (same shape FusionBridge.send uses)
+  if (window.self !== window.top) {
     window.top.postMessage({ request: "download", payload: { url } }, "*");
     return true;
   }
 
-  // Fallback: browser download
+  // Browser download fallback
   const link = document.createElement("a");
   link.href = url;
   if (filename) link.download = filename;
