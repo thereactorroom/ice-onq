@@ -7,6 +7,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import IframeDetector from './components/IframeDetector';
+import { isInFusionIframe } from '@/lib/fusionBridge';
 
 // Eagerly load ProfileView — it's the primary page (iframe entry point)
 import ProfileView from './pages/ProfileView';
@@ -34,19 +35,9 @@ const AuthenticatedApp = () => {
   }
 
   // Detect fusiononq iframe — skip loading gate for optimistic UI
-  // Components render immediately with their own loading states (skeleton/spinner)
-  const isFusionIframe = (() => {
-    if (window.self === window.top) return false;
-    let host = "";
-    try {
-      host = window.parent.location.hostname;
-    } catch {
-      try {
-        host = new URL(document.referrer).hostname;
-      } catch { return false; }
-    }
-    return host.endsWith("fusiononq.com");
-  })();
+  // Uses isInFusionIframe() with sessionStorage caching so the detection
+  // survives internal navigations (document.referrer changes after navigation)
+  const isFusionIframe = isInFusionIframe();
 
   // Show loading spinner while checking app public settings or auth
   // (skipped for fusiononq iframes — optimistic UI)
