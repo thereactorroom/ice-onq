@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { getGlobalBridge } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -709,7 +709,15 @@ export default function ProfileView() {
     return (
       <ProfileSelectorScreen
         guardianFid={rawFID}
-        onBack={() => window.history.back()}
+        onBack={() => {
+          if (isInFusionIframe()) {
+            const bridge = getGlobalBridge("FusionBridge");
+            if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
+            window.top.postMessage({ request: "closeComponent" }, "*");
+          } else {
+            window.history.back();
+          }
+        }}
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
@@ -727,7 +735,15 @@ export default function ProfileView() {
     return (
       <ProfileSelectorScreen
         guardianFid={rawFID}
-        onBack={() => window.location.href = "/profile"}
+        onBack={() => {
+          if (isInFusionIframe()) {
+            const bridge = getGlobalBridge("FusionBridge");
+            if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
+            window.top.postMessage({ request: "closeComponent" }, "*");
+          } else {
+            window.location.href = "/profile";
+          }
+        }}
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
