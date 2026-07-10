@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 
-const FUSION_BRIDGES = {
-  "uat.fusiononq.com": "https://uat.fusiononq.com/js/fusion.bridge.js?v=1.0",
-  "fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0",
-  "app.fusiononq.com": "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0",
-};
+function getBridgeUrl(host) {
+  if (!host) return null;
+  if (host.includes("uat")) return "https://uat.fusiononq.com/js/fusion.bridge.js?v=1.0";
+  if (host.endsWith("fusiononq.com")) return "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0";
+  return null;
+}
 
 export default function IframeDetector() {
   useEffect(() => {
@@ -19,13 +20,11 @@ export default function IframeDetector() {
         const url = new URL(document.referrer);
         host = url.hostname;
       } catch {
-        host = "unknown";
+        host = "";
       }
     }
 
-    if (!host || host === "unknown") return;
-
-    const bridgeSrc = FUSION_BRIDGES[host];
+    const bridgeSrc = getBridgeUrl(host);
     if (bridgeSrc) {
       window.__fusiononqBridge = true;
       const script = document.createElement("script");
