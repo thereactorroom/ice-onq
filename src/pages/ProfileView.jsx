@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { getGlobalBridge, isInFusionIframe } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe, fusionDownload } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -939,6 +939,22 @@ export default function ProfileView() {
                   className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/90 transition-colors"
                 >
                   updateContext
+                </button>
+                <button
+                  onClick={async () => {
+                    const testUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=download-test";
+                    const nativeBridge = getGlobalBridge("NativeBridge");
+                    const fusionBridge = getGlobalBridge("FusionBridge");
+                    console.log("[Download Test] Test URL:", testUrl);
+                    console.log("[Download Test] In iframe:", window.self !== window.top);
+                    console.log("[Download Test] NativeBridge:", !!nativeBridge, "methods:", nativeBridge ? Object.keys(nativeBridge) : []);
+                    console.log("[Download Test] FusionBridge:", !!fusionBridge, "methods:", fusionBridge ? Object.keys(fusionBridge) : []);
+                    console.log("[Download Test] window.__fusiononqBridge:", !!window.__fusiononqBridge);
+                    fusionDownload(testUrl, "download-test.png");
+                  }}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors"
+                >
+                  Download
                 </button>
               </div>
             )}
