@@ -33,10 +33,10 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      const padding = 40;
+      const padding = 50;
       const qrSize = 600;
-      const topTextHeight = 60;
-      const bottomTextHeight = 60;
+      const topTextHeight = 90;
+      const bottomTextHeight = 90;
       const canvasW = qrSize + padding * 2;
       const canvasH = qrSize + topTextHeight + bottomTextHeight + padding * 2;
 
@@ -51,18 +51,20 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
 
       // "ICE onQ" at top
       ctx.fillStyle = "#0F172A";
-      ctx.font = "bold 36px sans-serif";
+      ctx.font = "bold 52px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("ICE onQ", canvasW / 2, padding + 38);
+      ctx.textBaseline = "middle";
+      ctx.fillText("ICE onQ", canvasW / 2, padding + topTextHeight / 2);
 
       // QR code
       ctx.drawImage(img, padding, topTextHeight + padding, qrSize, qrSize);
 
       // Owner name at bottom
       ctx.fillStyle = "#0F172A";
-      ctx.font = "28px sans-serif";
+      ctx.font = "44px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(ownerName, canvasW / 2, topTextHeight + padding + qrSize + 48);
+      ctx.textBaseline = "middle";
+      ctx.fillText(ownerName, canvasW / 2, topTextHeight + padding + qrSize + bottomTextHeight / 2);
 
       canvas.toBlob((blob) => {
         const a = document.createElement("a");
