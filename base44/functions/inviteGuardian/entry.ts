@@ -55,11 +55,13 @@ Deno.serve(async (req) => {
     // Send invite email
     const appUrl = Deno.env.get('APP_URL') || 'https://app.fusiononq.com';
     const acceptUrl = `${appUrl}/profile?acceptInvite=${token}`;
+    console.log('[inviteGuardian] Sending email to:', inviteeEmail, 'acceptUrl:', acceptUrl);
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: inviteeEmail,
-      subject: `You've been invited to co-manage ${profile.display_name || "a dependent"}'s ICE profile`,
-      body: `
+    try {
+      const emailResult = await base44.asServiceRole.integrations.Core.SendEmail({
+        to: inviteeEmail,
+        subject: `You've been invited to co-manage ${profile.display_name || "a dependent"}'s ICE profile`,
+        body: `
 <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
   <h2 style="color: #1a3a6b;">ICE onQ — Guardian Invite</h2>
   <p><strong>${inviterName || 'Someone'}</strong> has invited you to co-manage the ICE emergency profile for <strong>${profile.display_name || 'a dependent'}</strong>.</p>
@@ -70,8 +72,13 @@ Deno.serve(async (req) => {
   <p style="color: #666; font-size: 13px;">If you don't have a fusion onQ account yet, you'll be prompted to create one — it's free and only takes a moment.</p>
   <p style="color: #999; font-size: 12px;">If you did not expect this invite, you can safely ignore this email.</p>
 </div>
-      `,
-    });
+        `,
+      });
+      console.log('[inviteGuardian] SendEmail result:', JSON.stringify(emailResult));
+    } catch (emailError) {
+      console.error('[inviteGuardian] SendEmail FAILED:', emailError?.message || emailError);
+      // Still return success — the invite record was created; email failure is logged for diagnosis
+    }
 
     return Response.json({ success: true, inviteId: invite.id });
   } catch (error) {
