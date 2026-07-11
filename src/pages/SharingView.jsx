@@ -5,6 +5,7 @@ import { fusionDownload, getGlobalBridge } from "@/lib/fusionBridge";
 
 export default function SharingView({ profile, contacts, user, profileDbId }) {
   const [copied, setCopied] = useState(false);
+  const [qrDownloaded, setQrDownloaded] = useState(false);
 
   // Use public_slug for the share URL if available, otherwise fall back to DB id
   const shareUrl = profile?.public_slug
@@ -20,6 +21,8 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
   });
 
   async function handleDownloadQR(url, ownerName) {
+    setQrDownloaded(true);
+    setTimeout(() => setQrDownloaded(false), 2500);
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(url)}&color=0F172A&bgcolor=FFFFFF`;
 
     // Try native bridge first (works inside Fusion iframe), else canvas download
@@ -146,10 +149,14 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
             <p className="text-xs text-muted-foreground text-center">Download the QR code for printing and physical deployment</p>
             <button
               onClick={() => handleDownloadQR(shareUrl, profile?.display_name || user?.full_name || "")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border font-medium text-sm transition-colors ${
+                qrDownloaded
+                  ? "bg-success/10 border-success/30 text-success"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent"
+              }`}
             >
-              <Download className="w-4 h-4" />
-              Download QR Code
+              {qrDownloaded ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+              {qrDownloaded ? "Downloaded!" : "Download QR Code"}
             </button>
           </div>
         </div>

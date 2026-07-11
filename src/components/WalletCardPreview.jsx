@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Shield, User, Download } from "lucide-react";
+import { Shield, User, Download, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -8,9 +8,12 @@ import { fusionDownload, getGlobalBridge } from "@/lib/fusionBridge";
 
 export default function WalletCardPreview({ user, profile, primaryContact }) {
   const cardRef = useRef(null);
+  const [downloaded, setDownloaded] = useState(false);
 
   async function handleDownload() {
     if (!cardRef.current) return;
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 2500);
     const canvas = await html2canvas(cardRef.current, { scale: 3, useCORS: true, backgroundColor: null });
     const dataUrl = canvas.toDataURL("image/png");
     const res = await fetch(dataUrl);
@@ -105,8 +108,8 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
 
         </div>
       </div>
-      <Button onClick={handleDownload} variant="outline" className="w-full gap-2">
-        <Download className="w-4 h-4" /> Download Card as Image
+      <Button onClick={handleDownload} variant="outline" className={`w-full gap-2 ${downloaded ? "bg-success/10 border-success/30 text-success hover:bg-success/10" : ""}`}>
+        {downloaded ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />} {downloaded ? "Downloaded!" : "Download Card as Image"}
       </Button>
     </div>
   );
