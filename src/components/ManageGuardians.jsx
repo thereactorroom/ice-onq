@@ -33,6 +33,7 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
         inviteeEmail: inviteEmail.trim(),
         inviterFusionId,
         inviterName,
+        appUrl: window.location.origin,
       });
       setSuccess(`Invite sent to ${inviteEmail.trim()}.`);
       setInviteEmail("");

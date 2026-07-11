@@ -9,7 +9,7 @@ function generateToken() {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { dependentProfileId, inviteeEmail, inviterFusionId, inviterName } = await req.json();
+    const { dependentProfileId, inviteeEmail, inviterFusionId, inviterName, appUrl: clientAppUrl } = await req.json();
 
     if (!dependentProfileId || !inviteeEmail || !inviterFusionId) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     });
 
     // Send invite email
-    const appUrl = Deno.env.get('APP_URL') || 'https://app.fusiononq.com';
+    const appUrl = clientAppUrl || Deno.env.get('APP_URL') || 'https://app.fusiononq.com';
     const acceptUrl = `${appUrl}/profile?acceptInvite=${token}`;
     console.log('[inviteGuardian] Sending email to:', inviteeEmail, 'acceptUrl:', acceptUrl);
 
