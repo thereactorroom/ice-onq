@@ -33,10 +33,10 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      const padding = 50;
+      const padding = 40;
       const qrSize = 600;
-      const topTextHeight = 90;
-      const bottomTextHeight = 90;
+      const topTextHeight = 70;
+      const bottomTextHeight = 100;
       const canvasW = qrSize + padding * 2;
       const canvasH = qrSize + topTextHeight + bottomTextHeight + padding * 2;
 
@@ -64,12 +64,12 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       const maxWidth = qrSize;
-      let nameFontSize = 64;
+      let nameFontSize = 120;
       do {
         ctx.font = `${nameFontSize}px sans-serif`;
         if (ctx.measureText(ownerName).width <= maxWidth) break;
         nameFontSize -= 2;
-      } while (nameFontSize > 20);
+      } while (nameFontSize > 24);
       ctx.fillText(ownerName, canvasW / 2, topTextHeight + padding + qrSize + bottomTextHeight / 2);
 
       canvas.toBlob((blob) => {
