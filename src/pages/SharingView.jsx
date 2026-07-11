@@ -59,11 +59,17 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
       // QR code
       ctx.drawImage(img, padding, topTextHeight + padding, qrSize, qrSize);
 
-      // Owner name at bottom
+      // Owner name at bottom — dynamic font size to fit on one line within QR width
       ctx.fillStyle = "#0F172A";
-      ctx.font = "44px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      const maxWidth = qrSize;
+      let nameFontSize = 64;
+      do {
+        ctx.font = `${nameFontSize}px sans-serif`;
+        if (ctx.measureText(ownerName).width <= maxWidth) break;
+        nameFontSize -= 2;
+      } while (nameFontSize > 20);
       ctx.fillText(ownerName, canvasW / 2, topTextHeight + padding + qrSize + bottomTextHeight / 2);
 
       canvas.toBlob((blob) => {
