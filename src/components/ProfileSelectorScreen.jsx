@@ -230,9 +230,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
 
         {/* Web-only footer prompt to launch Health onQ (hidden inside fusion iframe) */}
         {!isInFusionIframe() && (
-          <div className="pt-4 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Health onQ keeps your ICE Profile. It is a free app that also allows you to keep your health records.
+          <div className="rounded-2xl bg-primary px-5 py-4 text-center">
+            <p className="text-sm text-primary-foreground leading-relaxed">
+              <strong>Health onQ</strong> keeps your ICE Profile. It is a free app that also allows you to keep your health records.
             </p>
           </div>
         )}
