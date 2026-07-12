@@ -135,7 +135,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
               onClick={() => window.open("https://app.fusiononq.com", "_blank", "noopener,noreferrer")}
               className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors flex items-center gap-1.5 shrink-0"
             >
-              <ExternalLink className="w-3.5 h-3.5" /> Launch Health onQ
+              <ExternalLink className="w-3.5 h-3.5" /> Get Health onQ
             </button>
           )}
         </div>
@@ -232,7 +232,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         {!isInFusionIframe() && (
           <div className="rounded-2xl bg-primary px-5 py-4 text-center">
             <p className="text-sm text-primary-foreground leading-relaxed">
-              <strong>Health onQ</strong> keeps your ICE Profile. It is a free app that also allows you to keep your health records.
+              <strong>Health onQ</strong> stores your ICE Profile and your health records. Tap <strong>"Get Health onQ"</strong> to download the free fusion onQ app and access Health onQ.
             </p>
           </div>
         )}
