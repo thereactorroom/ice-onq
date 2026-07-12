@@ -24,31 +24,40 @@ export function isInFusionIframe() {
     return false;
   }
 
-  // sessionStorage survives same-tab navigations — after the first internal
-  // navigation, document.referrer becomes the previous base44 page URL (not
-  // the fusion parent), so re-detecting from scratch would return false.
+  // We're in an iframe. Try to detect the parent host FRESH first — this
+  // overwrites any stale cached value (e.g. a "true" left by a prior fusion
+  // session in the same tab) when the current parent is actually non-fusion
+  // (such as the Base44 builder preview).
+  let host = "";
+  try {
+    host = window.parent.location.hostname; // same-origin parent
+  } catch {
+    try {
+      host = new URL(document.referrer).hostname; // cross-origin parent via referrer
+    } catch {
+      host = "";
+    }
+  }
+
+  const ownHost = window.location.hostname;
+
+  // Fresh, usable host that isn't our own (i.e. not an internal navigation) →
+  // detect from it and update the cache.
+  if (host && host !== ownHost) {
+    const result = host.endsWith("fusiononq.com");
+    try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(result)); } catch {}
+    return result;
+  }
+
+  // Internal navigation (referrer is our own URL) or no usable referrer —
+  // trust the cache, then fall back to bridge globals.
   try {
     const cached = sessionStorage.getItem(FUSION_IFRAME_KEY);
     if (cached !== null) return cached === "true";
   } catch {}
-
-  let host = "";
-  try {
-    host = window.parent.location.hostname;
-  } catch {
-    try {
-      host = new URL(document.referrer).hostname;
-    } catch {
-      // Cross-origin iframe with no usable referrer — fall back to bridge globals
-      const hasBridge = !!window.__fusiononqBridge || !!getGlobalBridge("FusionBridge");
-      try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(hasBridge)); } catch {}
-      return hasBridge;
-    }
-  }
-
-  const result = host.endsWith("fusiononq.com");
-  try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(result)); } catch {}
-  return result;
+  const hasBridge = !!window.__fusiononqBridge || !!getGlobalBridge("FusionBridge");
+  try { sessionStorage.setItem(FUSION_IFRAME_KEY, String(hasBridge)); } catch {}
+  return hasBridge;
 }
 
 // Call a phone number — uses NativeBridge inside fusion iframe, else tel: link
