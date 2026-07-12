@@ -16,6 +16,14 @@ export function getGlobalBridge(name) {
 const FUSION_IFRAME_KEY = "__ice_onq_fusion_iframe";
 
 export function isInFusionIframe() {
+  // A top-level window is never in a fusion iframe. Check this BEFORE the
+  // sessionStorage cache so a stale "true" (left by a prior fusion iframe visit
+  // in the same tab) doesn't hide web-only UI on a direct web visit.
+  if (window.self === window.top) {
+    try { sessionStorage.setItem(FUSION_IFRAME_KEY, "false"); } catch {}
+    return false;
+  }
+
   // sessionStorage survives same-tab navigations — after the first internal
   // navigation, document.referrer becomes the previous base44 page URL (not
   // the fusion parent), so re-detecting from scratch would return false.
@@ -23,11 +31,6 @@ export function isInFusionIframe() {
     const cached = sessionStorage.getItem(FUSION_IFRAME_KEY);
     if (cached !== null) return cached === "true";
   } catch {}
-
-  if (window.self === window.top) {
-    try { sessionStorage.setItem(FUSION_IFRAME_KEY, "false"); } catch {}
-    return false;
-  }
 
   let host = "";
   try {
