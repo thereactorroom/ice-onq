@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle, ExternalLink } from "lucide-react";
 import HelpView from "./HelpView.jsx";
 import { Button } from "@/components/ui/button";
+import { isInFusionIframe } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
 import ManageGuardians from "./ManageGuardians";
@@ -121,12 +122,22 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <div className="bg-primary shadow-lg sticky top-0 z-50">
-        <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
-          <Shield className="w-6 h-6 text-white" />
-          <div>
-            <div className="font-bold text-white tracking-wider leading-none">ICE onQ</div>
-            <div className="text-white/70 text-xs mt-0.5">Select a profile to manage</div>
+        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Shield className="w-6 h-6 text-white" />
+            <div>
+              <div className="font-bold text-white tracking-wider leading-none">ICE onQ</div>
+              <div className="text-white/70 text-xs mt-0.5">Select a profile to manage</div>
+            </div>
           </div>
+          {!isInFusionIframe() && (
+            <button
+              onClick={() => window.open("https://app.fusiononq.com", "_blank", "noopener,noreferrer")}
+              className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors flex items-center gap-1.5 shrink-0"
+            >
+              <ExternalLink className="w-3.5 h-3.5" /> Launch Health onQ
+            </button>
+          )}
         </div>
       </div>
 
@@ -216,6 +227,15 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         )}
 
         {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Web-only footer prompt to launch Health onQ (hidden inside fusion iframe) */}
+        {!isInFusionIframe() && (
+          <div className="pt-4 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Health onQ keeps your ICE Profile. It is a free app that also allows you to keep your health records.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Manage guardians modal */}

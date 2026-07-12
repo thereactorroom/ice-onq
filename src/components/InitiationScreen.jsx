@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock, Play, UserPlus, ExternalLink } from "lucide-react";
+import { Shield, Heart, Phone, AlertTriangle, Pill, UserCheck, Lock, Play, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { isInFusionIframe } from "@/lib/fusionBridge";
 import LoginFlow from "./LoginFlow";
 import CreateProfileFlow from "./CreateProfileFlow";
 
@@ -44,22 +43,12 @@ export default function InitiationScreen({ onViewDemo }) {
               <div className="text-white/70 text-xs mt-0.5">In Case of Emergency</div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {!isInFusionIframe() && (
-              <button
-                onClick={() => window.open("https://app.fusiononq.com", "_blank", "noopener,noreferrer")}
-                className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors flex items-center gap-1.5"
-              >
-                <ExternalLink className="w-3.5 h-3.5" /> Launch Health onQ
-              </button>
-            )}
-            <button
-              onClick={() => setShowLogin(true)}
-              className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
-            >
-              Sign In
-            </button>
-          </div>
+          <button
+            onClick={() => setShowLogin(true)}
+            className="text-white text-sm font-semibold px-3 py-1.5 rounded-lg border border-white/40 hover:bg-white/10 transition-colors"
+          >
+            Sign In
+          </button>
         </div>
       </div>
 
@@ -145,15 +134,6 @@ export default function InitiationScreen({ onViewDemo }) {
 
           <p className="text-xs text-muted-foreground text-center pt-1">Already have fusion onQ? Sign in above to activate or manage your ICE profile.</p>
           </div>
-
-          {/* Web-only footer prompt to launch Health onQ (hidden inside fusion iframe) */}
-          {!isInFusionIframe() && (
-          <div className="pt-4 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Health onQ keeps your ICE Profile. It is a free app that also allows you to keep your health records.
-            </p>
-          </div>
-          )}
           </div>
     </div>
   );
