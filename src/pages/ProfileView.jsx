@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw, ExternalLink } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -876,15 +876,6 @@ export default function ProfileView() {
             <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
           </div>
           <div className="flex items-center gap-2">
-            {!isInFusionIframe() && (
-              <Button
-                size="sm"
-                onClick={() => window.open("https://app.fusiononq.com", "_blank", "noopener,noreferrer")}
-                className="bg-white/15 text-white hover:bg-white/25 gap-1 text-xs font-semibold border border-white/20"
-              >
-                <ExternalLink className="w-3 h-3" /> Launch Health onQ
-              </Button>
-            )}
             {isOwner && !isEditMode && (
               <Button size="sm" onClick={() => { setMode("edit"); setEditTab("medical"); }}
                 className="bg-white text-primary hover:bg-white/90 gap-1 text-xs font-semibold">
@@ -1013,14 +1004,7 @@ export default function ProfileView() {
           />
         )}
 
-        {/* Web-only footer prompt to launch Health onQ (hidden inside fusion iframe) */}
-        {!isEditMode && !isInFusionIframe() && (
-          <div className="mt-6 pt-4 border-t border-border text-center">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Health onQ keeps your ICE Profile. It is a free app that also allows you to keep your health records.
-            </p>
-          </div>
-        )}
+
       </div>
 
       {/* ── Bottom Navigation ── */}
