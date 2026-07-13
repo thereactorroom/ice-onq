@@ -52,24 +52,14 @@ Deno.serve(async (req) => {
       token,
     });
 
-    // Send invite email via Resend (delivers to external/non-registered addresses,
+    // Send invite email via Mailgun (delivers to external/non-registered addresses,
     // unlike the built-in SendEmail which is restricted to registered app users)
     const appUrl = clientAppUrl || 'https://app.fusiononq.com';
     const acceptUrl = `${appUrl}/profile?acceptInvite=${token}`;
-    const fromEmail = 'ICE onQ <noreply@fusiononq.com>';
-    console.log('[inviteGuardian] Sending email to:', inviteeEmail, 'acceptUrl:', acceptUrl);
-
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: inviteeEmail,
-        subject: `You've been invited to co-manage ${profile.display_name || "a dependent"}'s ICE profile`,
-        html: `
+    const mailgunDomain = Deno.env.get('MAILGUN_DOMAIN');
+    const fromEmail = 'ICE onQ <noreply@' + mailgunDomain + '>';
+    const subject = `You've been invited to co-manage ${profile.display_name || "a dependent"}'s ICE profile`;
+    const htmlBody = `
 <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
   <h2 style="color: #1a3a6b;">ICE onQ — Guardian Invite</h2>
   <p><strong>${inviterName || 'Someone'}</strong> has invited you to co-manage the ICE emergency profile for <strong>${profile.display_name || 'a dependent'}</strong>.</p>
@@ -80,18 +70,31 @@ Deno.serve(async (req) => {
   <p style="color: #666; font-size: 13px;">If you don't have a fusion onQ account yet, you'll be prompted to create one — it's free and only takes a moment.</p>
   <p style="color: #999; font-size: 12px;">If you did not expect this invite, you can safely ignore this email.</p>
 </div>
-        `,
-      }),
+    `;
+    console.log('[inviteGuardian] Sending email to:', inviteeEmail, 'acceptUrl:', acceptUrl);
+
+    const form = new FormData();
+    form.append('from', fromEmail);
+    form.append('to', inviteeEmail);
+    form.append('subject', subject);
+    form.append('html', htmlBody);
+
+    const emailRes = await fetch('https://api.mailgun.net/v3/' + mailgunDomain + '/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + btoa('api:' + Deno.env.get('MAILGUN_API_KEY')),
+      },
+      body: form,
     });
 
     if (!emailRes.ok) {
       const errText = await emailRes.text();
-      console.error('[inviteGuardian] Resend FAILED:', emailRes.status, errText);
+      console.error('[inviteGuardian] Mailgun FAILED:', emailRes.status, errText);
       return Response.json({ error: `Could not send invite email: ${errText}` }, { status: 502 });
     }
 
     const emailData = await emailRes.json();
-    console.log('[inviteGuardian] Resend success:', JSON.stringify(emailData));
+    console.log('[inviteGuardian] Mailgun success:', JSON.stringify(emailData));
 
     return Response.json({ success: true, inviteId: invite.id });
   } catch (error) {
