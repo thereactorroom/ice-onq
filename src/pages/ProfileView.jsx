@@ -1026,7 +1026,7 @@ export default function ProfileView() {
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span className="text-[10px] font-medium">Profiles</span>
+                <span className="text-[10px] font-medium">Profile</span>
               </button>
             )}
             {window.__fusiononqBridge && (
@@ -1046,9 +1046,9 @@ export default function ProfileView() {
               </button>
             )}
             {[
-              { id: "overview", label: "Overview", icon: LayoutDashboard },
+              { id: "overview", label: "Details", icon: LayoutDashboard },
               { id: "wallet", label: "Share", icon: WalletIcon },
-              { id: "help", label: "Help", icon: HelpCircle, accent: true },
+              { id: "help", label: "Emergency", icon: HelpCircle, accent: true },
             ].map(({ id, label, icon: Icon, accent }) => (
               <button
                 key={id}
