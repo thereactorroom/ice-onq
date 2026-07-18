@@ -518,8 +518,8 @@ export default function ProfileView() {
 
   // mode: 'display' | 'edit'
   const [mode, setMode] = useState("display");
-  // display sub-view: 'overview' | 'wallet'
-  const [displayTab, setDisplayTab] = useState("overview");
+  // display sub-view: 'overview' | 'wallet' | 'help'
+  const [displayTab, setDisplayTab] = useState("help");
 
   function setDisplayTabScrollTop(tab) {
     setDisplayTab(tab);
