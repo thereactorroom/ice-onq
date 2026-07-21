@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause } from "lucide-react";
+import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause, User, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -222,9 +222,58 @@ Write exactly 6 to 8 numbered first-aid steps. Format each step strictly as: "1.
 
 export default function HelpView({ profile, allergies, conditions, medications }) {
   const [selectedSituation, setSelectedSituation] = useState(null);
+  const [enlarged, setEnlarged] = useState(false);
 
   return (
     <div className="space-y-4 pb-4">
+      {/* Profile identity — compact, expandable photo + name */}
+      {profile && (
+        <div className="bg-card rounded-2xl border border-border p-3">
+          {enlarged && profile.profile_photo && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+              onClick={() => setEnlarged(false)}
+            >
+              <img
+                src={profile.profile_photo}
+                alt={profile.display_name || "Profile photo"}
+                className="w-80 h-80 rounded-2xl object-cover shadow-2xl border-4 border-white"
+              />
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <div
+              className={`relative w-14 h-14 flex-shrink-0 ${profile.profile_photo ? "cursor-pointer" : ""}`}
+              onClick={() => profile.profile_photo && setEnlarged(true)}
+              title={profile.profile_photo ? "Tap to enlarge" : undefined}
+            >
+              <div className="w-14 h-14 rounded-full bg-muted border-2 border-border overflow-hidden flex items-center justify-center">
+                {profile.profile_photo ? (
+                  <img src={profile.profile_photo} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-6 h-6 text-muted-foreground" />
+                )}
+              </div>
+              {profile.profile_photo && (
+                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
+                  <ZoomIn className="w-3 h-3 text-white" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-foreground truncate">
+                {profile.display_name || "Unknown"}
+              </h2>
+              {profile.date_of_birth && (
+                <p className="text-xs text-muted-foreground">
+                  DOB: {new Date(profile.date_of_birth).getFullYear()}/{String(new Date(profile.date_of_birth).getMonth() + 1).padStart(2, "0")}/{String(new Date(profile.date_of_birth).getDate()).padStart(2, "0")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-card rounded-2xl border-2 border-red-200 p-4 space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Phone className="w-5 h-5 text-red-600" />
