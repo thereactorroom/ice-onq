@@ -264,11 +264,16 @@ export default function HelpView({ profile, allergies, conditions, medications }
               <h2 className="text-base font-bold text-foreground truncate">
                 {profile.display_name || "Unknown"}
               </h2>
-              {profile.date_of_birth && (
-                <p className="text-xs text-muted-foreground">
-                  DOB: {new Date(profile.date_of_birth).getFullYear()}/{String(new Date(profile.date_of_birth).getMonth() + 1).padStart(2, "0")}/{String(new Date(profile.date_of_birth).getDate()).padStart(2, "0")}
-                </p>
-              )}
+              {profile.date_of_birth && (() => {
+                const dob = new Date(profile.date_of_birth);
+                const age = Math.floor((new Date() - dob) / 31557600000);
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    DOB: {dob.getFullYear()}/{String(dob.getMonth() + 1).padStart(2, "0")}/{String(dob.getDate()).padStart(2, "0")}
+                    {age >= 0 && <span className="ml-2">Age: {age}</span>}
+                  </p>
+                );
+              })()}
             </div>
           </div>
         </div>
