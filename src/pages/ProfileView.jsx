@@ -1046,10 +1046,10 @@ export default function ProfileView() {
               </button>
             )}
             {[
-              { id: "overview", label: "Details", icon: LayoutDashboard },
+              { id: "overview", label: "Details", icon: LayoutDashboard, attention: true },
               { id: "wallet", label: "Share", icon: WalletIcon },
               { id: "help", label: "Emergency", icon: HelpCircle, accent: true },
-            ].map(({ id, label, icon: Icon, accent }) => (
+            ].map(({ id, label, icon: Icon, accent, attention }) => (
               <button
                 key={id}
                 onClick={() => setDisplayTabScrollTop(id)}
@@ -1061,7 +1061,7 @@ export default function ProfileView() {
                       : "text-muted-foreground hover:text-primary"
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className={`w-5 h-5 ${attention && displayTab !== id ? "animate-attention-pulse text-primary" : ""}`} />
                 <span className="text-[10px] font-medium">{label}</span>
               </button>
             ))}
