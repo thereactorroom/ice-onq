@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("123456");
-
-  // Force the OTP input to pick up the pre-populated value once the OTP screen mounts
-  useEffect(() => {
-    if (showOtp) {
-      setOtpCode("");
-      const t = setTimeout(() => setOtpCode("123456"), 50);
-      return () => clearTimeout(t);
-    }
-  }, [showOtp]);
 
   // Preserve Fusion parameters through registration
   const fusionParams = new URLSearchParams(window.location.search);
@@ -100,8 +91,6 @@ export default function Register() {
             maxLength={6}
             value={otpCode}
             onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
           >
             <InputOTPGroup>
               <InputOTPSlot index={0} />
