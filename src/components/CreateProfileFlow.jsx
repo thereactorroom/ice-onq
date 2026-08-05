@@ -11,7 +11,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
   const [mobile, setMobile] = useState("");
   const [method, setMethod] = useState("sms");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState("123456");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -249,9 +249,12 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground uppercase tracking-wider block">Verification Code</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
               className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary tracking-widest text-center text-xl"
             />

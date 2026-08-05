@@ -9,7 +9,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
   const [step, setStep] = useState("mobile");
   const [mobile, setMobile] = useState("");
   const [method, setMethod] = useState("sms");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState("123456");
   const [fid, setFid] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -132,9 +132,12 @@ export default function LoginFlow({ onBack, onSuccess }) {
           <div className="space-y-3">
             <label className="text-xs text-muted-foreground uppercase tracking-wider block">One-Time Code</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
               className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary tracking-widest text-center text-lg"
             />
