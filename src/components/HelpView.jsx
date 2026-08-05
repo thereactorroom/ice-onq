@@ -282,7 +282,7 @@ export default function HelpView({ profile, allergies, conditions, medications, 
               })()}
               {onGoToDetails && (
                 <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
-                  View full details <ChevronLeft className="w-3 h-3 rotate-180" />
+                  Click to view full details <ChevronLeft className="w-3 h-3 rotate-180" />
                 </span>
               )}
             </div>
