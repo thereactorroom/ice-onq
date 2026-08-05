@@ -972,7 +972,7 @@ export default function ProfileView() {
         )}
 
         {!isEditMode && displayTab === "help" && (
-          <HelpView profile={profile} allergies={allergies} conditions={conditions} medications={medications} />
+          <HelpView profile={profile} allergies={allergies} conditions={conditions} medications={medications} onGoToDetails={() => setDisplayTabScrollTop("overview")} />
         )}
 
         {/* EDIT MODE */}

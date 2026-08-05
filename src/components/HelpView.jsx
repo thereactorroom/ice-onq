@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause, User, ZoomIn } from "lucide-react";
+import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause, User, ZoomIn, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 
@@ -220,13 +220,14 @@ Write exactly 6 to 8 numbered first-aid steps. Format each step strictly as: "1.
   );
 }
 
-export default function HelpView({ profile, allergies, conditions, medications }) {
+export default function HelpView({ profile, allergies, conditions, medications, onGoToDetails }) {
   const [selectedSituation, setSelectedSituation] = useState(null);
   const [enlarged, setEnlarged] = useState(false);
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Profile identity — compact, expandable photo + name */}
+      {/* Profile identity — compact, expandable photo + name. Tapping the card
+          opens the Details tab; tapping the photo still enlarges it. */}
       {profile && (
         <div className="bg-card rounded-2xl border border-border p-3">
           {enlarged && profile.profile_photo && (
@@ -241,10 +242,15 @@ export default function HelpView({ profile, allergies, conditions, medications }
               />
             </div>
           )}
-          <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onGoToDetails && onGoToDetails()}
+            disabled={!onGoToDetails}
+            className="w-full flex items-center gap-3 text-left rounded-xl transition-colors hover:bg-primary/5 disabled:cursor-default disabled:hover:bg-transparent"
+          >
             <div
               className={`relative w-14 h-14 flex-shrink-0 ${profile.profile_photo ? "cursor-pointer" : ""}`}
-              onClick={() => profile.profile_photo && setEnlarged(true)}
+              onClick={(e) => { if (profile.profile_photo) { e.stopPropagation(); setEnlarged(true); } }}
               title={profile.profile_photo ? "Tap to enlarge" : undefined}
             >
               <div className="w-14 h-14 rounded-full bg-muted border-2 border-border overflow-hidden flex items-center justify-center">
@@ -260,7 +266,7 @@ export default function HelpView({ profile, allergies, conditions, medications }
                 </div>
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h2 className="text-base font-bold text-foreground truncate">
                 {profile.display_name || "Unknown"}
               </h2>
@@ -274,8 +280,13 @@ export default function HelpView({ profile, allergies, conditions, medications }
                   </p>
                 );
               })()}
+              {onGoToDetails && (
+                <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+                  View full details <ChevronLeft className="w-3 h-3 rotate-180" />
+                </span>
+              )}
             </div>
-          </div>
+          </button>
         </div>
       )}
 
