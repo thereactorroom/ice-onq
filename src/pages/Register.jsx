@@ -89,7 +89,7 @@ export default function Register() {
         <div className="flex justify-center mb-6">
           <InputOTP
             maxLength={6}
-            value={otpCode}
+            defaultValue={otpCode}
             onChange={setOtpCode}
           >
             <InputOTPGroup>
