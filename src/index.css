@@ -101,3 +101,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide number-spinner controls on the OTP input */
+[data-input-otp]::-webkit-outer-spin-button,
+[data-input-otp]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+[data-input-otp] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

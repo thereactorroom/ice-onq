@@ -91,6 +91,7 @@ export default function Register() {
             maxLength={6}
             defaultValue={otpCode}
             onChange={setOtpCode}
+            autoComplete="off"
           >
             <InputOTPGroup>
               <InputOTPSlot index={0} />
