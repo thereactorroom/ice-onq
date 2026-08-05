@@ -17,7 +17,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [otpCode, setOtpCode] = useState("123456");
 
   // Preserve Fusion parameters through registration
   const fusionParams = new URLSearchParams(window.location.search);
