@@ -29,6 +29,16 @@ import DateInput from "../components/DateInput";
 import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
 import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
+// ── Close-component guard: ensure closeComponent is only ever invoked once ──
+let _closeRequested = false;
+function requestCloseComponent() {
+  if (_closeRequested) return;
+  _closeRequested = true;
+  const bridge = getGlobalBridge("FusionBridge") || window.FusionBridge;
+  if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
+  else window.top.postMessage({ request: "closeComponent" }, "*");
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -711,9 +721,7 @@ export default function ProfileView() {
         guardianFid={rawFID}
         onBack={() => {
           if (isInFusionIframe()) {
-            const bridge = getGlobalBridge("FusionBridge");
-            if (bridge && typeof bridge.closeComponent === "function") { bridge.closeComponent(); return; }
-            window.top.postMessage({ request: "closeComponent" }, "*");
+            requestCloseComponent();
           } else {
             window.history.back();
           }
@@ -737,9 +745,7 @@ export default function ProfileView() {
         guardianFid={rawFID}
         onBack={() => {
           if (isInFusionIframe()) {
-            const bridge = getGlobalBridge("FusionBridge");
-            if (bridge && typeof bridge.closeComponent === "function") { bridge.closeComponent(); return; }
-            window.top.postMessage({ request: "closeComponent" }, "*");
+            requestCloseComponent();
           } else {
             window.location.href = "/profile";
           }
@@ -839,13 +845,7 @@ export default function ProfileView() {
           <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
             <div className="flex justify-around py-2 max-w-lg mx-auto">
               <button
-                onClick={() => {
-                  if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
-                    window.FusionBridge.closeComponent();
-                    return;
-                  }
-                  window.top.postMessage({ request: "closeComponent" }, "*");
-                }}
+                onClick={requestCloseComponent}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
               >
                 <X className="w-5 h-5" />
@@ -1032,15 +1032,7 @@ export default function ProfileView() {
             )}
             {window.__fusiononqBridge && (
               <button
-                onClick={() => {
-                  if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
-                    window.FusionBridge.closeComponent();
-                    return;
-                  }
-                  // Fallback: send the raw message the host listens for when the
-                  // bridge global failed to initialise or its target origin differs.
-                  window.top.postMessage({ request: "closeComponent" }, "*");
-                }}
+                onClick={requestCloseComponent}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
               >
                 <X className="w-5 h-5" />
