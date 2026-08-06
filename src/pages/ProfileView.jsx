@@ -712,7 +712,7 @@ export default function ProfileView() {
         onBack={() => {
           if (isInFusionIframe()) {
             const bridge = getGlobalBridge("FusionBridge");
-            if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
+            if (bridge && typeof bridge.closeComponent === "function") { bridge.closeComponent(); return; }
             window.top.postMessage({ request: "closeComponent" }, "*");
           } else {
             window.history.back();
@@ -738,7 +738,7 @@ export default function ProfileView() {
         onBack={() => {
           if (isInFusionIframe()) {
             const bridge = getGlobalBridge("FusionBridge");
-            if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
+            if (bridge && typeof bridge.closeComponent === "function") { bridge.closeComponent(); return; }
             window.top.postMessage({ request: "closeComponent" }, "*");
           } else {
             window.location.href = "/profile";
@@ -842,6 +842,7 @@ export default function ProfileView() {
                 onClick={() => {
                   if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
                     window.FusionBridge.closeComponent();
+                    return;
                   }
                   window.top.postMessage({ request: "closeComponent" }, "*");
                 }}
@@ -1034,8 +1035,9 @@ export default function ProfileView() {
                 onClick={() => {
                   if (window.FusionBridge && typeof window.FusionBridge.closeComponent === "function") {
                     window.FusionBridge.closeComponent();
+                    return;
                   }
-                  // Always send the raw message the host listens for, in case the
+                  // Fallback: send the raw message the host listens for when the
                   // bridge global failed to initialise or its target origin differs.
                   window.top.postMessage({ request: "closeComponent" }, "*");
                 }}
