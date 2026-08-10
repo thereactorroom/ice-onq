@@ -109,7 +109,7 @@ function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
 }
 
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
-function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, onRegisterBack }) {
+function MedicalEditTab({ profile, profileDbId, viewerEmail, fusionUserId, onSaved, onBack, onRegisterBack }) {
   const [form, setForm] = useState({ ...profile });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -175,6 +175,9 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, onSaved, onBack, on
 
   return (
     <div className="space-y-4 pb-36">
+      {profileDbId && (
+        <LinkedQRCodesSection profileDbId={profileDbId} fusionUserId={fusionUserId} />
+      )}
       {/* Name */}
       <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
@@ -1029,6 +1032,7 @@ export default function ProfileView() {
             profile={profile}
             profileDbId={profileDbId}
             viewerEmail={viewerEmail}
+            fusionUserId={fusionUser?.userId}
             onSaved={handleMedicalSaved}
             onBack={() => { setMode("display"); fetchProfile(); }}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
