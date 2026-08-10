@@ -674,8 +674,13 @@ export default function ProfileView() {
     if (isSelectorMode) { setLoading(false); return; }
     // Initiation mode: don't fetch anything until user chooses View Demo
     if (isInitiationMode && !showDemo) { setLoading(false); return; }
-    if (showDemo) { fetchProfile(true); return; }
-    if (detectionDone && (!isFusionIframe || fusionReady)) fetchProfile();
+    if (showDemo) {
+      if (lastFetchedId.current !== "demo") { lastFetchedId.current = "demo"; fetchProfile(true); }
+      return;
+    }
+    if (detectionDone && (!isFusionIframe || fusionReady)) {
+      if (lastFetchedId.current !== profileId) { lastFetchedId.current = profileId; fetchProfile(); }
+    }
   }, [profileId, detectionDone, isFusionIframe, fusionReady, showDemo]);
 
   function handleMedicalSaved(updatedFields) {
