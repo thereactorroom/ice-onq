@@ -644,6 +644,7 @@ export default function ProfileView() {
       .then((res) => {
         const d = res.data;
         if (d?.status === "linked") {
+          setQrResolution({ status: "linked" });
           // Fetch the resolved profile by DB id (public, view-only)
           const payload = { profileId: d.profileId, isDbId: true, userName: urlUserName };
           return base44.functions.invoke("getPublicICEProfile", payload).then((r) => r.data);
