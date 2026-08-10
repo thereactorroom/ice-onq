@@ -1006,11 +1006,6 @@ export default function ProfileView() {
               </div>
             )}
 
-            {isOwner && profileDbId && (
-              <LinkedQRCodesSection profileDbId={profileDbId} fusionUserId={fusionUser?.userId} />
-            )}
-
-
           </div>
         )}
 
