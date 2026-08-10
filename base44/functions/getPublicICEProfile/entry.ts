@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { generateQrToken } from "../../shared/qrToken.ts";
 
 // Generate a cryptographically random slug (12 URL-safe chars)
 function generateSlug() {
@@ -82,7 +81,6 @@ Deno.serve(async (req) => {
         fusion_id: profileId,
         pre_login_enabled: true,
         public_slug: generateSlug(),
-        qr_token: generateQrToken(),
       };
 
       if (fusionUser) {
@@ -104,7 +102,6 @@ Deno.serve(async (req) => {
       const updates = {};
       if (userName && !profile.display_name) updates.display_name = userName;
       if (!profile.public_slug) updates.public_slug = generateSlug();
-      if (!profile.qr_token) updates.qr_token = generateQrToken();
 
       if (Object.keys(updates).length > 0) {
         profile = await base44.asServiceRole.entities.ICEProfile.update(profile.id, updates);

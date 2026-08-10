@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { generateQrToken } from "../../shared/qrToken.ts";
 
 Deno.serve(async (req) => {
   try {
@@ -48,6 +49,11 @@ Deno.serve(async (req) => {
     const safeUpdates = {};
     for (const key of allowedFields) {
       if (key in updates) safeUpdates[key] = updates[key];
+    }
+
+    // Generate a QR token only on first save with a valid display_name
+    if (!profile.qr_token && safeUpdates.display_name && safeUpdates.display_name.trim()) {
+      safeUpdates.qr_token = generateQrToken();
     }
 
     const updated = await base44.asServiceRole.entities.ICEProfile.update(profileId, safeUpdates);
