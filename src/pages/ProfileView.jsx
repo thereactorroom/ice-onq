@@ -1027,7 +1027,7 @@ export default function ProfileView() {
             profile={profile}
             profileDbId={profileDbId}
             viewerEmail={viewerEmail}
-            fusionUserId={fusionUser?.userId}
+            fusionUserId={profileId}
             onSaved={handleMedicalSaved}
             onBack={() => { setMode("display"); fetchProfile(); }}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
