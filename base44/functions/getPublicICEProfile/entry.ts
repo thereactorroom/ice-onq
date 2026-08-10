@@ -92,8 +92,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Resolve display name from userName fallback
       if (!seedData.display_name) {
         seedData.display_name = userName || '';
+      }
+
+      // Do not create empty shell profiles — require a display name
+      if (!seedData.display_name.trim()) {
+        return Response.json({ profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: 'Unknown' }, notFound: true });
       }
 
       profile = await base44.asServiceRole.entities.ICEProfile.create(seedData);
