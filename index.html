@@ -5,7 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    <title>Base44 APP</title>
+    <title>ICE onQ</title>
+    <script>
+      // Instant QR-token redirect — runs before JS bundle loads for fast ICE access
+      (function () {
+        var p = window.location.pathname;
+        var segs = p.split('/').filter(Boolean);
+        var known = ['/profile', '/login', '/register', '/forgot-password', '/reset-password', '/contacts', '/medical', '/wallet-card'];
+        if (segs.length === 1 && known.indexOf(p) === -1 && /^[A-Za-z0-9_-]{32}$/.test(segs[0])) {
+          window.location.replace('/profile?qrToken=' + segs[0]);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
