@@ -498,8 +498,8 @@ export default function ProfileView() {
     ownerParam?.toLowerCase() === "true" &&
     !ownerExplicitlyFalse;
 
-  // No fID/slug/invite → show intro screen (demo, login, register). No auto-creation.
-  const isInitiationMode = !rawFID && !slugParam && !acceptInviteToken;
+  // No fID/slug/invite/qrToken → show intro screen (demo, login, register). No auto-creation.
+  const isInitiationMode = !rawFID && !slugParam && !acceptInviteToken && !qrToken;
   // fID=0 → demo profile (read-only)
   const isDemoMode = rawFID === "0";
   const profileId = rawFID || "0";
