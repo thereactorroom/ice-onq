@@ -10,6 +10,10 @@
       "type": "string",
       "title": "Public Share Slug"
     },
+    "qr_token": {
+      "type": "string",
+      "title": "Founding QR Token"
+    },
     "fusion_link_pending": {
       "type": "boolean",
       "title": "Fusion Link Pending",
@@ -30,6 +34,10 @@
     "profile_photo": {
       "type": "string",
       "title": "Profile Photo"
+    },
+    "profile_photo_updated": {
+      "type": "string",
+      "title": "Profile Photo Updated Date"
     },
     "date_of_birth": {
       "type": "string",
@@ -105,6 +113,18 @@
     "last_reviewed_date": {
       "type": "string",
       "title": "Last Reviewed Date"
+    },
+    "allergies_reviewed_date": {
+      "type": "string",
+      "title": "Allergies Reviewed Date"
+    },
+    "conditions_reviewed_date": {
+      "type": "string",
+      "title": "Conditions Reviewed Date"
+    },
+    "medications_reviewed_date": {
+      "type": "string",
+      "title": "Medications Reviewed Date"
     },
     "is_deleted": {
       "type": "boolean",

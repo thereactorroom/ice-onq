@@ -1,0 +1,36 @@
+{
+  "name": "LinkedQRCode",
+  "type": "object",
+  "properties": {
+    "qr_token": {
+      "type": "string",
+      "title": "QR Token"
+    },
+    "profile_id": {
+      "type": "string",
+      "title": "Profile ID"
+    },
+    "link_name": {
+      "type": "string",
+      "title": "Link Name"
+    },
+    "linked_at": {
+      "type": "string",
+      "title": "Linked At"
+    },
+    "linked_by": {
+      "type": "string",
+      "title": "Linked By"
+    }
+  },
+  "required": [
+    "qr_token",
+    "profile_id"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {}
+  }
+}

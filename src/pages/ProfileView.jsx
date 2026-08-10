@@ -29,6 +29,8 @@ import DateInput from "../components/DateInput";
 import ProfileViewSkeleton from "../components/ProfileViewSkeleton";
 import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
+import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
+import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
 // ── Close-component guard: ensure closeComponent is only ever invoked once ──
 let _closeRequested = false;
 function requestCloseComponent() {
@@ -465,6 +467,7 @@ export default function ProfileView() {
   const showSelector = params.get("showSelector") === "true";
   const isDbId = params.get("isDbId") === "true";
   const acceptInviteToken = params.get("acceptInvite");
+  const qrToken = params.get("qrToken");
 
   // Launch parameter routing:
   // Launch=New  → Initiation screen (default)
@@ -540,6 +543,8 @@ export default function ProfileView() {
   const medicalBackHandler = useRef(null);
   const hasAutoOpenedEdit = useRef(false);
   const [showContextDialog, setShowContextDialog] = useState(false);
+  // QR-token resolution state: null | { status: 'linked'|'unlinked'|'invalid' }
+  const [qrResolution, setQrResolution] = useState(null);
 
   useEffect(() => {
     // No fID = initiation mode; skip fusion detection entirely
@@ -628,8 +633,37 @@ export default function ProfileView() {
       .catch(() => { setError("Could not load profile."); setLoading(false); });
   };
 
+  // ── QR-token resolution: a scanned QR code resolves to /profile?qrToken=... ──
+  useEffect(() => {
+    if (!qrToken) return;
+    setLoading(true);
+    base44.functions.invoke("manageQRCode", { action: "resolve", qrToken })
+      .then((res) => {
+        const d = res.data;
+        if (d?.status === "linked") {
+          // Fetch the resolved profile by DB id (public, view-only)
+          const payload = { profileId: d.profileId, isDbId: true, userName: urlUserName };
+          return base44.functions.invoke("getPublicICEProfile", payload).then((r) => r.data);
+        }
+        // unlinked or invalid → show the onboarding gateway
+        setQrResolution({ status: d?.status || "unlinked" });
+        setLoading(false);
+        return null;
+      })
+      .then((profileData) => {
+        if (profileData) {
+          setData(profileData);
+          setIsOwner(false); // QR scans are always view-only
+          setLoading(false);
+        }
+      })
+      .catch(() => { setError("Could not resolve QR code."); setLoading(false); });
+  }, [qrToken]);
+
   // Wait for fusion detection to complete before fetching
   useEffect(() => {
+    // QR-token mode handles its own fetch above
+    if (qrToken) return;
     // Selector mode: no profile fetch needed — just show the selector
     if (isSelectorMode) { setLoading(false); return; }
     // Initiation mode: don't fetch anything until user chooses View Demo
@@ -768,6 +802,11 @@ export default function ProfileView() {
 
   if (loading) {
     return <ProfileViewSkeleton />;
+  }
+
+  // QR scan with no profile linked → onboarding gateway
+  if (qrToken && qrResolution?.status !== "linked") {
+    return <UnlinkedQRCodeView qrToken={qrToken} />;
   }
 
   if (error) {
@@ -962,6 +1001,10 @@ export default function ProfileView() {
                 <h3 className="font-semibold text-foreground text-sm mb-2">Emergency Notes</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{profile.emergency_notes}</p>
               </div>
+            )}
+
+            {isOwner && profileDbId && (
+              <LinkedQRCodesSection profileDbId={profileDbId} fusionUserId={fusionUser?.userId} />
             )}
 
 

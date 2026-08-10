@@ -34,6 +34,17 @@ const AuthenticatedApp = () => {
     return null;
   }
 
+  // Resolve QR-code path URLs: https://ice.onq.life/{32-char-token} → /profile?qrToken=...
+  const knownRoutes = ['/profile', '/login', '/register', '/forgot-password', '/reset-password', '/contacts', '/medical', '/wallet-card'];
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  if (pathSegments.length === 1 && !knownRoutes.includes(window.location.pathname)) {
+    const seg = pathSegments[0];
+    if (/^[A-Za-z0-9_-]{32}$/.test(seg)) {
+      window.location.replace(`/profile?qrToken=${seg}`);
+      return null;
+    }
+  }
+
   // Detect fusiononq iframe — skip loading gate for optimistic UI
   // Uses isInFusionIframe() with sessionStorage caching so the detection
   // survives internal navigations (document.referrer changes after navigation)
