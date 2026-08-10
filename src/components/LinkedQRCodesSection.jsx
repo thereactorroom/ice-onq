@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { QrCode, Plus, Trash2, Loader2, Link2, AlertCircle, ShieldCheck, ExternalLink } from "lucide-react";
+import { QrCode, Plus, Trash2, Loader2, Link2, AlertCircle, ShieldCheck, ExternalLink, Pencil } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import {
   AlertDialog,
@@ -42,6 +42,9 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [claimedInfo, setClaimedInfo] = useState(null);
   const [unlinkTarget, setUnlinkTarget] = useState(null);
   const [unlinking, setUnlinking] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function loadCodes() {
     if (!profileDbId) return;
@@ -103,6 +106,25 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
     }
   }
 
+  async function handleEditSave() {
+    if (!editTarget) return;
+    setSaving(true);
+    try {
+      await base44.functions.invoke("manageQRCode", {
+        action: "update",
+        linkedQrId: editTarget.id,
+        linkName: editName,
+        fusionUserId,
+      });
+      setEditTarget(null);
+      loadCodes();
+    } catch (err) {
+      // keep dialog open on error
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -119,7 +141,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Scan or paste a QR code to link it to this profile. The primary ICE QR code cannot be removed.
+        Scan or paste a QR code to link it to this profile.
       </p>
 
       {loading ? (
@@ -128,36 +150,34 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {codes.map((code) => (
+          {codes.filter((c) => !c.is_founding).map((code) => (
             <div
               key={code.id}
               className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background/50"
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${code.is_founding ? "bg-primary/10" : "bg-muted"}`}>
-                {code.is_founding
-                  ? <ShieldCheck className="w-4.5 h-4.5 text-primary" />
-                  : <QrCode className="w-4.5 h-4.5 text-muted-foreground" />
-                }
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-muted">
+                <QrCode className="w-4.5 h-4.5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{code.link_name}</p>
-                <p className="text-[11px] text-muted-foreground font-mono truncate">{code.qr_token}</p>
                 {code.linked_at && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">Linked: {formatDate(code.linked_at)}</p>
                 )}
               </div>
-              {!code.is_founding && (
-                <button
-                  onClick={() => setUnlinkTarget(code)}
-                  className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
-                  title="Delink QR code"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-              {code.is_founding && (
-                <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0">Primary</span>
-              )}
+              <button
+                onClick={() => { setEditTarget(code); setEditName(code.link_name || ""); }}
+                className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors flex-shrink-0"
+                title="Edit name"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setUnlinkTarget(code)}
+                className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                title="Delink QR code"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           ))}
         </div>
@@ -252,6 +272,34 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
             <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90 border-0">Cancel</AlertDialogCancel>
             <Button variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" disabled={unlinking} onClick={handleUnlink}>
               {unlinking ? "Delinking..." : "Yes, Delink"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit name confirmation */}
+      <AlertDialog open={!!editTarget} onOpenChange={(open) => { if (!open) setEditTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Edit QR Code Name</AlertDialogTitle>
+            <AlertDialogDescription>
+              Update the label for this linked QR code.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Name</label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="e.g. Helmet, Wallet, Bike"
+              className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90 border-0">Cancel</AlertDialogCancel>
+            <Button variant="outline" disabled={saving} onClick={handleEditSave}>
+              {saving ? "Saving..." : "Save"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

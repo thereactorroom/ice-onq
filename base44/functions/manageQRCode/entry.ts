@@ -132,6 +132,20 @@ Deno.serve(async (req) => {
       return Response.json({ status: 'linked', code: created });
     }
 
+    // ── update: rename a linked QR code alias ───────────────────────────
+    if (action === 'update') {
+      if (!linkedQrId) return Response.json({ error: 'linkedQrId required' }, { status: 400 });
+      const record = await base44.asServiceRole.entities.LinkedQRCode.get(linkedQrId).catch(() => null);
+      if (!record) return Response.json({ error: 'Record not found' }, { status: 404 });
+      const profile = await base44.asServiceRole.entities.ICEProfile.get(record.profile_id).catch(() => null);
+      if (!profile) return Response.json({ error: 'Profile not found' }, { status: 404 });
+      const auth = await authorize(base44, profile, body);
+      if (!auth.authorized) return Response.json({ error: 'Not authorized' }, { status: 403 });
+      const newName = (linkName || '').trim() || 'Linked QR Code';
+      await base44.asServiceRole.entities.LinkedQRCode.update(linkedQrId, { link_name: newName });
+      return Response.json({ status: 'updated', link_name: newName });
+    }
+
     // ── unlink: delete an alias (founding codes are never stored here) ──
     if (action === 'unlink') {
       if (!linkedQrId) return Response.json({ error: 'linkedQrId required' }, { status: 400 });
