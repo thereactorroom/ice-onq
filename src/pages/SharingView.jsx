@@ -10,11 +10,11 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
   // Prefer the clean path-based QR token URL (shorter QR, cleaner print);
   // fall back to slug or DB id formats if no founding token is present.
   const shareUrl = profile?.qr_token
-    ? `${window.location.origin}/${profile.qr_token}`
+    ? `https://${window.location.hostname}/${profile.qr_token}`
     : profile?.public_slug
-      ? `${window.location.origin}/profile?s=${profile.public_slug}`
+      ? `https://${window.location.hostname}/profile?s=${profile.public_slug}`
       : profileDbId
-        ? `${window.location.origin}/profile?fID=${profileDbId}&isDbId=true`
+        ? `https://${window.location.hostname}/profile?fID=${profileDbId}&isDbId=true`
         : null;
 
   const sortedContacts = [...(contacts || [])].sort((a, b) => {
