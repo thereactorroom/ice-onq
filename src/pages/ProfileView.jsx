@@ -531,6 +531,8 @@ export default function ProfileView() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Guard against duplicate fetchProfile calls for the same profileId
+  const lastFetchedId = useRef(null);
 
   // mode: 'display' | 'edit'
   const [mode, setMode] = useState("display");

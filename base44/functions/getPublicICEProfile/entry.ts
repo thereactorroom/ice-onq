@@ -35,6 +35,26 @@ Deno.serve(async (req) => {
     } else {
       const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
       profile = profiles[0] || null;
+
+      // Deduplicate: if multiple profiles exist for the same fusion_id,
+      // keep the one with the most data and delete the rest
+      if (profiles.length > 1) {
+        const hasData = (p) => !!(p.display_name?.trim() || p.date_of_birth || p.medical_aid_name || p.doctor_name || p.hospital_name);
+        profiles.sort((a, b) => {
+          // Prefer profiles with data, then oldest (first created)
+          const aHas = hasData(a) ? 1 : 0;
+          const bHas = hasData(b) ? 1 : 0;
+          if (aHas !== bHas) return bHas - aHas;
+          return new Date(a.created_date) - new Date(b.created_date);
+        });
+        profile = profiles[0]; // best one
+        // Delete the duplicates (all except the first/best)
+        const dupes = profiles.slice(1);
+        for (const dup of dupes) {
+          await base44.asServiceRole.entities.ICEProfile.delete(dup.id).catch(() => {});
+        }
+      }
+
       // Fallback: try as a DB id if fusion_id lookup fails
       if (!profile && !isDemoRequest) {
         profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
