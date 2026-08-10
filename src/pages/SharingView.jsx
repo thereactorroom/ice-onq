@@ -7,12 +7,15 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
   const [copied, setCopied] = useState(false);
   const [qrDownloaded, setQrDownloaded] = useState(false);
 
-  // Use public_slug for the share URL if available, otherwise fall back to DB id
-  const shareUrl = profile?.public_slug
-    ? `${window.location.origin}/profile?s=${profile.public_slug}`
-    : profileDbId
-      ? `${window.location.origin}/profile?fID=${profileDbId}&isDbId=true`
-      : null;
+  // Prefer the clean path-based QR token URL (shorter QR, cleaner print);
+  // fall back to slug or DB id formats if no founding token is present.
+  const shareUrl = profile?.qr_token
+    ? `${window.location.origin}/${profile.qr_token}`
+    : profile?.public_slug
+      ? `${window.location.origin}/profile?s=${profile.public_slug}`
+      : profileDbId
+        ? `${window.location.origin}/profile?fID=${profileDbId}&isDbId=true`
+        : null;
 
   const sortedContacts = [...(contacts || [])].sort((a, b) => {
     if (a.is_primary && !b.is_primary) return -1;
