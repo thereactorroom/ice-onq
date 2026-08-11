@@ -125,7 +125,6 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? "Copied!" : "Copy Link"}
           </button>
-          <p className="text-[11px] text-muted-foreground truncate text-center">{shareUrl}</p>
         </div>
       )}
 
