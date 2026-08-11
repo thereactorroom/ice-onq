@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { QrCode, Plus, Trash2, Loader2, Link2, AlertCircle, ShieldCheck, ExternalLink, Pencil } from "lucide-react";
+import { QrCode, Plus, Trash2, Loader2, Link2, AlertCircle, ShieldCheck, ExternalLink, Pencil, ScanLine } from "lucide-react";
+import QRScannerModal from "@/components/QRScannerModal";
 import { base44 } from "@/api/base44Client";
 import {
   AlertDialog,
@@ -45,6 +46,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [editTarget, setEditTarget] = useState(null);
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   function loadCodes() {
     if (!profileDbId) return;
@@ -199,13 +201,23 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
             <div className="space-y-3 py-2">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">QR Token or URL</label>
-                <input
-                  type="text"
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  placeholder="https://ice.onq.life/…  or  32-char token"
-                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-mono"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tokenInput}
+                    onChange={(e) => setTokenInput(e.target.value)}
+                    placeholder="https://ice.onq.life/…  or  32-char token"
+                    className="w-full bg-card border border-border rounded-lg pl-3 pr-11 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    title="Scan with camera"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <ScanLine className="w-4.5 h-4.5" />
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Name (optional)</label>
@@ -304,6 +316,15 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <QRScannerModal
+        open={showScanner}
+        onClose={() => setShowScanner(false)}
+        onScan={(text) => {
+          setShowScanner(false);
+          setTokenInput(text);
+        }}
+      />
     </div>
   );
 }
