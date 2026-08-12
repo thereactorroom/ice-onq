@@ -193,31 +193,34 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Link a QR Code</AlertDialogTitle>
             <AlertDialogDescription>
-              Paste the QR code token or the full URL printed on the code. Then give it a name (e.g. "Helmet").
+              Scan the QR code with your camera, or paste the token/URL manually. Then give it a name (e.g. "Helmet").
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           {!claimedInfo ? (
             <div className="space-y-3 py-2">
+              <button
+                type="button"
+                onClick={() => setShowScanner(true)}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold text-sm hover:bg-primary/15 transition-colors"
+              >
+                <ScanLine className="w-5 h-5" />
+                Activate Camera Scanning
+              </button>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex-1 h-px bg-border" />
+                <span className="uppercase tracking-wider">or paste manually</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">QR Token or URL</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={tokenInput}
-                    onChange={(e) => setTokenInput(e.target.value)}
-                    placeholder="https://ice.onq.life/…  or  32-char token"
-                    className="w-full bg-card border border-border rounded-lg pl-3 pr-11 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowScanner(true)}
-                    title="Scan with camera"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                  >
-                    <ScanLine className="w-4.5 h-4.5" />
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  placeholder="https://ice.onq.life/…  or  32-char token"
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-mono"
+                />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Name (optional)</label>
