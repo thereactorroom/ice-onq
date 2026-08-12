@@ -2,7 +2,73 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import jsQR from "jsqr";
 import { X, Camera, Loader2, AlertCircle, ScanLine } from "lucide-react";
-import { getGlobalBridge } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe } from "@/lib/fusionBridge";
+
+// Try to get a QR scan from the fusion parent app via the bridge.
+// Returns a Promise that resolves with the scanned string.
+function requestBridgeScan() {
+  return new Promise((resolve, reject) => {
+    const nativeBridge = getGlobalBridge("NativeBridge");
+    const fusionBridge = getGlobalBridge("FusionBridge");
+
+    const tryNative = (method) => {
+      if (nativeBridge && typeof nativeBridge[method] === "function") {
+        try {
+          const result = nativeBridge[method]();
+          if (typeof result === "string") return Promise.resolve(result);
+          if (result && typeof result.then === "function") return result;
+        } catch {}
+      }
+      return null;
+    };
+
+    const nativeResult =
+      tryNative("scanQR") || tryNative("scanQrCode") || tryNative("scanQRCode");
+    if (nativeResult) {
+      Promise.resolve(nativeResult).then(resolve, reject);
+      return;
+    }
+
+    let settled = false;
+    const handler = (event) => {
+      if (settled) return;
+      const data = event.data || {};
+      if (data.request === "scanQR" || data.type === "scanQR" || data.event === "scanQR") {
+        const value =
+          data.payload?.token || data.payload?.data || data.payload?.qr ||
+          data.token || data.data || data.qr;
+        if (value) {
+          settled = true;
+          window.removeEventListener("message", handler);
+          resolve(String(value));
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+
+    const payload = { request: "scanQR", payload: {} };
+    let sent = false;
+    if (fusionBridge && typeof fusionBridge.send === "function") {
+      try { fusionBridge.send(payload); sent = true; } catch {}
+    }
+    if (!sent && window.self !== window.top) {
+      try { window.parent.postMessage(payload, "*"); sent = true; } catch {}
+    }
+
+    if (!sent) {
+      window.removeEventListener("message", handler);
+      reject(new Error("no_bridge"));
+      return;
+    }
+
+    setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("message", handler);
+      reject(new Error("timeout"));
+    }, 60000);
+  });
+}
 
 export default function QRScannerModal({ open, onClose, onScan }) {
   const videoRef = useRef(null);
@@ -13,8 +79,7 @@ export default function QRScannerModal({ open, onClose, onScan }) {
   const [starting, setStarting] = useState(true);
   const [usingBridge, setUsingBridge] = useState(false);
 
-  // Mobile native app = NativeBridge global is present (injected by the fusion app).
-  // Browser (desktop or mobile browser) = no NativeBridge → use the web camera.
+  // Mobile native app = NativeBridge present. Browser = no NativeBridge → camera.
   const nativeBridge = getGlobalBridge("NativeBridge");
   const useBridgeScan = !!nativeBridge;
 
@@ -22,81 +87,31 @@ export default function QRScannerModal({ open, onClose, onScan }) {
     if (!open) return;
     setError(null);
 
+    let stopped = false;
+    let bridgeHandler = null;
+
     // ── Mobile native app: delegate to the bridge scanner ──
     if (useBridgeScan) {
       setUsingBridge(true);
       setStarting(false);
 
-      let settled = false;
+      requestBridgeScan()
+        .then((text) => { if (!stopped) onScan(text); })
+        .catch((err) => {
+          if (stopped) return;
+          setUsingBridge(false);
+          setError(
+            err?.message === "no_bridge"
+              ? "Native scanning isn't available. Please paste the QR token manually."
+              : "Scanning timed out or was cancelled. Please paste the QR token manually."
+          );
+        });
 
-      const finish = (text) => {
-        if (settled) return;
-        settled = true;
-        if (text) onScan(String(text));
-      };
-
-      const fail = (msg) => {
-        if (settled) return;
-        settled = true;
-        setUsingBridge(false);
-        setError(msg);
-      };
-
-      // Listen for the parent app's scan result via postMessage
-      const handler = (event) => {
-        const data = event.data || {};
-        if (data.request === "scanQR" || data.type === "scanQR" || data.event === "scanQR") {
-          const value =
-            data.payload?.token || data.payload?.data || data.payload?.qr ||
-            data.token || data.data || data.qr;
-          if (value) finish(value);
-        }
-      };
-      window.addEventListener("message", handler);
-
-      // Try synchronous native methods first
-      const tryNative = (method) => {
-        if (nativeBridge && typeof nativeBridge[method] === "function") {
-          try {
-            const result = nativeBridge[method]();
-            if (typeof result === "string") return Promise.resolve(result);
-            if (result && typeof result.then === "function") return result;
-          } catch {}
-        }
-        return null;
-      };
-
-      const nativeResult =
-        tryNative("scanQR") || tryNative("scanQrCode") || tryNative("scanQRCode");
-      if (nativeResult) {
-        nativeResult.then(finish, () => fail("Native scan was cancelled. Please paste the QR token manually."));
-      } else {
-        // Ask the parent app to scan and reply
-        const fusionBridge = getGlobalBridge("FusionBridge");
-        const payload = { request: "scanQR", payload: {} };
-        let sent = false;
-        if (fusionBridge && typeof fusionBridge.send === "function") {
-          try { fusionBridge.send(payload); sent = true; } catch {}
-        }
-        if (!sent && window.self !== window.top) {
-          try { window.parent.postMessage(payload, "*"); sent = true; } catch {}
-        }
-        if (!sent) {
-          fail("Native scanning isn't available. Please paste the QR token manually.");
-        } else {
-          setTimeout(() => fail("Scanning timed out. Please paste the QR token manually."), 60000);
-        }
-      }
-
-      return () => {
-        settled = true;
-        window.removeEventListener("message", handler);
-      };
+      return () => { stopped = true; };
     }
 
     // ── Browser: use the device camera ──
     setUsingBridge(false);
-    let stopped = false;
 
     async function startCamera() {
       setError(null);
@@ -111,25 +126,39 @@ export default function QRScannerModal({ open, onClose, onScan }) {
           return;
         }
         streamRef.current = stream;
+        // video element is always rendered, so ref should be available
         const video = videoRef.current;
         if (video) {
           video.srcObject = stream;
           video.setAttribute("playsinline", "true");
-          await video.play();
+          await video.play().catch(() => {});
         }
         setStarting(false);
         tick();
       } catch (err) {
         setStarting(false);
-        setError(
-          err?.name === "NotAllowedError"
-            ? "Camera access denied. Allow camera permissions in your browser settings, or paste the token manually."
-            : "Could not access the camera. You can paste the token manually."
-        );
+        if (err?.name === "NotAllowedError" && isInFusionIframe()) {
+          // Camera blocked by iframe — try the bridge as a fallback
+          setUsingBridge(true);
+          requestBridgeScan()
+            .then((text) => { if (!stopped) onScan(text); })
+            .catch(() => {
+              if (stopped) return;
+              setUsingBridge(false);
+              setError("Camera is blocked in this view and native scanning isn't available. Please paste the QR token or URL manually below.");
+            });
+        } else {
+          setError(
+            err?.name === "NotAllowedError"
+              ? "Camera access denied. Allow camera permissions in your browser settings, or paste the token manually."
+              : "Could not access the camera. You can paste the token manually."
+          );
+        }
       }
     }
 
     function tick() {
+      if (stopped) return;
       const video = videoRef.current;
       const canvas = canvasRef.current;
       if (!video || !canvas) {
@@ -174,11 +203,14 @@ export default function QRScannerModal({ open, onClose, onScan }) {
 
   if (!open) return null;
 
-  // Combined close handler — works for both mouse clicks and touch taps
   const handleClose = (e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     onClose();
   };
+
+  const showVideo = !usingBridge && !error;
+  const showLoading = !usingBridge && starting && !error;
+  const showScanFrame = !usingBridge && !starting && !error;
 
   return createPortal(
     <div
@@ -189,7 +221,7 @@ export default function QRScannerModal({ open, onClose, onScan }) {
         className="w-full max-w-md bg-card rounded-2xl overflow-hidden shadow-2xl relative"
         style={{ pointerEvents: "auto" }}
       >
-        {/* Header with close button */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border relative z-10">
           <div className="flex items-center gap-2">
             {usingBridge ? <ScanLine className="w-5 h-5 text-primary" /> : <Camera className="w-5 h-5 text-primary" />}
@@ -207,43 +239,52 @@ export default function QRScannerModal({ open, onClose, onScan }) {
           </button>
         </div>
 
-        {/* Camera / status area */}
+        {/* Camera / status area — video always rendered so ref is available */}
         <div className="relative aspect-square bg-black flex items-center justify-center overflow-hidden">
-          {usingBridge ? (
-            <div className="flex flex-col items-center gap-3 p-6 text-center">
+          <video
+            ref={videoRef}
+            className={`w-full h-full object-cover ${showVideo ? "" : "hidden"}`}
+            muted
+            playsInline
+          />
+          <canvas ref={canvasRef} className="hidden" />
+
+          {/* Scan frame overlay */}
+          {showScanFrame && (
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="w-2/3 h-2/3 border-2 border-white/80 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+            </div>
+          )}
+
+          {/* Loading overlay */}
+          {showLoading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 bg-black">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <p className="text-xs">Starting camera…</p>
+            </div>
+          )}
+
+          {/* Error overlay */}
+          {error && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center bg-black">
+              <AlertCircle className="w-8 h-8 text-amber-400" />
+              <p className="text-sm text-white/80">{error}</p>
+            </div>
+          )}
+
+          {/* Bridge waiting overlay */}
+          {usingBridge && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center bg-black">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <ScanLine className="w-8 h-8 text-primary animate-pulse" />
               </div>
               <p className="text-sm text-white/80">Waiting for the native scanner…</p>
               <p className="text-xs text-white/50">The app will open its camera. Scan a QR code to continue.</p>
             </div>
-          ) : starting && !error ? (
-            <div className="flex flex-col items-center gap-2 text-white/70">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <p className="text-xs">Starting camera…</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center gap-2 p-6 text-center">
-              <AlertCircle className="w-8 h-8 text-amber-400" />
-              <p className="text-sm text-white/80">{error}</p>
-            </div>
-          ) : (
-            <>
-              <video
-                ref={videoRef}
-                className="w-full h-full object-cover"
-                muted
-                playsInline
-              />
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-2/3 h-2/3 border-2 border-white/80 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
-              </div>
-            </>
           )}
-          <canvas ref={canvasRef} className="hidden" />
         </div>
 
-        {/* Footer with Cancel button */}
+        {/* Footer */}
         <div className="px-4 py-3 flex flex-col gap-2">
           <p className="text-xs text-muted-foreground text-center">
             {usingBridge
