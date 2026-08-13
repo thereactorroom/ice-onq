@@ -325,6 +325,13 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         onClose={() => setShowScanner(false)}
         onScan={(text) => {
           setShowScanner(false);
+          const origin = window.location.origin;
+          if (!text || !text.includes(origin)) {
+            setLinkError("This is not an ICE onQ QR Code");
+            setTokenInput("");
+            return;
+          }
+          setLinkError(null);
           setTokenInput(text);
         }}
       />
