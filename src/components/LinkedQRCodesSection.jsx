@@ -79,7 +79,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         setLinkName("");
         loadCodes();
       } else if (data?.status === "claimed") {
-        setClaimedInfo({ ownerName: data.ownerName, ownerProfileId: data.ownerProfileId, token });
+        setClaimedInfo({ ownerName: data.ownerName, ownerProfileId: data.ownerProfileId, token, linkName: data.linkName, linkType: data.linkType });
       } else {
         setLinkError(data?.error || "Could not link this QR code.");
       }
@@ -243,9 +243,13 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
             <div className="space-y-3 py-2">
               <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-amber-900">
-                  This QR code has already been claimed by <strong>{claimedInfo.ownerName}</strong>. You can view their emergency profile instead.
-                </p>
+                <div className="text-sm text-amber-900 space-y-1">
+                  <p>This QR code is already linked to another profile.</p>
+                  <div className="flex flex-col gap-1 pl-3 border-l-2 border-amber-300">
+                    <p><span className="text-amber-700 font-medium">Linked to:</span> <strong>{claimedInfo.ownerName}</strong></p>
+                    <p><span className="text-amber-700 font-medium">Linked as:</span> {claimedInfo.linkName || 'Linked QR Code'}</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -262,6 +266,18 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
             ) : (
               <>
                 <AlertDialogCancel>Close</AlertDialogCancel>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setClaimedInfo(null);
+                    setTokenInput("");
+                    setLinkName("");
+                    setLinkError(null);
+                  }}
+                  className="gap-2"
+                >
+                  <ScanLine className="w-4 h-4" /> Dismiss & Rescan
+                </Button>
                 <a
                   href={`/profile?qrToken=${encodeURIComponent(claimedInfo.token)}`}
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"

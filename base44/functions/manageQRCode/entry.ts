@@ -109,13 +109,13 @@ Deno.serve(async (req) => {
       // Already claimed as a founding token by another profile?
       const founding = await base44.asServiceRole.entities.ICEProfile.filter({ qr_token: qrToken });
       if (founding[0] && founding[0].id !== profileId) {
-        return Response.json({ status: 'claimed', ownerProfileId: founding[0].id, ownerName: founding[0].display_name || 'Another profile' });
+        return Response.json({ status: 'claimed', ownerProfileId: founding[0].id, ownerName: founding[0].display_name || 'Another profile', linkType: 'founding', linkName: 'Primary ICE QR Code' });
       }
       // Already claimed as an alias by another profile?
       const alias = await base44.asServiceRole.entities.LinkedQRCode.filter({ qr_token: qrToken });
       if (alias[0] && alias[0].profile_id !== profileId) {
         const owner = await base44.asServiceRole.entities.ICEProfile.get(alias[0].profile_id).catch(() => null);
-        return Response.json({ status: 'claimed', ownerProfileId: alias[0].profile_id, ownerName: owner?.display_name || 'Another profile' });
+        return Response.json({ status: 'claimed', ownerProfileId: alias[0].profile_id, ownerName: owner?.display_name || 'Another profile', linkType: 'alias', linkName: alias[0].link_name || 'Linked QR Code' });
       }
       // Already linked to this same profile
       if (alias[0] && alias[0].profile_id === profileId) {
