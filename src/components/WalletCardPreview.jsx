@@ -22,7 +22,7 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
 
     const nativeBridge = getGlobalBridge("NativeBridge");
     const fusionBridge = getGlobalBridge("FusionBridge");
-    if (typeof nativeBridge?.download === "function" || typeof fusionBridge?.download === "function") {
+    if (typeof nativeBridge?.download === "function" || typeof fusionBridge?.download === "function" || typeof fusionBridge?.send === "function") {
       // NativeBridge.download needs a real URL — upload the canvas image first
       const file = new File([blob], filename, { type: "image/png" });
       const uploadRes = await base44.integrations.Core.UploadFile({ file });

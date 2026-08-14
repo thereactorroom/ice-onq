@@ -31,7 +31,7 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
     // Try native bridge first (works inside Fusion iframe), else canvas download
     const nativeBridge = getGlobalBridge("NativeBridge");
     const fusionBridge = getGlobalBridge("FusionBridge");
-    if (typeof nativeBridge?.download === "function" || typeof fusionBridge?.download === "function") {
+    if (typeof nativeBridge?.download === "function" || typeof fusionBridge?.download === "function" || typeof fusionBridge?.send === "function") {
       fusionDownload(qrImageUrl);
       return;
     }
