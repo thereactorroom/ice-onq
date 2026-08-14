@@ -32,7 +32,7 @@ import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
 import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
 import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
-// ── Close-component guard: ensure closeComponent is only ever invoked once ──
+// ── Close-component guard: debounce rapid double-fires without blocking a later re-open ──
 let _closeRequested = false;
 function requestCloseComponent() {
   if (_closeRequested) return;
@@ -40,6 +40,8 @@ function requestCloseComponent() {
   const bridge = getGlobalBridge("FusionBridge") || window.FusionBridge;
   if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
   else window.top.postMessage({ request: "closeComponent" }, "*");
+  // Reset shortly after so a re-opened component can close again
+  setTimeout(() => { _closeRequested = false; }, 1000);
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -1085,15 +1087,6 @@ export default function ProfileView() {
               >
                 <ArrowLeft className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Profile</span>
-              </button>
-            )}
-            {window.__fusiononqBridge && (
-              <button
-                onClick={requestCloseComponent}
-                className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
-              >
-                <X className="w-5 h-5" />
-                <span className="text-[10px] font-medium">Close</span>
               </button>
             )}
             {[
