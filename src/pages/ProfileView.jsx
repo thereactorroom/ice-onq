@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
@@ -462,6 +463,7 @@ function UpdateContextDialog({ open, onOpenChange, currentFid }) {
 // ── Main ProfileView ──────────────────────────────────────────────────────────
 export default function ProfileView() {
   const { user: authUser } = useAuth();
+  const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const rawFID = params.get("fID");
   const isDevMode = params.get("DevMode") === "True";
@@ -505,6 +507,11 @@ export default function ProfileView() {
   const profileId = rawFID || "0";
   const viewerEmail = params.get("userEmail");
   const urlUserName = params.get("UserName") || params.get("Name");
+  // Preserve fusion-critical params across in-app navigations so the fusion session
+  // and bridge context survive (a full reload would drop them and break bridge buttons)
+  const preservedFusionParams = ["session", "UserName", "Name"]
+    .map((k) => { const v = params.get(k); return v ? `&${k}=${encodeURIComponent(v)}` : ""; })
+    .join("");
   const [isFusionIframe, setIsFusionIframe] = useState(false);
   const [fusionUser, setFusionUser] = useState(null);
   const [fusionHost, setFusionHost] = useState(null);
@@ -777,7 +784,7 @@ export default function ProfileView() {
           const newProfileParam = result.newProfile ? "&newProfile=true" : "";
           // Launch=View shows display/overview mode; Owner=True enables the Edit Profile button
           // newProfile=true triggers auto-open edit mode for just-created profiles
-          window.location.href = `/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}${newProfileParam}${devModeParam}`;
+          navigate(`/profile?fID=${result.fID}&Launch=View&Owner=True${guardianParam}${dbIdParam}${newProfileParam}${devModeParam}${preservedFusionParams}`);
         }}
       />
     );
@@ -798,7 +805,7 @@ export default function ProfileView() {
         onSelect={(result) => {
           const guardianParam = `&guardianFid=${rawFID}`;
           const dbIdParam = result.isDbId ? "&isDbId=true" : "";
-          window.location.href = `/profile?fID=${result.fID}&Launch=Profile${guardianParam}${dbIdParam}`;
+          navigate(`/profile?fID=${result.fID}&Launch=Profile${guardianParam}${dbIdParam}${preservedFusionParams}`);
         }}
       />
     );

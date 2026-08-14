@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -26,6 +26,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const location = useLocation();
 
   // Redirect Fusion iframe URLs (/?fID=...&UserName=...) to /profile immediately
   const fusionParams = new URLSearchParams(window.location.search);
@@ -76,7 +77,7 @@ const AuthenticatedApp = () => {
       }>
         <Routes>
 
-          <Route path="/profile" element={<ProfileView />} />
+          <Route path="/profile" element={<ProfileView key={location.pathname + location.search} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
