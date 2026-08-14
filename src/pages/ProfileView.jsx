@@ -1089,6 +1089,15 @@ export default function ProfileView() {
                 <span className="text-[10px] font-medium">Profile</span>
               </button>
             )}
+            {window.__fusiononqBridge && ownerParam?.toLowerCase() !== "true" && (
+              <button
+                onClick={requestCloseComponent}
+                className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-emergency"
+              >
+                <X className="w-5 h-5" />
+                <span className="text-[10px] font-medium">Close</span>
+              </button>
+            )}
             {[
               { id: "overview", label: "Details", icon: LayoutDashboard, attention: true },
               { id: "wallet", label: "Share", icon: WalletIcon },
