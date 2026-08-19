@@ -14,19 +14,22 @@ export default function IframeDetector() {
     const isIframe = window.self !== window.top;
     if (!isIframe) return;
 
+    const ownHost = window.location.hostname;
     let host = "";
     try {
-      host = window.parent.location.hostname;
+      const parentHost = window.parent.location.hostname; // same-origin parent
+      if (parentHost && parentHost !== ownHost) host = parentHost;
     } catch {
       try {
-        const url = new URL(document.referrer);
-        host = url.hostname;
+        const refHost = new URL(document.referrer).hostname; // cross-origin parent
+        if (refHost && refHost !== ownHost) host = refHost;
       } catch {
         host = "";
       }
     }
 
-    // Fallback to cached host — survives iframe reloads where referrer is empty
+    // Fallback to cached host — survives internal full reloads (where the
+    // referrer is our own URL) and iframe reloads where the referrer is empty.
     if (!host) {
       try { host = sessionStorage.getItem(HOST_KEY) || ""; } catch {}
     }
