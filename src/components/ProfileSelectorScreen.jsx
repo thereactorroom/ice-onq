@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle, ExternalLink, QrCode } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, Users, HelpCircle, ExternalLink, QrCode } from "lucide-react";
 import HelpView from "./HelpView.jsx";
 import { Button } from "@/components/ui/button";
 import { isInFusionIframe } from "@/lib/fusionBridge";
@@ -372,9 +372,6 @@ function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusi
               ? <img src={photo} alt={name} className="w-full h-full object-cover" />
               : <User className="w-6 h-6 text-primary" />
             }
-          </div>
-          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center shadow">
-            <ZoomIn className="w-3 h-3 text-white" />
           </div>
         </div>
         <div className="flex-1 min-w-0">
