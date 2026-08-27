@@ -11,6 +11,13 @@ async function authorize(base44, profile, body) {
         String(profile.guardian_fid) === String(fusionUserId)) {
       return { authorized: true, actorEmail: '' };
     }
+    // Co-guardian via ProfileGuardian record (shared profiles)
+    const guardians = await base44.asServiceRole.entities.ProfileGuardian
+      .filter({ dependent_profile_id: profile.id, guardian_fusion_id: String(fusionUserId) })
+      .catch(() => []);
+    if (guardians && guardians.length > 0) {
+      return { authorized: true, actorEmail: '' };
+    }
   }
   try {
     const user = await base44.auth.me();

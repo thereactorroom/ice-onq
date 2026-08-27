@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle, ExternalLink } from "lucide-react";
+import { Shield, User, Plus, ChevronRight, Loader2, AlertCircle, CheckCircle, Clock, Trash2, ZoomIn, Users, HelpCircle, ExternalLink, QrCode } from "lucide-react";
 import HelpView from "./HelpView.jsx";
 import { Button } from "@/components/ui/button";
 import { isInFusionIframe } from "@/lib/fusionBridge";
@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import AddDependentForm from "./AddDependentForm";
 import ManageGuardians from "./ManageGuardians";
 import PendingInviteBanner from "./PendingInviteBanner";
+import LinkedQRDialog from "./LinkedQRDialog";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel
@@ -28,10 +29,40 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   const [deleting, setDeleting] = useState(false);
   // Try to get the current user's email for invite lookup
   const [userEmail, setUserEmail] = useState("");
+  const [qrCounts, setQrCounts] = useState({});
+  const [qrDialog, setQrDialog] = useState(null); // { id, name }
 
   useEffect(() => {
     base44.auth.me().then(u => setUserEmail(u?.email || "")).catch(() => {});
   }, []);
+
+  function isActiveProfile(profile) {
+    return !!profile && !!(profile.blood_group || profile.medical_aid_name || profile.doctor_name);
+  }
+
+  async function fetchQrCount(profileId) {
+    try {
+      const res = await base44.functions.invoke("manageQRCode", {
+        action: "list", profileId, fusionUserId: String(guardianFid),
+      });
+      const codes = res.data?.codes || [];
+      return codes.filter((c) => !c.is_founding).length;
+    } catch { return 0; }
+  }
+
+  async function loadQrCounts(primary, deps, shared) {
+    const tiles = [];
+    if (isActiveProfile(primary)) tiles.push(primary.id);
+    deps.forEach((p) => { if (isActiveProfile(p)) tiles.push(p.id); });
+    shared.forEach((p) => { if (isActiveProfile(p)) tiles.push(p.id); });
+    const entries = await Promise.all(tiles.map(async (id) => [id, await fetchQrCount(id)]));
+    setQrCounts(Object.fromEntries(entries));
+  }
+
+  async function refreshQrCount(profileId) {
+    const count = await fetchQrCount(profileId);
+    setQrCounts((prev) => ({ ...prev, [profileId]: count }));
+  }
 
   function loadProfiles() {
     setLoading(true);
@@ -52,6 +83,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         setSharedProfiles(inviteRes.data?.sharedProfiles || []);
         setPendingInvites(inviteRes.data?.pendingInvites || []);
         setLoading(false);
+        loadQrCounts(primaryRes.data?.profile, inviteRes.data?.dependentProfiles || [], inviteRes.data?.sharedProfiles || []);
       })
       .catch(() => setLoading(false));
   }
@@ -175,6 +207,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
               statusBadge={statusBadge(primaryProfile)}
               onClick={() => onSelect({ fID: guardianFid, owner: true })}
               onManage={primaryProfile ? () => setManageProfile({ id: primaryProfile.id, name: primaryProfile.display_name || "My Profile" }) : undefined}
+              showQrPill={isActiveProfile(primaryProfile)}
+              qrCount={qrCounts[primaryProfile?.id]}
+              onQrClick={() => setQrDialog({ id: primaryProfile.id, name: primaryProfile?.display_name || "My Profile" })}
             />
 
             {/* Dependent profiles I created */}
@@ -189,6 +224,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 onClick={() => onSelect({ fID: p.fusion_id || p.id, isDbId: !p.fusion_id, guardianFid })}
                 onManage={() => setManageProfile({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
                 onManageGuardians={() => setManageGuardians({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
+                showQrPill={isActiveProfile(p)}
+                qrCount={qrCounts[p.id]}
+                onQrClick={() => setQrDialog({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
               />
             ))}
 
@@ -205,6 +243,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                     statusBadge={statusBadge(p)}
                     isShared
                     onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, isDbId: !p.fusion_id })}
+                    showQrPill={isActiveProfile(p)}
+                    qrCount={qrCounts[p.id]}
+                    onQrClick={() => setQrDialog({ id: p.id, name: p.display_name || "Shared Dependent" })}
                   />
                 ))}
               </>
@@ -281,6 +322,23 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Linked QR codes dialog (opened from a profile tile pill) */}
+      {qrDialog && (
+        <LinkedQRDialog
+          open={!!qrDialog}
+          onOpenChange={(open) => {
+            if (!open) {
+              const pid = qrDialog.id;
+              setQrDialog(null);
+              refreshQrCount(pid);
+            }
+          }}
+          profileDbId={qrDialog.id}
+          profileName={qrDialog.name}
+          fusionUserId={String(guardianFid)}
+        />
+      )}
+
       {/* Sticky back */}
       <div className="sticky bottom-0 bg-card border-t border-border px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
         <button
@@ -303,9 +361,10 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   );
 }
 
-function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusionPending, onClick, onManage, onManageGuardians }) {
+function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusionPending, onClick, onManage, onManageGuardians, showQrPill, qrCount, onQrClick }) {
   return (
-    <div className="w-full flex items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
+    <div className="w-full p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors">
+      <div className="flex items-center gap-2">
       <button onClick={onClick} className="flex items-center gap-4 flex-1 min-w-0 text-left">
         <div className="relative w-12 h-12 flex-shrink-0">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
@@ -355,6 +414,16 @@ function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusi
           </button>
         )}
       </div>
+      </div>
+      {showQrPill && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onQrClick(); }}
+          className="w-full mt-3 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors"
+        >
+          <QrCode className="w-4 h-4" />
+          {qrCount > 0 ? `${qrCount} QR code${qrCount > 1 ? 's' : ''} linked · Edit` : 'Add QR Code'}
+        </button>
+      )}
     </div>
   );
 }
