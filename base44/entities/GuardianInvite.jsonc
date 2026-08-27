@@ -20,7 +20,11 @@
     },
     "invitee_email": {
       "type": "string",
-      "title": "Invitee Email"
+      "title": "Invitee Email (legacy)"
+    },
+    "invitee_mobile": {
+      "type": "string",
+      "title": "Invitee Mobile (E.164)"
     },
     "invitee_fusion_id": {
       "type": "string",
@@ -43,7 +47,6 @@
   },
   "required": [
     "dependent_profile_id",
-    "invitee_email",
     "inviter_fusion_id"
   ],
   "rls": {

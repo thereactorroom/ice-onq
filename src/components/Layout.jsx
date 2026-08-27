@@ -1,10 +1,11 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Shield, Users, Heart, CreditCard, LogOut, ArrowLeft } from "lucide-react";
+import { Shield, Users, Heart, CreditCard, LogOut, ArrowLeft, Settings } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQueryString } from "@/hooks/useQueryString";
+import { useState, useEffect } from "react";
 
-const navItems = [
+const baseNavItems = [
   { path: "/contacts", label: "Contacts", icon: Users },
   { path: "/medical", label: "Medical", icon: Heart },
   { path: "/", label: "Back", icon: ArrowLeft },
@@ -13,6 +14,17 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const queryString = useQueryString();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me()
+      .then((u) => setIsAdmin(u?.role === "admin"))
+      .catch(() => setIsAdmin(false));
+  }, []);
+
+  const navItems = isAdmin
+    ? [...baseNavItems, { path: "/ice-setup", label: "Set-Up", icon: Settings }]
+    : baseNavItems;
 
   return (
     <div className="min-h-screen bg-background font-sans">

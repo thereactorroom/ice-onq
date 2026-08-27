@@ -1,0 +1,58 @@
+{
+  "name": "ICESetup",
+  "type": "object",
+  "properties": {
+    "whatsapp_template": {
+      "type": "string",
+      "title": "WhatsApp Invitation Template",
+      "description": "Use [Name] for the dependent's name and [AcceptLink] for the acceptance link."
+    },
+    "sms_template": {
+      "type": "string",
+      "title": "SMS Invitation Template",
+      "description": "Use [Name] for the dependent's name and [AcceptLink] for the acceptance link."
+    },
+    "sms_enabled": {
+      "type": "boolean",
+      "title": "SMS Gateway Enabled",
+      "default": false
+    },
+    "sms_provider": {
+      "type": "string",
+      "title": "SMS Provider",
+      "enum": [
+        "twilio",
+        "messagebird",
+        "africas_talking"
+      ],
+      "default": "twilio"
+    },
+    "sms_sender": {
+      "type": "string",
+      "title": "SMS Sender ID / Number"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

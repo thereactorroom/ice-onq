@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
-import { Users, Mail, Plus, CheckCircle, Clock, Trash2, X, Loader2, Shield, Send } from "lucide-react";
+import { Users, Phone, Plus, CheckCircle, Clock, Trash2, X, Loader2, Shield, Send, MessageCircle, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { fusionWhatsApp, fusionSMS } from "@/lib/fusionBridge";
 
 export default function ManageGuardians({ dependentProfileId, dependentName, inviterFusionId, inviterName, onClose }) {
   const [guardians, setGuardians] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteMobile, setInviteMobile] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  // Last prepared invite — lets the inviter fall back to SMS if WhatsApp isn't available
+  const [lastInvite, setLastInvite] = useState(null); // { mobile, whatsappMessage, smsMessage }
   const [resendTarget, setResendTarget] = useState(null);
   const [resending, setResending] = useState(false);
 
@@ -35,26 +38,37 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
   useEffect(() => { load(); }, [dependentProfileId]);
 
   async function handleInvite() {
-    if (!inviteEmail.trim()) return;
+    if (!inviteMobile.trim()) return;
     setSending(true);
     setError("");
     setSuccess("");
+    setLastInvite(null);
     try {
-      await base44.functions.invoke("inviteGuardian", {
+      const res = await base44.functions.invoke("inviteGuardian", {
         dependentProfileId,
-        inviteeEmail: inviteEmail.trim(),
+        inviteeMobile: inviteMobile.trim(),
         inviterFusionId,
         inviterName,
         appUrl: window.location.origin,
       });
-      setSuccess(`Invite sent to ${inviteEmail.trim()}.`);
-      setInviteEmail("");
+      const data = res.data;
+      setLastInvite({ mobile: data.mobile, whatsappMessage: data.whatsappMessage, smsMessage: data.smsMessage });
+      setSuccess(`WhatsApp opened for ${data.mobile} — press send.`);
+      setInviteMobile("");
+      // Pre-populate WhatsApp (inviter presses send manually)
+      fusionWhatsApp(data.mobile, data.whatsappMessage);
       load();
     } catch (e) {
-      setError(e?.response?.data?.error || e?.message || "Could not send invite.");
+      setError(e?.response?.data?.error || e?.message || "Could not prepare invite.");
     } finally {
       setSending(false);
     }
+  }
+
+  function handleSmsFallback() {
+    if (!lastInvite) return;
+    fusionSMS(lastInvite.mobile, lastInvite.smsMessage);
+    setSuccess(`SMS opened for ${lastInvite.mobile} — press send.`);
   }
 
   async function handleResend() {
@@ -64,15 +78,18 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
     setSuccess("");
     try {
       await base44.entities.GuardianInvite.delete(resendTarget.id);
-      await base44.functions.invoke("inviteGuardian", {
+      const res = await base44.functions.invoke("inviteGuardian", {
         dependentProfileId,
-        inviteeEmail: resendTarget.invitee_email,
+        inviteeMobile: resendTarget.invitee_mobile,
         inviterFusionId,
         inviterName,
         appUrl: window.location.origin,
       });
-      setSuccess(`Invite resent to ${resendTarget.invitee_email}.`);
+      const data = res.data;
+      setLastInvite({ mobile: data.mobile, whatsappMessage: data.whatsappMessage, smsMessage: data.smsMessage });
+      setSuccess(`WhatsApp opened for ${data.mobile} — press send.`);
       setResendTarget(null);
+      fusionWhatsApp(data.mobile, data.whatsappMessage);
       load();
     } catch (e) {
       setError(e?.response?.data?.error || e?.message || "Could not resend invite.");
@@ -103,24 +120,37 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
             <p className="text-xs font-semibold text-foreground">Invite a Co-Guardian</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Enter their email address. They'll receive an invite to join as a co-guardian and will need a fusion onQ account to accept.
+              Enter their mobile number. We'll open WhatsApp with the invitation pre-filled — just press send. If they're not on WhatsApp, send via SMS instead.
             </p>
             <div className="flex gap-2">
               <input
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="email@example.com"
+                type="tel"
+                value={inviteMobile}
+                onChange={(e) => setInviteMobile(e.target.value)}
+                placeholder="e.g. 082 123 4567"
                 className="flex-1 bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
                 onKeyDown={(e) => e.key === "Enter" && handleInvite()}
               />
-              <Button onClick={handleInvite} disabled={sending || !inviteEmail.trim()} size="sm" className="gap-1.5 shrink-0">
+              <Button onClick={handleInvite} disabled={sending || !inviteMobile.trim()} size="sm" className="gap-1.5 shrink-0">
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Invite
               </Button>
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
-            {success && <p className="text-xs text-success">{success}</p>}
+            {success && (
+              <div className="space-y-2">
+                <p className="text-xs text-success">{success}</p>
+                {lastInvite && (
+                  <button
+                    onClick={handleSmsFallback}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-foreground/5 border border-border text-foreground text-xs font-semibold hover:bg-foreground/10 transition-colors"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Not on WhatsApp? Send via SMS instead
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -159,10 +189,10 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
                       className="w-full flex items-center gap-3 p-3 rounded-xl bg-warning/5 border border-warning/20 hover:bg-warning/10 hover:scale-[1.01] transition-all text-left"
                     >
                       <div className="w-8 h-8 rounded-full bg-warning/20 flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-warning" />
+                        <Phone className="w-4 h-4 text-warning" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-foreground truncate">{inv.invitee_email}</p>
+                        <p className="text-sm text-foreground truncate">{inv.invitee_mobile || inv.invitee_email}</p>
                         <p className="text-xs text-muted-foreground">Sent {formatInviteDate(inv.created_date)}</p>
                       </div>
                       <Send className="w-4 h-4 text-warning flex-shrink-0" />
@@ -184,11 +214,11 @@ export default function ManageGuardians({ dependentProfileId, dependentName, inv
           <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4">
             <div className="bg-card rounded-2xl border border-border w-full max-w-sm p-5 shadow-2xl space-y-4">
               <div className="flex items-center gap-2">
-                <Send className="w-5 h-5 text-primary" />
+                <MessageCircle className="w-5 h-5 text-primary" />
                 <h3 className="font-bold text-foreground text-sm">Resend Invite?</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Would you like to resend the invite email to <span className="font-semibold text-foreground">{resendTarget.invitee_email}</span>?
+                Re-open WhatsApp with the invitation for <span className="font-semibold text-foreground">{resendTarget.invitee_mobile}</span>?
               </p>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" size="sm" onClick={() => setResendTarget(null)} disabled={resending}>

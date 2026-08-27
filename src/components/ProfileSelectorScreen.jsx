@@ -29,11 +29,31 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   const [deleting, setDeleting] = useState(false);
   // Try to get the current user's email for invite lookup
   const [userEmail, setUserEmail] = useState("");
+  const [userMobile, setUserMobile] = useState("");
   const [qrCounts, setQrCounts] = useState({});
   const [qrDialog, setQrDialog] = useState(null); // { id, name }
 
   useEffect(() => {
     base44.auth.me().then(u => setUserEmail(u?.email || "")).catch(() => {});
+  }, []);
+
+  // Fetch the fusion user's mobile (when inside a fusion iframe) so pending
+  // co-guardian invitations can be matched by mobile number as well as token.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const session = params.get("session");
+    if (!session || window.self === window.top) return;
+    let host = "";
+    try { host = window.parent.location.hostname; } catch { try { host = new URL(document.referrer).hostname; } catch {} }
+    if (!host.endsWith("fusiononq.com")) return;
+    const baseUrl = host.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
+    base44.functions.invoke("getFusionUser", { host: baseUrl, session })
+      .then((res) => {
+        const u = res.data?.user || {};
+        const m = u.mobile || u.phone || u.cell || u.mobileNumber || u.phoneNumber || u.contactNumber || u.telephone || "";
+        if (m) setUserMobile(String(m));
+      })
+      .catch(() => {});
   }, []);
 
   function isActiveProfile(profile) {
@@ -75,6 +95,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
       base44.functions.invoke("getGuardianInvites", {
         fusionId: String(guardianFid),
         email: userEmail,
+        mobile: userMobile,
       }),
     ])
       .then(([primaryRes, inviteRes]) => {
@@ -88,7 +109,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
       .catch(() => setLoading(false));
   }
 
-  useEffect(() => { loadProfiles(); }, [guardianFid, userEmail]);
+  useEffect(() => { loadProfiles(); }, [guardianFid, userEmail, userMobile]);
 
   if (showHelp) {
     return (

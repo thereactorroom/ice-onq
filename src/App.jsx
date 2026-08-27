@@ -22,6 +22,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ICESetup = lazy(() => import('./pages/ICESetup'));
 
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
             <Route path="/contacts" element={<ManageContacts />} />
             <Route path="/medical" element={<EditProfile />} />
             <Route path="/wallet-card" element={<SharingView />} />
+            <Route path="/ice-setup" element={<ICESetup />} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>
