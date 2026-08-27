@@ -421,7 +421,7 @@ function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusi
           className="w-full mt-3 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors"
         >
           <QrCode className="w-4 h-4" />
-          {qrCount > 0 ? `${qrCount} QR code${qrCount > 1 ? 's' : ''} linked · Edit` : 'Add QR Code'}
+          {qrCount > 0 ? `${qrCount} QR code${qrCount > 1 ? 's' : ''} linked · Edit/Add` : 'Add QR Code'}
         </button>
       )}
     </div>
