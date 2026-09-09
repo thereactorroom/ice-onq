@@ -114,6 +114,19 @@ export function fusionDownload(url, filename) {
   return true;
 }
 
+// Close the component — call the host bridge's closeComponent if present, and
+// ALWAYS also post the raw close request to the top window as a fallback
+// (the host may rely on the postMessage even when the bridge call succeeds).
+export function closeComponent() {
+  const fusionBridge = getGlobalBridge("FusionBridge");
+  if (fusionBridge && typeof fusionBridge.closeComponent === "function") {
+    fusionBridge.closeComponent();
+  }
+  if (window.self !== window.top) {
+    window.top.postMessage({ request: "closeComponent" }, "*");
+  }
+}
+
 // Open WhatsApp — tries NativeBridge.openWhatsApp (routes through openBrowser) first,
 // then FusionBridge.openWhatsApp, then direct postMessage, else wa.me link
 export function fusionWhatsApp(phone, text) {

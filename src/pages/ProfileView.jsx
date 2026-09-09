@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp, closeComponent } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,16 +32,11 @@ import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
 import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
 import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
-// ── Close-component guard: debounce rapid double-fires without blocking a later re-open ──
-let _closeRequested = false;
+// ── Close-component: mirrors the fusion boilerplate closeComponent helper ──
+// Calls the host bridge's closeComponent when available AND always posts the
+// raw close request to the top window as a fallback.
 function requestCloseComponent() {
-  if (_closeRequested) return;
-  _closeRequested = true;
-  const bridge = getGlobalBridge("FusionBridge") || window.FusionBridge;
-  if (bridge && typeof bridge.closeComponent === "function") bridge.closeComponent();
-  else window.top.postMessage({ request: "closeComponent" }, "*");
-  // Reset shortly after so a re-opened component can close again
-  setTimeout(() => { _closeRequested = false; }, 1000);
+  closeComponent();
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
