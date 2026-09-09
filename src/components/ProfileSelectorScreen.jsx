@@ -47,6 +47,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
     try { host = window.parent.location.hostname; } catch { try { host = new URL(document.referrer).hostname; } catch {} }
     if (!host.endsWith("fusiononq.com")) return;
     const baseUrl = host.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
+    console.log("[FusionEnv] Selector — Parent hostname:", host, "| getFusionUser host:", baseUrl);
     base44.functions.invoke("getFusionUser", { host: baseUrl, session })
       .then((res) => {
         const u = res.data?.user || {};

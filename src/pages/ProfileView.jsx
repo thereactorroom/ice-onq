@@ -585,6 +585,7 @@ export default function ProfileView() {
     if (isIframe && isFusion) {
       const host = hostname.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
       const session = new URLSearchParams(window.location.search).get("session");
+      console.log("[FusionEnv] Parent hostname:", hostname, "| getFusionUser host:", host, "| session present:", !!session);
 
       if (session) {
         setIsFusionIframe(true);

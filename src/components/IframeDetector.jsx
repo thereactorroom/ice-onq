@@ -35,6 +35,7 @@ export default function IframeDetector() {
     }
 
     const bridgeSrc = getBridgeUrl(host);
+    console.log("[FusionEnv] Detected host:", host || "(none)", "| Bridge URL:", bridgeSrc || "(not fusion — no bridge loaded)");
     if (bridgeSrc) {
       try { sessionStorage.setItem(HOST_KEY, host); } catch {}
       window.__fusiononqBridge = true;
