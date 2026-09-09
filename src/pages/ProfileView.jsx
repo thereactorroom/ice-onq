@@ -861,8 +861,8 @@ export default function ProfileView() {
           <div className="flex justify-around py-2 max-w-lg mx-auto">
             <button
               onClick={() => {
-                if (window.history.length > 1) {
-                  window.history.back();
+                if (isInFusionIframe()) {
+                  requestCloseComponent();
                 } else if (guardianFid) {
                   window.location.href = `/profile?fID=${guardianFid}&Launch=Profile&Owner=True`;
                 } else {
@@ -1080,7 +1080,7 @@ export default function ProfileView() {
             )}
             {guardianFid && !isInitiationMode && (
               <button
-                onClick={() => window.location.href = `/profile?fID=${guardianFid}&owner=true&showSelector=true`}
+                onClick={() => navigate(`/profile?fID=${guardianFid}&owner=true&showSelector=true${preservedFusionParams}`)}
                 className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="w-5 h-5" />
