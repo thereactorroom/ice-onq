@@ -57,7 +57,15 @@ export default function IframeDetector() {
       try { host = sessionStorage.getItem(HOST_KEY) || ""; } catch {}
     }
 
-    const bridgeSrc = getBridgeUrl(host);
+    let bridgeSrc = getBridgeUrl(host);
+    // Fusion session fallback: the fusion host appends ?session=... to component
+    // URLs. When the parent host isn't a detectable fusiononq.com host (the
+    // cross-origin parent can't be read and the referrer is unusable), inject
+    // the production bridge so FusionBridge is available for bridge calls
+    // (closeComponent, WhatsApp, download, etc.).
+    if (!bridgeSrc && new URLSearchParams(window.location.search).get("session")) {
+      bridgeSrc = "https://app.fusiononq.com/js/fusion.bridge.js?v=1.0";
+    }
     if (bridgeSrc) {
       try { sessionStorage.setItem(HOST_KEY, host); } catch {}
       window.__fusiononqBridge = true;

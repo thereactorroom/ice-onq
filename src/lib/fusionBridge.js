@@ -24,6 +24,15 @@ export function isInFusionIframe() {
     return false;
   }
 
+  // Fusion session fallback — only the fusion host appends ?session=... to
+  // component URLs. If we're in an iframe carrying one, treat it as a fusion
+  // iframe even when the parent host can't be confirmed (cross-origin parent
+  // that throws on access, or a host/referrer that can't be read).
+  if (new URLSearchParams(window.location.search).get("session")) {
+    try { sessionStorage.setItem(FUSION_IFRAME_KEY, "true"); } catch {}
+    return true;
+  }
+
   // We're in an iframe. Try to detect the parent host FRESH first — this
   // overwrites any stale cached value (e.g. a "true" left by a prior fusion
   // session in the same tab) when the current parent is actually non-fusion
