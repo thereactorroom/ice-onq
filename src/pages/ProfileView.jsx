@@ -773,7 +773,9 @@ export default function ProfileView() {
           if (isInFusionIframe()) {
             requestCloseComponent();
           } else {
-            window.history.back();
+            // Never use history.back() here — inside an iframe (preview, fusion
+            // host) it navigates to the iframe's initial about:blank entry.
+            window.location.href = "/profile";
           }
         }}
         onSelect={(result) => {
