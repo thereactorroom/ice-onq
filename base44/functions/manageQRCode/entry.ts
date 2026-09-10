@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { waitUntil } from "base44:runtime";
 import { generateQrToken, normalizeQrToken } from "../../shared/qrToken.ts";
+import { pushQrBindingEvent } from "../../shared/qrGenCallback.ts";
 
 // Authorization helper — mirrors the pattern in manageICEContact:
 // fusion identity matching fusion_id/guardian_fid, OR authenticated Base44
@@ -136,6 +138,8 @@ Deno.serve(async (req) => {
         linked_at: new Date().toISOString(),
         linked_by: auth.actorEmail || String(body.fusionUserId || ''),
       });
+      // Notify the ICE onQ QR Generator that this token is now bound.
+      waitUntil(pushQrBindingEvent('bind', qrToken, profile.fusion_id));
       return Response.json({ status: 'linked', code: created });
     }
 
@@ -163,6 +167,8 @@ Deno.serve(async (req) => {
       const auth = await authorize(base44, profile, body);
       if (!auth.authorized) return Response.json({ error: 'Not authorized' }, { status: 403 });
       await base44.asServiceRole.entities.LinkedQRCode.delete(linkedQrId);
+      // Notify the ICE onQ QR Generator that this token has been released.
+      waitUntil(pushQrBindingEvent('unbind', record.qr_token, profile.fusion_id));
       return Response.json({ status: 'unlinked' });
     }
 
