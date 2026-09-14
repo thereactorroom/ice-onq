@@ -63,30 +63,55 @@ export default function LoginFlow({ onBack, onSuccess }) {
         const user = data.user;
         setFusionUser(user);
         setFid(String(user.userId));
-        // Does this fusion user already have an ICE profile?
-        try {
-          const check = await base44.functions.invoke("checkProfileExists", { id: String(user.userId) });
-          if (check.data?.exists) {
-            window.location.href = `/profile?fID=${user.userId}&Launch=Profile&Owner=True`;
-            return;
-          }
-        } catch { /* check failed — fall through to creation */ }
-        // No ICE profile yet — create the fusion relationship (profile shell
-        // seeded from the fusion account), then drop into profile creation
-        try {
-          await base44.functions.invoke("getPublicICEProfile", {
-            profileId: String(user.userId),
-            fusionUser: { userId: user.userId, name: user.name, surname: user.surname, dob: user.dob, picture: user.picture },
-            fusionHost: "https://app.fusiononq.com",
-          });
-        } catch { /* shell creation failed — still route to their profile area */ }
-        setLoading(false);
-        window.location.href = `/profile?fID=${user.userId}&owner=true&newProfile=true`;
+        await routeAfterAuth(user);
       })
       .catch((e) => {
         setError(e?.response?.data?.error || e?.message || "Could not sign in.");
         setLoading(false);
       });
+  }
+
+  // ── Verify the SMS one-time code, then route to profile / creation ──
+  function handleVerifyOtp() {
+    setError("");
+    setLoading(true);
+    base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp })
+      .then(async (res) => {
+        const data = res.data;
+        if (!data || !data.result) {
+          setError(data?.reason || "Invalid OTP code");
+          setLoading(false);
+          return;
+        }
+        await routeAfterAuth(fusionUser);
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.error || e?.message || "Could not verify the code.");
+        setLoading(false);
+      });
+  }
+
+  // ── Shared post-verification routing: "Your ICE Profiles" or creation ──
+  async function routeAfterAuth(user) {
+    // Does this fusion user already have an ICE profile?
+    try {
+      const check = await base44.functions.invoke("checkProfileExists", { id: String(user.userId) });
+      if (check.data?.exists) {
+        window.location.href = `/profile?fID=${user.userId}&Launch=Profile&Owner=True`;
+        return;
+      }
+    } catch { /* check failed — fall through to creation */ }
+    // No ICE profile yet — create the fusion relationship (profile shell
+    // seeded from the fusion account), then drop into profile creation
+    try {
+      await base44.functions.invoke("getPublicICEProfile", {
+        profileId: String(user.userId),
+        fusionUser: { userId: user.userId, name: user.name, surname: user.surname, dob: user.dob, picture: user.picture },
+        fusionHost: "https://app.fusiononq.com",
+      });
+    } catch { /* shell creation failed — still route to their profile area */ }
+    setLoading(false);
+    window.location.href = `/profile?fID=${user.userId}&owner=true&newProfile=true`;
   }
 
   // ── Profile Selector (post-login) ──
@@ -244,10 +269,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
             className="w-full h-11"
-            disabled={otp.length < 6}
-            onClick={() => setStep("select_profile")}
+            disabled={otp.length < 6 || loading}
+            onClick={handleVerifyOtp}
           >
-            Verify
+            {loading ? "Verifying..." : "Verify"}
           </Button>
         </div>
         <BottomBack onBack={() => setStep("mobile")} />
