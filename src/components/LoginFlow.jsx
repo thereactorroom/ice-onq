@@ -1,22 +1,44 @@
 import { useState } from "react";
-import { Shield, ArrowLeft, Phone, MessageSquare, KeyRound } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, MessageSquare, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import ProfileSelectorScreen from "./ProfileSelectorScreen";
 
-// Steps: 'mobile' → 'method' → 'otp' → 'fid' → 'select_profile'
+// Steps: 'mobile' → fusion userCheck → 'not_found' | 'password' | 'otp' → 'select_profile'
 export default function LoginFlow({ onBack, onSuccess }) {
   const [step, setStep] = useState("mobile");
   const [mobile, setMobile] = useState("");
-  const [method, setMethod] = useState("sms");
-  const [otp, setOtp] = useState("123456");
   const [fid, setFid] = useState("");
+  const [fusionUser, setFusionUser] = useState(null);
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function handleError(msg) {
-    setError(msg);
-    setLoading(false);
+  // ── Verify the mobile number against fusion onQ ──
+  function handleUserCheck() {
+    setError("");
+    setLoading(true);
+    base44.functions.invoke("fusionUserCheck", { mobile })
+      .then((res) => {
+        const data = res.data;
+        setLoading(false);
+        if (data && data.result && data.user) {
+          setFusionUser(data.user);
+          setFid(String(data.user.userId));
+          if (String(data.user.hasPassword) === "true") {
+            setStep("password");
+          } else {
+            setStep("otp");
+          }
+        } else {
+          setStep("not_found");
+        }
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.error || e?.message || "Could not verify your mobile number.");
+        setLoading(false);
+      });
   }
 
   // ── Profile Selector (post-login) ──
@@ -24,7 +46,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
     return (
       <ProfileSelectorScreen
         guardianFid={fid}
-        onBack={() => setStep("fid")}
+        onBack={() => setStep("mobile")}
         onSelect={(result) => {
           if (result.addDependent) {
             onSuccess({ addDependent: true, guardianFid: fid });
@@ -45,7 +67,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6">
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">Sign in to fusion onQ</h2>
-            <p className="text-sm text-muted-foreground">Enter your mobile number to receive a verification code.</p>
+            <p className="text-sm text-muted-foreground">Enter your mobile number to access your ICE profiles.</p>
           </div>
           <div className="space-y-3">
             <label className="text-xs text-muted-foreground uppercase tracking-wider block">Mobile Number</label>
@@ -60,10 +82,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
             className="w-full h-11"
-            disabled={!mobile.trim()}
-            onClick={() => { setError(""); setStep("method"); }}
+            disabled={!mobile.trim() || loading}
+            onClick={handleUserCheck}
           >
-            Continue
+            {loading ? "Verifying..." : "Sign In"}
           </Button>
           <div className="text-center">
             <p className="text-xs text-muted-foreground">Don't have fusion onQ yet?</p>
@@ -77,39 +99,58 @@ export default function LoginFlow({ onBack, onSuccess }) {
     );
   }
 
-  // ── Step: Method selection ──
-  if (step === "method") {
+  // ── Step: Not on fusion (temp holding page) ──
+  if (step === "not_found") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header onBack={() => setStep("mobile")} />
+        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-12 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <UserX className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Mobile number not found</h2>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            <span className="font-semibold">{mobile}</span> isn't registered with fusion onQ yet. You'll need a fusion onQ account before you can activate your ICE profile.
+          </p>
+          <a href="https://app.fusiononq.com" target="_blank" rel="noreferrer" className="mt-4 text-sm text-primary font-semibold underline">
+            Register at fusiononq.com
+          </a>
+        </div>
+        <BottomBack onBack={() => setStep("mobile")} />
+      </div>
+    );
+  }
+
+  // ── Step: fusion onQ password ──
+  if (step === "password") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header onBack={() => setStep("mobile")} />
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6">
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-foreground">How would you like to verify?</h2>
-            <p className="text-sm text-muted-foreground">We'll send a one-time code to {mobile}.</p>
+            <KeyRound className="w-8 h-8 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Enter your fusion onQ password</h2>
+            <p className="text-sm text-muted-foreground">
+              Welcome back{fusionUser?.name ? `, ${fusionUser.name}` : ""}. Enter the password you use for fusion onQ.
+            </p>
           </div>
           <div className="space-y-3">
-            {[
-              { id: "sms", icon: MessageSquare, label: "SMS", desc: "Receive a text message" },
-              { id: "whatsapp", icon: Phone, label: "WhatsApp", desc: "Receive a WhatsApp message" },
-            ].map(({ id, icon: Icon, label, desc }) => (
-              <button
-                key={id}
-                onClick={() => setMethod(id)}
-                className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-colors text-left ${
-                  method === id ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
-                }`}
-              >
-                <Icon className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-sm text-foreground">{label}</p>
-                  <p className="text-xs text-muted-foreground">{desc}</p>
-                </div>
-              </button>
-            ))}
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your fusion onQ password"
+              className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
+            />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button className="w-full h-11" onClick={() => { setError(""); setStep("otp"); }}>
-            Send Code
+          <Button
+            className="w-full h-11"
+            disabled={!password.trim()}
+            onClick={() => setStep("select_profile")}
+          >
+            Sign In
           </Button>
         </div>
         <BottomBack onBack={() => setStep("mobile")} />
@@ -117,16 +158,22 @@ export default function LoginFlow({ onBack, onSuccess }) {
     );
   }
 
-  // ── Step: OTP entry ──
+  // ── Step: OTP verification (no fusion password set) ──
   if (step === "otp") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <Header onBack={() => setStep("method")} />
+        <Header onBack={() => setStep("mobile")} />
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6">
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-foreground">Enter your verification code</h2>
+            <MessageSquare className="w-8 h-8 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Verify with a one-time code</h2>
             <p className="text-sm text-muted-foreground">
-              We sent a code via {method === "whatsapp" ? "WhatsApp" : "SMS"} to {mobile}.
+              You don't have a fusion onQ password yet, so you'll be verified via a one-time code.
+            </p>
+          </div>
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+            <p className="text-sm text-foreground">
+              fusion onQ is sending an OTP to <span className="font-semibold">{mobile}</span>. Enter it below to continue.
             </p>
           </div>
           <div className="space-y-3">
@@ -139,71 +186,20 @@ export default function LoginFlow({ onBack, onSuccess }) {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
+              autoComplete="one-time-code"
               className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary tracking-widest text-center text-lg"
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
             className="w-full h-11"
-            disabled={!otp.trim() || loading}
-            onClick={() => { setError(""); setStep("fid"); }}
+            disabled={otp.length < 6}
+            onClick={() => setStep("select_profile")}
           >
-            {loading ? "Verifying..." : "Verify"}
-          </Button>
-          <button onClick={() => setStep("method")} className="w-full text-xs text-muted-foreground hover:text-primary transition-colors">
-            Resend code
-          </button>
-        </div>
-        <BottomBack onBack={() => setStep("method")} />
-      </div>
-    );
-  }
-
-  // ── Step: FID entry (demo/testing flow) ──
-  if (step === "fid") {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <Header onBack={() => setStep("otp")} />
-        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6">
-          <div className="space-y-2">
-            <KeyRound className="w-8 h-8 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Enter your fusion ID</h2>
-            <p className="text-sm text-muted-foreground">Enter your fusion onQ user ID to access your ICE profiles.</p>
-          </div>
-          <div className="space-y-3">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider block">fusion ID</label>
-            <input
-              type="number"
-              value={fid}
-              onChange={(e) => setFid(e.target.value)}
-              placeholder="e.g. 32"
-              className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button
-            className="w-full h-11"
-            disabled={!fid.trim() || loading}
-            onClick={() => {
-              setError("");
-              setLoading(true);
-              base44.functions.invoke("getPublicICEProfile", {
-                profileId: fid,
-                fusionUser: { userId: fid },
-                fusionHost: window.location.origin,
-              })
-                .then(() => {
-                  setLoading(false);
-                  // Go to profile selector — not directly to the profile
-                  setStep("select_profile");
-                })
-                .catch((e) => handleError(e?.response?.data?.error || e?.message || "Could not find profile."));
-            }}
-          >
-            {loading ? "Loading..." : "Access My Profiles"}
+            Verify
           </Button>
         </div>
-        <BottomBack onBack={() => setStep("otp")} />
+        <BottomBack onBack={() => setStep("mobile")} />
       </div>
     );
   }
