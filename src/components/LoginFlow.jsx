@@ -258,10 +258,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={5}
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 5))}
+              placeholder="00000"
               autoComplete="one-time-code"
               className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary tracking-widest text-center text-lg"
             />
@@ -269,7 +269,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
             className="w-full h-11"
-            disabled={otp.length < 6 || loading}
+            disabled={otp.length < 5 || loading}
             onClick={handleVerifyOtp}
           >
             {loading ? "Verifying..." : "Verify"}
