@@ -1,4 +1,5 @@
 import { secrets } from 'base44:runtime';
+import { normalizeFusionMobile } from '../../shared/fusionMobileFormat.ts';
 
 // Proxy for the fusion onQ userCheck API. Called from the ICE onQ sign-in
 // flow to verify a mobile number belongs to a fusion onQ user.
@@ -12,19 +13,10 @@ import { secrets } from 'base44:runtime';
 //   27720980200  → userId=0720980200, countryCode=27
 //   0720980200   → userId=0720980200, countryCode=27
 
-function normalizeMobile(raw) {
-  const digits = String(raw || '').replace(/\D/g, '');
-  const countryCode = '27';
-  if (digits.startsWith('0')) return { userId: digits, countryCode };
-  if (digits.startsWith('27') && digits.length === 11) return { userId: '0' + digits.slice(2), countryCode };
-  if (digits.length === 9) return { userId: '0' + digits, countryCode };
-  return { userId: digits, countryCode };
-}
-
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
-    const { userId, countryCode } = normalizeMobile(body.mobile);
+    const { userId, countryCode } = normalizeFusionMobile(body.mobile);
     if (!userId) return Response.json({ error: 'mobile required' }, { status: 400 });
 
     const apiKey = secrets.get('FUSION_API_KEY');

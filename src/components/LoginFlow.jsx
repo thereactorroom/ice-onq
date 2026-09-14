@@ -41,6 +41,47 @@ export default function LoginFlow({ onBack, onSuccess }) {
       });
   }
 
+  // ── Verify the fusion onQ password, then route to profile / creation ──
+  function handlePasswordSignIn() {
+    setError("");
+    setLoading(true);
+    base44.functions.invoke("fusionSignIn", { mobile, password })
+      .then(async (res) => {
+        const data = res.data;
+        if (!data || !data.result || !data.user) {
+          setError(data?.reason || "Invalid password");
+          setLoading(false);
+          return;
+        }
+        const user = data.user;
+        setFusionUser(user);
+        setFid(String(user.userId));
+        // Does this fusion user already have an ICE profile?
+        try {
+          const check = await base44.functions.invoke("checkProfileExists", { id: String(user.userId) });
+          if (check.data?.exists) {
+            window.location.href = `/profile?fID=${user.userId}&owner=true`;
+            return;
+          }
+        } catch { /* check failed — fall through to creation */ }
+        // No ICE profile yet — create the fusion relationship (profile shell
+        // seeded from the fusion account), then drop into profile creation
+        try {
+          await base44.functions.invoke("getPublicICEProfile", {
+            profileId: String(user.userId),
+            fusionUser: { userId: user.userId, name: user.name, surname: user.surname, dob: user.dob, picture: user.picture },
+            fusionHost: "https://app.fusiononq.com",
+          });
+        } catch { /* shell creation failed — still route to their profile area */ }
+        setLoading(false);
+        window.location.href = `/profile?fID=${user.userId}&owner=true&newProfile=true`;
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.error || e?.message || "Could not sign in.");
+        setLoading(false);
+      });
+  }
+
   // ── Profile Selector (post-login) ──
   if (step === "select_profile") {
     return (
@@ -147,10 +188,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button
             className="w-full h-11"
-            disabled={!password.trim()}
-            onClick={() => setStep("select_profile")}
+            disabled={!password.trim() || loading}
+            onClick={handlePasswordSignIn}
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </Button>
         </div>
         <BottomBack onBack={() => setStep("mobile")} />
