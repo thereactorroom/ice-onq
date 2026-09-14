@@ -20,7 +20,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
     setError("");
     setLoading(true);
     base44.functions.invoke("fusionUserCheck", { mobile })
-      .then((res) => {
+      .then(async (res) => {
         const data = res.data;
         setLoading(false);
         if (data && data.result && data.user) {
@@ -29,6 +29,13 @@ export default function LoginFlow({ onBack, onSuccess }) {
           if (String(data.user.hasPassword) === "true") {
             setStep("password");
           } else {
+            // No password set — request an SMS one-time code from fusion onQ
+            const otpRes = await base44.functions.invoke("fusionSendOtp", { mobile });
+            const otpData = otpRes.data;
+            if (!otpData || !otpData.result) {
+              setError(otpData?.reason || "Could not send the one-time code.");
+              return;
+            }
             setStep("otp");
           }
         } else {
@@ -214,7 +221,10 @@ export default function LoginFlow({ onBack, onSuccess }) {
           </div>
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
             <p className="text-sm text-foreground">
-              fusion onQ is sending an OTP to <span className="font-semibold">{mobile}</span>. Enter it below to continue.
+              We've sent a one-time code via SMS to <span className="font-semibold">{mobile}</span>. Enter it below to continue.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              fusion onQ limits one-time codes to 3 per mobile number every 24 hours.
             </p>
           </div>
           <div className="space-y-3">
