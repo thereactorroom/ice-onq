@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Shield, ArrowLeft, Phone, MessageSquare, Mail, Loader2, CheckCircle, User, Users } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, UserX, Loader2, CheckCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 
 // Steps: 'who' → 'dependent_name' (if dependent) → 'identity' → 'otp' → 'fusion_pending'
 export default function CreateProfileFlow({ onBack, guardianFid = null }) {
@@ -9,11 +10,44 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
   const [dependentName, setDependentName] = useState("");
   const [dependentRelationship, setDependentRelationship] = useState("");
   const [mobile, setMobile] = useState("");
-  const [method, setMethod] = useState("sms");
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("123456");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ── Guardian verification — same methodology as sign-in ──
+  // Mobile → fusion userCheck → password (if set) or SMS one-time code
+  function handleVerifyIdentity() {
+    setError("");
+    setLoading(true);
+    base44.functions.invoke("fusionUserCheck", { mobile })
+      .then(async (res) => {
+        const data = res.data;
+        if (data && data.result && data.user) {
+          if (String(data.user.hasPassword) === "true") {
+            setLoading(false);
+            setStep("password");
+          } else {
+            // No password set — request an SMS one-time code from fusion onQ
+            const otpRes = await base44.functions.invoke("fusionSendOtp", { mobile });
+            const otpData = otpRes.data;
+            setLoading(false);
+            if (!otpData || !otpData.result) {
+              setError(otpData?.reason || "Could not send the one-time code.");
+              return;
+            }
+            setStep("otp");
+          }
+        } else {
+          setLoading(false);
+          setStep("not_found");
+        }
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.error || e?.message || "Could not verify your mobile number.");
+        setLoading(false);
+      });
+  }
 
   // ── Step 0: Who is this profile for? ──
   if (step === "who") {
@@ -177,65 +211,116 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider block">Verify via</label>
-            <div className="space-y-2">
-              {[
-                { id: "sms", icon: MessageSquare, label: "SMS", desc: "Text message to your mobile" },
-                { id: "whatsapp", icon: Phone, label: "WhatsApp", desc: "WhatsApp message to your mobile" },
-                { id: "email", icon: Mail, label: "Email", desc: "One-time code to your email address" },
-              ].map(({ id, icon: Icon, label, desc }) => (
-                <button
-                  key={id}
-                  onClick={() => setMethod(id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
-                    method === id ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  <Icon className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-sm text-foreground">{label}</p>
-                    <p className="text-xs text-muted-foreground">{desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+            <p className="text-sm text-foreground">
+              We'll verify <span className="font-semibold">{mobile || "your mobile number"}</span> with fusion onQ — using your fusion onQ password, or a one-time SMS code if you don't have one yet.
+            </p>
           </div>
-
-          {method === "email" && (
-            <div className="space-y-2">
-              <label className="text-xs text-muted-foreground uppercase tracking-wider block">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
-              />
-            </div>
-          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <Button
           className="w-full h-11 mt-6"
-          disabled={!mobile.trim() || (method === "email" && !email.trim())}
-          onClick={() => {
-            setError("");
-            // TODO: Trigger OTP send via fusion API
-            setStep("otp");
-          }}
+          disabled={!mobile.trim() || loading}
+          onClick={handleVerifyIdentity}
         >
-          Send Verification Code
+          {loading ? "Verifying..." : "Continue"}
         </Button>
       </FlowShell>
     );
   }
 
-  // ── Step 3: OTP Verification ──
+  // ── Step: fusion onQ password (guardian has a password set) ──
+  if (step === "password") {
+    return (
+      <FlowShell
+        onBack={() => { setStep("identity"); setPassword(""); setError(""); }}
+        title="Your fusion onQ Password"
+        subtitle={`Step ${parseInt(stepNum) + 1} of ${totalSteps} — Guardian verification`}
+      >
+        <div className="space-y-5">
+          {profileType === "dependent" && (
+            <div className="bg-muted/60 rounded-xl px-4 py-3 flex items-center gap-3">
+              <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                Creating profile for <span className="font-semibold">{dependentName}</span>
+                <span className="text-muted-foreground"> · {dependentRelationship}</span>
+              </p>
+            </div>
+          )}
+
+          <KeyRound className="w-8 h-8 text-primary" />
+
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your fusion onQ password"
+              className="w-full bg-card border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter the password you use for fusion onQ to confirm you're the guardian of this profile.
+            </p>
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+
+        <Button
+          className="w-full h-11 mt-6"
+          disabled={!password.trim() || loading}
+          onClick={() => {
+            setError("");
+            setLoading(true);
+            base44.functions.invoke("fusionSignIn", { mobile, password })
+              .then((res) => {
+                setLoading(false);
+                if (res.data && res.data.result) {
+                  setStep("fusion_pending");
+                } else {
+                  setError(res.data?.reason || "Invalid password");
+                }
+              })
+              .catch((e) => {
+                setError(e?.response?.data?.error || e?.message || "Could not sign in.");
+                setLoading(false);
+              });
+          }}
+        >
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : "Verify Password"}
+        </Button>
+      </FlowShell>
+    );
+  }
+
+  // ── Step: Mobile number not registered with fusion onQ ──
+  if (step === "not_found") {
+    return (
+      <FlowShell
+        onBack={() => { setStep("identity"); setError(""); }}
+        title="Mobile number not found"
+        subtitle={`Step ${stepNum} of ${totalSteps} — Guardian verification`}
+      >
+        <div className="flex-1 flex flex-col items-center text-center py-8">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+            <UserX className="w-8 h-8 text-destructive" />
+          </div>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            <span className="font-semibold text-foreground">{mobile}</span> isn't registered with fusion onQ yet. You'll need a fusion onQ account before you can create or manage ICE profiles.
+          </p>
+          <a href="https://app.fusiononq.com" target="_blank" rel="noreferrer" className="mt-4 text-sm text-primary font-semibold underline">
+            Register at fusiononq.com
+          </a>
+        </div>
+      </FlowShell>
+    );
+  }
+
+  // ── Step: SMS one-time code (no fusion password set) ──
   if (step === "otp") {
-    const methodLabel = method === "whatsapp" ? "WhatsApp" : method === "email" ? `email (${email})` : `SMS to ${mobile}`;
     return (
       <FlowShell
         onBack={() => { setStep("identity"); setOtp(""); setError(""); }}
@@ -244,7 +329,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            We sent a one-time code via <span className="font-medium text-foreground">{methodLabel}</span>. Enter it below.
+            We've sent a one-time code via SMS to <span className="font-medium text-foreground">{mobile}</span>. Enter it below to confirm you're the guardian.
           </p>
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground uppercase tracking-wider block">Verification Code</label>
@@ -263,23 +348,30 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
             onClick={() => { setStep("identity"); setOtp(""); }}
             className="text-xs text-primary font-medium hover:underline"
           >
-            Change contact details or method
+            Change contact details
           </button>
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <Button
           className="w-full h-11 mt-6"
-          disabled={!otp.trim() || loading}
+          disabled={otp.length < 4 || loading}
           onClick={() => {
             setError("");
             setLoading(true);
-            // TODO: Verify OTP via fusion API → returns guardianFid
-            // On success, fusion will resolve or create the fID
-            setTimeout(() => {
-              setLoading(false);
-              setStep("fusion_pending");
-            }, 800);
+            base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp })
+              .then((res) => {
+                setLoading(false);
+                if (res.data && res.data.result) {
+                  setStep("fusion_pending");
+                } else {
+                  setError(res.data?.reason || "Invalid OTP code");
+                }
+              })
+              .catch((e) => {
+                setError(e?.response?.data?.error || e?.message || "Could not verify the code.");
+                setLoading(false);
+              });
           }}
         >
           {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : "Verify Code"}
@@ -291,7 +383,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
   // ── Step 4: Fusion Handshake Pending — NO ICE record created here ──
   if (step === "fusion_pending") {
     return (
-      <FlowShell onBack={() => { setStep("otp"); setError(""); }} title="Linking to fusion onQ" subtitle="Final step — Account setup">
+      <FlowShell onBack={() => { setStep("identity"); setError(""); }} title="Linking to fusion onQ" subtitle="Final step — Account setup">
         <div className="space-y-5">
           {profileType === "dependent" && (
             <div className="bg-muted/60 rounded-xl px-4 py-3 flex items-center gap-3">
