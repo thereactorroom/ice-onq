@@ -60,7 +60,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
         try {
           const check = await base44.functions.invoke("checkProfileExists", { id: String(user.userId) });
           if (check.data?.exists) {
-            window.location.href = `/profile?fID=${user.userId}&owner=true`;
+            window.location.href = `/profile?fID=${user.userId}&Launch=Profile&Owner=True`;
             return;
           }
         } catch { /* check failed — fall through to creation */ }
