@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Shield, ArrowLeft, KeyRound, MessageSquare, UserX } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import ProfileSelectorScreen from "./ProfileSelectorScreen";
+import FusionRegisterForm from "./FusionRegisterForm";
+import { routeAfterFusionAuth } from "@/lib/fusionAuthRouting";
 
 // Steps: 'mobile' → fusion userCheck → 'not_found' | 'password' | 'otp' → 'select_profile'
 export default function LoginFlow({ onBack, onSuccess }) {
@@ -14,6 +16,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // ── Verify the mobile number against fusion onQ ──
   function handleUserCheck() {
@@ -24,6 +27,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
         const data = res.data;
         setLoading(false);
         if (data && data.result && data.user) {
+          setIsNewUser(false);
           setFusionUser(data.user);
           setFid(String(data.user.userId));
           if (String(data.user.hasPassword) === "true") {
@@ -39,7 +43,17 @@ export default function LoginFlow({ onBack, onSuccess }) {
             setStep("otp");
           }
         } else {
-          setStep("not_found");
+          // Not registered on fusion yet — verify the number via OTP,
+          // then offer in-app fusion onQ registration
+          setIsNewUser(true);
+          const otpRes = await base44.functions.invoke("fusionSendOtp", { mobile });
+          const otpData = otpRes.data;
+          setLoading(false);
+          if (!otpData || !otpData.result) {
+            setError(otpData?.reason || "Could not send the one-time code.");
+            return;
+          }
+          setStep("otp");
         }
       })
       .catch((e) => {
@@ -83,6 +97,11 @@ export default function LoginFlow({ onBack, onSuccess }) {
           setLoading(false);
           return;
         }
+        if (isNewUser) {
+          setLoading(false);
+          setStep("register");
+          return;
+        }
         await routeAfterAuth(fusionUser);
       })
       .catch((e) => {
@@ -93,25 +112,8 @@ export default function LoginFlow({ onBack, onSuccess }) {
 
   // ── Shared post-verification routing: "Your ICE Profiles" or creation ──
   async function routeAfterAuth(user) {
-    // Does this fusion user already have an ICE profile?
-    try {
-      const check = await base44.functions.invoke("checkProfileExists", { id: String(user.userId) });
-      if (check.data?.exists) {
-        window.location.href = `/profile?fID=${user.userId}&Launch=Profile&Owner=True`;
-        return;
-      }
-    } catch { /* check failed — fall through to creation */ }
-    // No ICE profile yet — create the fusion relationship (profile shell
-    // seeded from the fusion account), then drop into profile creation
-    try {
-      await base44.functions.invoke("getPublicICEProfile", {
-        profileId: String(user.userId),
-        fusionUser: { userId: user.userId, name: user.name, surname: user.surname, dob: user.dob, picture: user.picture },
-        fusionHost: "https://app.fusiononq.com",
-      });
-    } catch { /* shell creation failed — still route to their profile area */ }
-    setLoading(false);
-    window.location.href = `/profile?fID=${user.userId}&owner=true&newProfile=true`;
+    setLoading(true);
+    await routeAfterFusionAuth(user);
   }
 
   // ── Profile Selector (post-login) ──
@@ -160,36 +162,24 @@ export default function LoginFlow({ onBack, onSuccess }) {
           >
             {loading ? "Verifying..." : "Sign In"}
           </Button>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Don't have fusion onQ yet?</p>
-            <a href="https://app.fusiononq.com" target="_blank" rel="noreferrer" className="text-xs text-primary font-semibold underline">
-              Register at fusiononq.com
-            </a>
-          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            New to fusion onQ? Continue with your mobile number — we'll verify it and set up your account.
+          </p>
         </div>
         <BottomBack onBack={onBack} />
       </div>
     );
   }
 
-  // ── Step: Not on fusion (temp holding page) ──
-  if (step === "not_found") {
+  // ── Step: Register a new fusion onQ account (verified, not yet on fusion) ──
+  if (step === "register") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <Header onBack={() => setStep("mobile")} />
-        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-12 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-            <UserX className="w-8 h-8 text-destructive" />
-          </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">Mobile number not found</h2>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            <span className="font-semibold">{mobile}</span> isn't registered with fusion onQ yet. You'll need a fusion onQ account before you can activate your ICE profile.
-          </p>
-          <a href="https://app.fusiononq.com" target="_blank" rel="noreferrer" className="mt-4 text-sm text-primary font-semibold underline">
-            Register at fusiononq.com
-          </a>
+        <Header onBack={() => setStep("otp")} />
+        <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8">
+          <FusionRegisterForm mobile={mobile} onRegistered={(user) => routeAfterAuth(user)} />
         </div>
-        <BottomBack onBack={() => setStep("mobile")} />
+        <BottomBack onBack={() => setStep("otp")} />
       </div>
     );
   }
@@ -241,7 +231,9 @@ export default function LoginFlow({ onBack, onSuccess }) {
             <MessageSquare className="w-8 h-8 text-primary" />
             <h2 className="text-xl font-bold text-foreground">Verify with a one-time code</h2>
             <p className="text-sm text-muted-foreground">
-              You don't have a fusion onQ password yet, so you'll be verified via a one-time code.
+              {isNewUser
+                ? "This number isn't on fusion onQ yet — we'll verify it now and set up your account."
+                : "You don't have a fusion onQ password yet, so you'll be verified via a one-time code."}
             </p>
           </div>
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">

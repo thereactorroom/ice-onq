@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Shield, ArrowLeft, KeyRound, UserX, Loader2, CheckCircle, User, Users } from "lucide-react";
+import { Shield, ArrowLeft, KeyRound, Loader2, CheckCircle, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import FusionRegisterForm from "./FusionRegisterForm";
+import { routeAfterFusionAuth } from "@/lib/fusionAuthRouting";
 
 // Steps: 'who' → 'dependent_name' (if dependent) → 'identity' → 'otp' → 'fusion_pending'
 export default function CreateProfileFlow({ onBack, guardianFid = null }) {
@@ -14,6 +16,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // ── Guardian verification — same methodology as sign-in ──
   // Mobile → fusion userCheck → password (if set) or SMS one-time code
@@ -24,6 +27,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
       .then(async (res) => {
         const data = res.data;
         if (data && data.result && data.user) {
+          setIsNewUser(false);
           if (String(data.user.hasPassword) === "true") {
             setLoading(false);
             setStep("password");
@@ -39,8 +43,17 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
             setStep("otp");
           }
         } else {
+          // Not registered on fusion yet — verify the number via OTP,
+          // then offer in-app fusion onQ registration
+          setIsNewUser(true);
+          const otpRes = await base44.functions.invoke("fusionSendOtp", { mobile });
+          const otpData = otpRes.data;
           setLoading(false);
-          setStep("not_found");
+          if (!otpData || !otpData.result) {
+            setError(otpData?.reason || "Could not send the one-time code.");
+            return;
+          }
+          setStep("otp");
         }
       })
       .catch((e) => {
@@ -296,29 +309,6 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
     );
   }
 
-  // ── Step: Mobile number not registered with fusion onQ ──
-  if (step === "not_found") {
-    return (
-      <FlowShell
-        onBack={() => { setStep("identity"); setError(""); }}
-        title="Mobile number not found"
-        subtitle={`Step ${stepNum} of ${totalSteps} — Guardian verification`}
-      >
-        <div className="flex-1 flex flex-col items-center text-center py-8">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-            <UserX className="w-8 h-8 text-destructive" />
-          </div>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            <span className="font-semibold text-foreground">{mobile}</span> isn't registered with fusion onQ yet. You'll need a fusion onQ account before you can create or manage ICE profiles.
-          </p>
-          <a href="https://app.fusiononq.com" target="_blank" rel="noreferrer" className="mt-4 text-sm text-primary font-semibold underline">
-            Register at fusiononq.com
-          </a>
-        </div>
-      </FlowShell>
-    );
-  }
-
   // ── Step: SMS one-time code (no fusion password set) ──
   if (step === "otp") {
     return (
@@ -363,7 +353,11 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
               .then((res) => {
                 setLoading(false);
                 if (res.data && res.data.result) {
-                  setStep("fusion_pending");
+                  if (isNewUser) {
+                    setStep("register");
+                  } else {
+                    setStep("fusion_pending");
+                  }
                 } else {
                   setError(res.data?.reason || "Invalid OTP code");
                 }
@@ -376,6 +370,30 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
         >
           {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : "Verify Code"}
         </Button>
+      </FlowShell>
+    );
+  }
+
+  // ── Step: Register a new guardian fusion onQ account (verified, not yet on fusion) ──
+  if (step === "register") {
+    return (
+      <FlowShell
+        onBack={() => setStep("otp")}
+        title="Create your fusion onQ account"
+        subtitle={`Step ${parseInt(stepNum) + 1} of ${totalSteps} — Guardian verification`}
+      >
+        <FusionRegisterForm
+          mobile={mobile}
+          onRegistered={async (user) => {
+            if (profileType === "self") {
+              // Map the new fusion user to a new ICE profile and log them in
+              await routeAfterFusionAuth(user);
+            } else {
+              // Guardian registered — continue with the dependent profile setup
+              setStep("fusion_pending");
+            }
+          }}
+        />
       </FlowShell>
     );
   }
