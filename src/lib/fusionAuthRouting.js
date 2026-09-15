@@ -25,5 +25,7 @@ export async function routeAfterFusionAuth(user) {
     });
   } catch { /* shell creation failed — still route to their profile area */ }
 
-  window.location.href = `/profile?fID=${fid}&owner=true&newProfile=true`;
+  // New fusion account — take the user to "Your ICE Profiles" (selector),
+  // where their freshly created profile shell is listed.
+  window.location.href = `/profile?fID=${fid}&Launch=Profile&Owner=true`;
 }
