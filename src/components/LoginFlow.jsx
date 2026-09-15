@@ -89,7 +89,7 @@ export default function LoginFlow({ onBack, onSuccess }) {
   function handleVerifyOtp() {
     setError("");
     setLoading(true);
-    base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp })
+    base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp, signin: !isNewUser })
       .then(async (res) => {
         const data = res.data;
         if (!data || !data.result) {

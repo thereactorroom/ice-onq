@@ -349,7 +349,7 @@ export default function CreateProfileFlow({ onBack, guardianFid = null }) {
           onClick={() => {
             setError("");
             setLoading(true);
-            base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp })
+            base44.functions.invoke("fusionVerifyOtp", { mobile, code: otp, signin: !isNewUser })
               .then((res) => {
                 setLoading(false);
                 if (res.data && res.data.result) {

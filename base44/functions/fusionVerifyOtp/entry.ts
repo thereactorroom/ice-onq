@@ -20,12 +20,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'mobile and code required' }, { status: 400 });
     }
 
+    // For fresh signups the caller passes signin=false — fusion's verifyOTP
+    // endpoint must omit signin=true when the number isn't a fusion user yet.
+    const signin = body.signin !== false;
     const form = new URLSearchParams({
       userId,
       code,
-      signin: 'true',
       action: 'verifyOTP',
     });
+    if (signin) {
+      form.set('signin', 'true');
+    }
 
     const res = await fetch('https://app.fusiononq.com/api/', {
       method: 'POST',
