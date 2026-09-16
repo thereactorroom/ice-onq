@@ -61,7 +61,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
 
   async function handleLink() {
     const token = normalizeToken(tokenInput);
-    if (!token) { setLinkError("Enter a valid 32-character QR token or the QR code URL."); return; }
+    if (!token) { setLinkError("Enter a valid QR token or the QR code URL."); return; }
     setSubmitting(true);
     setLinkError(null);
     setClaimedInfo(null);
@@ -219,7 +219,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                   type="text"
                   value={tokenInput}
                   onChange={(e) => setTokenInput(e.target.value)}
-                  placeholder="https://ice.onq.life/…  or  32-char token"
+                  placeholder="https://onq.mobi/1/…  or  QR token"
                   className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-primary font-mono"
                 />
               </div>
@@ -342,14 +342,23 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         onClose={() => setShowScanner(false)}
         onScan={(text) => {
           setShowScanner(false);
-          const origin = window.location.origin;
-          if (!text || !text.includes(origin)) {
+          // Accept ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
+          // origin, and the new short-format URLs on onq.mobi (e.g. /1/cz3jum).
+          const scanned = String(text || "");
+          const token = normalizeToken(scanned);
+          const isUrl = /^https?:\/\//i.test(scanned);
+          const hostOk =
+            !isUrl ||
+            scanned.includes(window.location.origin) ||
+            /^https?:\/\/([^/]*\.)?onq\.(mobi|life)\//i.test(scanned) ||
+            /^https?:\/\/([^/]*\.)?onq\.(mobi|life)$/i.test(scanned);
+          if (!token || !hostOk) {
             setLinkError("This is not an ICE onQ QR Code");
             setTokenInput("");
             return;
           }
           setLinkError(null);
-          setTokenInput(text);
+          setTokenInput(token);
         }}
       />
     </div>
