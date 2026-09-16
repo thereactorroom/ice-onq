@@ -7,16 +7,17 @@ export function generateQrToken(length = 32) {
   return Array.from(arr).map(b => chars[b % chars.length]).join('');
 }
 
-// Extracts a 32-char token from either a raw token or a full URL like
+// Extracts a 6–32 char token from either a raw token or a full URL like
 // https://ice.onq.life/{token}
+// Legacy tokens are 32 chars; newer QR generator batches issue short tokens.
 // Always lowercases the result so QR resolution is case-insensitive.
 export function normalizeQrToken(input) {
   if (!input) return null;
   const trimmed = String(input).trim();
   // Try to extract from a URL path
-  const match = trimmed.match(/\/([A-Za-z0-9_-]{32})(?:[/?#]|$)/);
+  const match = trimmed.match(/\/([A-Za-z0-9_-]{6,32})(?:[/?#]|$)/);
   if (match) return match[1].toLowerCase();
   // Otherwise treat as a raw token
-  if (/^[A-Za-z0-9_-]{32}$/.test(trimmed)) return trimmed.toLowerCase();
+  if (/^[A-Za-z0-9_-]{6,32}$/.test(trimmed)) return trimmed.toLowerCase();
   return null;
 }

@@ -41,7 +41,7 @@ const AuthenticatedApp = () => {
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
   if (pathSegments.length === 1 && !knownRoutes.includes(window.location.pathname)) {
     const seg = pathSegments[0];
-    if (/^[A-Za-z0-9_-]{32}$/.test(seg)) {
+    if (/^[A-Za-z0-9_-]{6,32}$/.test(seg)) {
       window.location.replace(`/profile?qrToken=${seg}`);
       return null;
     }

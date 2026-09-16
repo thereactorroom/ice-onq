@@ -14,13 +14,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-// Extracts a 32-char token from a raw token or a full URL.
+// Extracts a 6–32 char token from a raw token or a full URL.
+// Legacy tokens are 32 chars; newer QR generator batches issue short tokens.
 function normalizeToken(input) {
   if (!input) return null;
   const trimmed = String(input).trim();
-  const match = trimmed.match(/\/([A-Za-z0-9_-]{32})(?:[/?#]|$)/);
+  const match = trimmed.match(/\/([A-Za-z0-9_-]{6,32})(?:[/?#]|$)/);
   if (match) return match[1];
-  if (/^[A-Za-z0-9_-]{32}$/.test(trimmed)) return trimmed;
+  if (/^[A-Za-z0-9_-]{6,32}$/.test(trimmed)) return trimmed;
   return null;
 }
 
