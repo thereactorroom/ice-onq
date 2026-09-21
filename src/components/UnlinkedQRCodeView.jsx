@@ -1,12 +1,10 @@
-import { Shield, QrCode, ExternalLink, Download } from "lucide-react";
+import { Shield, QrCode } from "lucide-react";
 import ClaimQRCodeFlow from "./ClaimQRCodeFlow";
 
 // Shown when a scanned QR token has no emergency information linked to it.
 // Lets the user verify their mobile number and link the QR code to their
-// ICE profile, with onboarding guidance for users without one.
+// ICE profile.
 export default function UnlinkedQRCodeView({ qrToken }) {
-  const fusionAppUrl = "https://app.fusiononq.com";
-  const healthOnQUrl = "https://app.fusiononq.com";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -32,52 +30,6 @@ export default function UnlinkedQRCodeView({ qrToken }) {
 
         {/* Link this QR code to your ICE profile (mobile verification) */}
         <ClaimQRCodeFlow qrToken={qrToken} />
-
-        {/* If this is your QR code */}
-        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
-          <h2 className="font-bold text-foreground text-sm">Prefer to link it in the app?</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            You can also open <strong>Health onQ</strong> in your <strong>fusion onQ</strong> app and link this QR code to your ICE onQ profile there.
-          </p>
-          <a
-            href={healthOnQUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full border border-border bg-transparent text-foreground font-semibold text-sm py-3 rounded-xl hover:bg-muted transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Open Health onQ
-          </a>
-        </div>
-
-        {/* Don't have a profile yet */}
-        <div className="bg-card rounded-2xl border border-border p-4 space-y-4">
-          <h2 className="font-bold text-foreground text-sm">Don't have an ICE onQ profile yet?</h2>
-          <ol className="space-y-2.5 text-sm text-muted-foreground">
-            {[
-              "Download the fusion onQ app from the App Store or Google Play.",
-              "Open Health onQ.",
-              "Create your ICE onQ profile.",
-              "Link this QR code to your profile.",
-            ].map((step, i) => (
-              <li key={i} className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center mt-0.5">
-                  {i + 1}
-                </span>
-                <span className="leading-relaxed">{step}</span>
-              </li>
-            ))}
-          </ol>
-          <a
-            href={fusionAppUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full bg-foreground text-background font-semibold text-sm py-3 rounded-xl hover:bg-foreground/90 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Download fusion onQ
-          </a>
-        </div>
 
         {/* Footer note */}
         <p className="text-xs text-muted-foreground text-center leading-relaxed px-4">
