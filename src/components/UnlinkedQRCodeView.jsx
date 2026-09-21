@@ -1,7 +1,9 @@
 import { Shield, QrCode, ExternalLink, Download } from "lucide-react";
+import ClaimQRCodeFlow from "./ClaimQRCodeFlow";
 
 // Shown when a scanned QR token has no emergency information linked to it.
-// Acts as an onboarding gateway guiding the user to claim the code.
+// Lets the user verify their mobile number and link the QR code to their
+// ICE profile, with onboarding guidance for users without one.
 export default function UnlinkedQRCodeView({ qrToken }) {
   const fusionAppUrl = "https://app.fusiononq.com";
   const healthOnQUrl = "https://app.fusiononq.com";
@@ -28,17 +30,20 @@ export default function UnlinkedQRCodeView({ qrToken }) {
           </p>
         </div>
 
+        {/* Link this QR code to your ICE profile (mobile verification) */}
+        <ClaimQRCodeFlow qrToken={qrToken} />
+
         {/* If this is your QR code */}
         <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
-          <h2 className="font-bold text-foreground text-sm">If this is your QR code:</h2>
+          <h2 className="font-bold text-foreground text-sm">Prefer to link it in the app?</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Open <strong>Health onQ</strong> in your <strong>fusion onQ</strong> app and link this QR code to your ICE onQ profile.
+            You can also open <strong>Health onQ</strong> in your <strong>fusion onQ</strong> app and link this QR code to your ICE onQ profile there.
           </p>
           <a
             href={healthOnQUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground font-semibold text-sm py-3 rounded-xl hover:bg-primary/90 transition-colors"
+            className="flex items-center justify-center gap-2 w-full border border-border bg-transparent text-foreground font-semibold text-sm py-3 rounded-xl hover:bg-muted transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             Open Health onQ
