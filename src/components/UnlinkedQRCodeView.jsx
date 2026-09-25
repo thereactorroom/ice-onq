@@ -15,15 +15,21 @@ export default function UnlinkedQRCodeView({ qrToken }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Brand bar */}
-      <div className="bg-primary sticky top-0 z-50 shadow-lg">
+      {/* Brand bar — normal top bar (not sticky, which clips inside the fusion iframe) */}
+      <div className="bg-primary shadow-lg">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
           <Shield className="w-5 h-5 text-white" />
           <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
         </div>
       </div>
 
-      <div className="flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6">
+      {/* Content: centered vertically for terminal states, top-aligned otherwise */}
+      <div
+        className={
+          "flex-1 max-w-lg mx-auto w-full px-4 py-8 space-y-6 " +
+          (isTerminal ? "flex flex-col items-center justify-center" : "")
+        }
+      >
         {/* "No Emergency Information Linked" intro — hidden once the QR
             code is linked (or the flow otherwise reaches a terminal state) */}
         {!isTerminal && (
