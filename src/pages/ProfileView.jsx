@@ -1042,7 +1042,7 @@ export default function ProfileView() {
             profile={profile}
             profileDbId={profileDbId}
             viewerEmail={viewerEmail}
-            fusionUserId={profileId}
+            fusionUserId={fusionUser?.userId || guardianFid || profileId}
             onSaved={handleMedicalSaved}
             onBack={() => { setMode("display"); fetchProfile(); }}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
