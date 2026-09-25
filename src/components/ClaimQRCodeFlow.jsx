@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Shield, Loader2, KeyRound, MessageSquare, CheckCircle, User, Link2,
   AlertCircle, QrCode, ChevronRight,
@@ -10,8 +10,14 @@ import FusionRegisterForm from "./FusionRegisterForm";
 // Steps: 'mobile' → (fusion userCheck) → 'password' | 'otp' | 'register'
 //        → 'checking' → 'profiles' (multiple) | 'confirm' (single/new)
 //        → 'success' | 'claimed' | 'declined'
-export default function ClaimQRCodeFlow({ qrToken }) {
+export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
   const [step, setStep] = useState("mobile");
+
+  // Notify the parent whenever the flow step changes, so it can hide its
+  // stale "No Emergency Information Linked" header once linking succeeds.
+  useEffect(() => {
+    onStepChange?.(step);
+  }, [step, onStepChange]);
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
