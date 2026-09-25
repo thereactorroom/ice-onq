@@ -8,7 +8,7 @@ import { base44 } from "@/api/base44Client";
 import FusionRegisterForm from "./FusionRegisterForm";
 
 // Steps: 'mobile' → (fusion userCheck) → 'password' | 'otp' | 'register'
-//        → 'checking' → 'profiles' (multiple) | 'confirm' (single/new)
+//        → 'name' → 'checking' → 'profiles' (multiple) | 'confirm' (single/new)
 //        → 'success' | 'claimed' | 'declined'
 export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
   const [step, setStep] = useState("mobile");
@@ -30,6 +30,7 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
   const [selected, setSelected] = useState(null);
   const [isNewProfile, setIsNewProfile] = useState(false);
   const [claimInfo, setClaimInfo] = useState(null);
+  const [linkName, setLinkName] = useState("");
 
   // ── Verify the mobile number against fusion onQ ──
   function handleUserCheck() {
@@ -85,7 +86,8 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
           return;
         }
         setFusionUser(data.user);
-        afterAuth(data.user);
+        setLoading(false);
+        setStep("name");
       })
       .catch((e) => {
         setError(e?.response?.data?.error || e?.message || "Could not sign in.");
@@ -110,7 +112,8 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
           setStep("register");
           return;
         }
-        afterAuth(fusionUser);
+        setLoading(false);
+        setStep("name");
       })
       .catch((e) => {
         setError(e?.response?.data?.error || e?.message || "Could not verify the code.");
@@ -207,7 +210,7 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
         action: "link",
         qrToken,
         profileId: candidate.id,
-        linkName: "Linked QR Code",
+        linkName: linkName.trim() || "Linked QR Code",
         fusionUserId: fid,
       });
       const d = res.data;
@@ -233,6 +236,36 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
     const newParam = isNewProfile ? "&newProfile=true" : "";
     window.location.href =
       `/profile?fID=${c.fID}&Launch=View&Owner=True&guardianFid=${fid}${dbIdParam}${newParam}`;
+  }
+
+  // ── Step: name the QR code (optional, before profile choice) ──
+  if (step === "name") {
+    return (
+      <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
+        <div className="space-y-1">
+          <QrCode className="w-7 h-7 text-primary" />
+          <h2 className="text-lg font-bold text-foreground">Name this QR code</h2>
+          <p className="text-sm text-muted-foreground">
+            Give this QR code a label so you can recognise it later — for example where you'll place it.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name (optional)</label>
+          <input
+            type="text"
+            value={linkName}
+            onChange={(e) => setLinkName(e.target.value)}
+            placeholder="e.g. Helmet, Wallet, Bike"
+            className="w-full bg-background border border-border rounded-lg px-3 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
+          />
+        </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button className="w-full h-11" disabled={loading} onClick={() => afterAuth()}>
+          {loading ? "Checking…" : "Continue"}
+        </Button>
+        <BackLink onBack={() => { setStep("mobile"); setError(""); }} />
+      </div>
+    );
   }
 
   // ── Step: checking profiles ──
@@ -343,7 +376,7 @@ export default function ClaimQRCodeFlow({ qrToken, onStepChange }) {
             Your number isn't on fusion onQ yet. Create your account — we'll set up your ICE profile and link this QR code.
           </p>
         </div>
-        <FusionRegisterForm mobile={mobile} onRegistered={(user) => afterAuth(user)} />
+        <FusionRegisterForm mobile={mobile} onRegistered={(user) => { setFusionUser(user); setStep("name"); }} />
         <BackLink onBack={() => { setStep("mobile"); setError(""); }} />
       </div>
     );
