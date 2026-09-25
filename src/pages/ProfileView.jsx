@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp, closeComponent } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
-import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw } from "lucide-react";
+import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -955,7 +955,20 @@ export default function ProfileView() {
           <div className="space-y-4">
             <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} />
 
-
+            <div className="bg-card rounded-2xl border-2 border-red-200 p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Phone className="w-5 h-5 text-red-600" />
+                <h3 className="font-bold text-foreground text-sm">Emergency Call</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">If this is a life-threatening emergency, call immediately.</p>
+              <a
+                href="tel:082911"
+                className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 px-8 rounded-2xl shadow-lg transition-colors"
+              >
+                <Phone className="w-6 h-6 fill-white" />
+                Call Emergency Services (082911)
+              </a>
+            </div>
 
             <CriticalAlertsBanner alerts={[...new Set([
               ...(profile.critical_alerts || []),
