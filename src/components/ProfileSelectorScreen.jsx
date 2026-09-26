@@ -73,9 +73,9 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
 
   async function loadQrCounts(primary, deps, shared) {
     const tiles = [];
-    if (isActiveProfile(primary)) tiles.push(primary.id);
-    deps.forEach((p) => { if (isActiveProfile(p)) tiles.push(p.id); });
-    shared.forEach((p) => { if (isActiveProfile(p)) tiles.push(p.id); });
+    if (primary) tiles.push(primary.id);
+    deps.forEach((p) => tiles.push(p.id));
+    shared.forEach((p) => tiles.push(p.id));
     const entries = await Promise.all(tiles.map(async (id) => [id, await fetchQrCount(id)]));
     setQrCounts(Object.fromEntries(entries));
   }
@@ -229,7 +229,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
               statusBadge={statusBadge(primaryProfile)}
               onClick={() => onSelect({ fID: guardianFid, owner: true })}
               onManage={primaryProfile ? () => setManageProfile({ id: primaryProfile.id, name: primaryProfile.display_name || "My Profile" }) : undefined}
-              showQrPill={isActiveProfile(primaryProfile)}
+              showQrPill={!!primaryProfile}
               qrCount={qrCounts[primaryProfile?.id]}
               onQrClick={() => setQrDialog({ id: primaryProfile.id, name: primaryProfile?.display_name || "My Profile" })}
             />
@@ -246,7 +246,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                 onClick={() => onSelect({ fID: p.fusion_id || p.id, isDbId: !p.fusion_id, guardianFid })}
                 onManage={() => setManageProfile({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
                 onManageGuardians={() => setManageGuardians({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
-                showQrPill={isActiveProfile(p)}
+                showQrPill={true}
                 qrCount={qrCounts[p.id]}
                 onQrClick={() => setQrDialog({ id: p.id, name: p.display_name || "Unnamed Dependent" })}
               />
@@ -265,7 +265,7 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
                     statusBadge={statusBadge(p)}
                     isShared
                     onClick={() => onSelect({ fID: p.fusion_id || p.id, owner: true, isDbId: !p.fusion_id })}
-                    showQrPill={isActiveProfile(p)}
+                    showQrPill={true}
                     qrCount={qrCounts[p.id]}
                     onQrClick={() => setQrDialog({ id: p.id, name: p.display_name || "Shared Dependent" })}
                   />
@@ -440,7 +440,7 @@ function ProfileCard({ name, subtitle, photo, isOwn, isShared, statusBadge, fusi
           className="w-full mt-3 flex items-center justify-center gap-2 py-2 rounded-xl bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/15 transition-colors"
         >
           <QrCode className="w-4 h-4" />
-          {qrCount > 0 ? `${qrCount} QR code${qrCount > 1 ? 's' : ''} linked · Edit/Add` : 'Add QR Code'}
+          {qrCount > 0 ? `${qrCount} QR code${qrCount > 1 ? 's' : ''} linked · Edit/Add` : '0 QR codes linked · Add/Edit'}
         </button>
       )}
     </div>
