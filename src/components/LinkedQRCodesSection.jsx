@@ -26,6 +26,30 @@ function normalizeToken(input) {
   return null;
 }
 
+// Extracts the scanned text/URL from a native scan bridge message.
+// The fusion host replies with { event: "ON_BARCODE_SCAN", data: "<url>", ... }
+// but the exact field can vary — try the common locations.
+function extractScanUrl(d) {
+  if (!d) return null;
+  if (typeof d === "string") return d.trim() || null;
+  if (typeof d === "object") {
+    const cands = [
+      d.data, d.url, d.result, d.scanResult, d.scannedValue, d.text, d.value,
+      d.payload?.data, d.payload?.url, d.payload?.result,
+      d.payload?.scanResult, d.payload?.scannedValue, d.payload?.text,
+    ];
+    for (const c of cands) {
+      if (typeof c === "string" && c.trim()) return c.trim();
+    }
+    // Last resort: hunt for an onq URL anywhere in the serialized message
+    try {
+      const m = JSON.stringify(d).match(/https?:\/\/[^"'\\ ]+/);
+      if (m) return m[0];
+    } catch { /* not serializable */ }
+  }
+  return null;
+}
+
 function formatDate(iso) {
   if (!iso) return "";
   try {
@@ -51,6 +75,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [showScanner, setShowScanner] = useState(false);
   const [awaitingNativeScan, setAwaitingNativeScan] = useState(false);
   const [scanDebug, setScanDebug] = useState(null);
+  const [scanExtract, setScanExtract] = useState(null);
 
   // Validate a scanned QR code and fill the token input.
   // Accepts ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
@@ -93,7 +118,15 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
       let d = raw;
       if (raw?.data !== undefined) d = raw.data;
       if (d?.detail !== undefined) d = d.detail;
+      if (typeof d === "string") { try { d = JSON.parse(d); } catch { /* plain string */ } }
       try { setScanDebug(typeof d === "string" ? d : JSON.stringify(d)); } catch { setScanDebug(String(d)); }
+      // Extract the scanned value and validate it exactly like a web scan
+      const url = extractScanUrl(d);
+      setScanExtract(url);
+      if (url && (/^https?:\/\/([^/]*\.)?onq\.(mobi|life)\//i.test(url) || url.includes(window.location.origin))) {
+        setAwaitingNativeScan(false);
+        handleScannedText(url);
+      }
     }
     function onNativeScan(e) {
       setAwaitingNativeScan(false);
@@ -260,6 +293,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                   // scan to the host's native barcode scanner instead.
                   if (fusionScanBarcode()) {
                     setScanDebug(null);
+                    setScanExtract(null);
                     setAwaitingNativeScan(true);
                   } else {
                     setShowScanner(true);
@@ -271,8 +305,9 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                 {awaitingNativeScan ? "Waiting for scan…" : "Activate Camera Scanning"}
               </button>
               {scanDebug && (
-                <div className="text-[10px] font-mono bg-muted/60 border border-border rounded-lg p-2 break-all text-muted-foreground">
-                  <span className="font-bold">[debug] last bridge message:</span> {scanDebug}
+                <div className="text-[10px] font-mono bg-muted/60 border border-border rounded-lg p-2 break-all text-muted-foreground space-y-1">
+                  <p><span className="font-bold">[debug] last bridge message:</span> {scanDebug}</p>
+                  <p><span className="font-bold">[debug] extracted data:</span> {scanExtract || "(none found)"}</p>
                 </div>
               )}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
