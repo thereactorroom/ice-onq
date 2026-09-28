@@ -156,11 +156,13 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         fusionUserId,
       });
       const data = res.data;
-      if (data?.status === "linked" || data?.status === "already_linked") {
+      if (data?.status === "linked") {
         setShowLinkDialog(false);
         setTokenInput("");
         setLinkName("");
         loadCodes();
+      } else if (data?.status === "already_linked") {
+        setLinkError("This QR code is already linked to this profile — it's shown in your list.");
       } else if (data?.status === "claimed") {
         setClaimedInfo({ ownerName: data.ownerName, ownerProfileId: data.ownerProfileId, token, linkName: data.linkName, linkType: data.linkType });
       } else {
@@ -219,9 +221,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         </div>
         <button
           onClick={() => setShowLinkDialog(true)}
-          disabled={codes.filter((c) => !c.is_founding).length >= 2}
-          title={codes.filter((c) => !c.is_founding).length >= 2 ? "Maximum of 2 linked QR codes reached" : "Link a QR code"}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> Link QR Code
         </button>
@@ -230,15 +230,6 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
       <p className="text-xs text-muted-foreground">
         Scan or paste a QR code to link it to this profile.
       </p>
-
-      {codes.filter((c) => !c.is_founding).length >= 2 && (
-        <div className="flex items-start gap-2 text-xs text-warning bg-warning/10 border border-warning/30 rounded-lg p-2.5">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>
-            You've reached the maximum of <strong>2 linked QR codes</strong> for this profile. Delink one below to add another.
-          </span>
-        </div>
-      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-4">
