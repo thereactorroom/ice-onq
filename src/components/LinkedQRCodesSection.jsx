@@ -50,6 +50,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [saving, setSaving] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [awaitingNativeScan, setAwaitingNativeScan] = useState(false);
+  const [scanDebug, setScanDebug] = useState(null);
 
   // Validate a scanned QR code and fill the token input.
   // Accepts ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
@@ -84,15 +85,30 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   useEffect(() => { loadCodes(); }, [profileDbId]);
 
   // Consume native barcode scan results (fusion iframe): ProfileView's
-  // FusionBridge listener re-dispatches ON_BARCODE_SCAN payloads as this event.
+  // FusionBridge listener re-dispatches bridge payloads as these events.
+  // While waiting, capture every raw bridge/window message for debugging.
   useEffect(() => {
     if (!awaitingNativeScan) return;
+    function capture(raw) {
+      let d = raw;
+      if (raw?.data !== undefined) d = raw.data;
+      if (d?.detail !== undefined) d = d.detail;
+      try { setScanDebug(typeof d === "string" ? d : JSON.stringify(d)); } catch { setScanDebug(String(d)); }
+    }
     function onNativeScan(e) {
       setAwaitingNativeScan(false);
       handleScannedText(e.detail);
     }
+    function onBridgeDebug(e) { capture(e.detail); }
+    function onWindowMessage(e) { capture(e); }
     window.addEventListener("iceonq:barcode-scan", onNativeScan);
-    return () => window.removeEventListener("iceonq:barcode-scan", onNativeScan);
+    window.addEventListener("iceonq:bridge-debug", onBridgeDebug);
+    window.addEventListener("message", onWindowMessage);
+    return () => {
+      window.removeEventListener("iceonq:barcode-scan", onNativeScan);
+      window.removeEventListener("iceonq:bridge-debug", onBridgeDebug);
+      window.removeEventListener("message", onWindowMessage);
+    };
   }, [awaitingNativeScan]);
 
   async function handleLink() {
@@ -243,6 +259,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                   // Inside the fusion iframe the camera is blocked — hand the
                   // scan to the host's native barcode scanner instead.
                   if (fusionScanBarcode()) {
+                    setScanDebug(null);
                     setAwaitingNativeScan(true);
                   } else {
                     setShowScanner(true);
@@ -253,6 +270,11 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                 <ScanLine className="w-5 h-5" />
                 {awaitingNativeScan ? "Waiting for scan…" : "Activate Camera Scanning"}
               </button>
+              {scanDebug && (
+                <div className="text-[10px] font-mono bg-muted/60 border border-border rounded-lg p-2 break-all text-muted-foreground">
+                  <span className="font-bold">[debug] last bridge message:</span> {scanDebug}
+                </div>
+              )}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="flex-1 h-px bg-border" />
                 <span className="uppercase tracking-wider">or paste manually</span>

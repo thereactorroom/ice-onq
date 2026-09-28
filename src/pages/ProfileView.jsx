@@ -730,6 +730,10 @@ export default function ProfileView() {
     if (typeof data === "string") {
       try { data = JSON.parse(data); } catch { /* not JSON */ }
     }
+    // Debug: surface every bridge message so raw scan payloads can be inspected
+    if (data) {
+      window.dispatchEvent(new CustomEvent("iceonq:bridge-debug", { detail: data }));
+    }
     if (data && typeof data === "object" && data.event === "ON_BARCODE_SCAN") {
       // Native barcode scanner result — re-dispatch for the Linked QR Codes
       // section to consume (it validates and links the scanned QR token).
