@@ -89,6 +89,21 @@ export function fusionSMS(to, body) {
   }
 }
 
+// Open the native barcode scanner (fusion iframe only).
+// Returns false when the NativeBridge scanner isn't available (e.g. plain web).
+// The scanned URL is delivered back through the FusionBridge listener as
+// { event: "ON_BARCODE_SCAN", data: "<scanned URL>", payload: {...} }.
+export function fusionScanBarcode() {
+  const bridge = getGlobalBridge("NativeBridge");
+  if (isInFusionIframe() && bridge && typeof bridge.openBarcodeScanner === "function") {
+    bridge.openBarcodeScanner({
+      hook: "handleBridgeMessage.bind({ event : 'ON_BARCODE_SCAN', payload: { extra: 'Just some extra data' } })",
+    });
+    return true;
+  }
+  return false;
+}
+
 // Download a file by URL — tries NativeBridge.download (native app + browser fallback),
 // then FusionBridge.send (postMessage to parent), then direct postMessage, then browser download
 export function fusionDownload(url, filename) {

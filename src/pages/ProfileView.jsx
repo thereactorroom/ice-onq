@@ -730,6 +730,12 @@ export default function ProfileView() {
     if (typeof data === "string") {
       try { data = JSON.parse(data); } catch { /* not JSON */ }
     }
+    if (data && typeof data === "object" && data.event === "ON_BARCODE_SCAN") {
+      // Native barcode scanner result — re-dispatch for the Linked QR Codes
+      // section to consume (it validates and links the scanned QR token).
+      window.dispatchEvent(new CustomEvent("iceonq:barcode-scan", { detail: data.data }));
+      return;
+    }
     if (data && typeof data === "object" && data.jump) {
       switchProfile(String(data.jump));
     } else if (data && typeof data === "object" && data.updateContext) {

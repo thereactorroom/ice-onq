@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { QrCode, Plus, Trash2, Loader2, Link2, AlertCircle, ShieldCheck, ExternalLink, Pencil, ScanLine } from "lucide-react";
 import QRScannerModal from "@/components/QRScannerModal";
 import { base44 } from "@/api/base44Client";
+import { fusionScanBarcode } from "@/lib/fusionBridge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,29 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [awaitingNativeScan, setAwaitingNativeScan] = useState(false);
+
+  // Validate a scanned QR code and fill the token input.
+  // Accepts ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
+  // origin, and the new short-format URLs on onq.mobi (e.g. /1/cz3jum).
+  function handleScannedText(text) {
+    const scanned = String(text || "");
+    const token = normalizeToken(scanned);
+    const isUrl = /^https?:\/\//i.test(scanned);
+    const hostOk =
+      !isUrl ||
+      scanned.includes(window.location.origin) ||
+      /^https?:\/\/([^/]*\.)?onq\.(mobi|life)\//i.test(scanned) ||
+      /^https?:\/\/([^/]*\.)?onq\.(mobi|life)$/i.test(scanned);
+    if (!token || !hostOk) {
+      setLinkError("This is not an ICE onQ QR Code");
+      setTokenInput("");
+      return false;
+    }
+    setLinkError(null);
+    setTokenInput(token);
+    return true;
+  }
 
   function loadCodes() {
     if (!profileDbId) return;
@@ -58,6 +82,18 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   }
 
   useEffect(() => { loadCodes(); }, [profileDbId]);
+
+  // Consume native barcode scan results (fusion iframe): ProfileView's
+  // FusionBridge listener re-dispatches ON_BARCODE_SCAN payloads as this event.
+  useEffect(() => {
+    if (!awaitingNativeScan) return;
+    function onNativeScan(e) {
+      setAwaitingNativeScan(false);
+      handleScannedText(e.detail);
+    }
+    window.addEventListener("iceonq:barcode-scan", onNativeScan);
+    return () => window.removeEventListener("iceonq:barcode-scan", onNativeScan);
+  }, [awaitingNativeScan]);
 
   async function handleLink() {
     const token = normalizeToken(tokenInput);
@@ -188,7 +224,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
 
       {/* Link dialog */}
       <AlertDialog open={showLinkDialog} onOpenChange={(open) => {
-        if (!open) { setShowLinkDialog(false); setLinkError(null); setClaimedInfo(null); }
+        if (!open) { setShowLinkDialog(false); setLinkError(null); setClaimedInfo(null); setAwaitingNativeScan(false); }
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -202,11 +238,20 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
             <div className="space-y-3 py-2">
               <button
                 type="button"
-                onClick={() => setShowScanner(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold text-sm hover:bg-primary/15 transition-colors"
+                disabled={awaitingNativeScan}
+                onClick={() => {
+                  // Inside the fusion iframe the camera is blocked — hand the
+                  // scan to the host's native barcode scanner instead.
+                  if (fusionScanBarcode()) {
+                    setAwaitingNativeScan(true);
+                  } else {
+                    setShowScanner(true);
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary font-semibold text-sm hover:bg-primary/15 transition-colors disabled:opacity-60"
               >
                 <ScanLine className="w-5 h-5" />
-                Activate Camera Scanning
+                {awaitingNativeScan ? "Waiting for scan…" : "Activate Camera Scanning"}
               </button>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="flex-1 h-px bg-border" />
@@ -342,23 +387,7 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
         onClose={() => setShowScanner(false)}
         onScan={(text) => {
           setShowScanner(false);
-          // Accept ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
-          // origin, and the new short-format URLs on onq.mobi (e.g. /1/cz3jum).
-          const scanned = String(text || "");
-          const token = normalizeToken(scanned);
-          const isUrl = /^https?:\/\//i.test(scanned);
-          const hostOk =
-            !isUrl ||
-            scanned.includes(window.location.origin) ||
-            /^https?:\/\/([^/]*\.)?onq\.(mobi|life)\//i.test(scanned) ||
-            /^https?:\/\/([^/]*\.)?onq\.(mobi|life)$/i.test(scanned);
-          if (!token || !hostOk) {
-            setLinkError("This is not an ICE onQ QR Code");
-            setTokenInput("");
-            return;
-          }
-          setLinkError(null);
-          setTokenInput(token);
+          handleScannedText(text);
         }}
       />
     </div>
