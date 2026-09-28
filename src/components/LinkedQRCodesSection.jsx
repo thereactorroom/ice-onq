@@ -74,8 +74,6 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
   const [saving, setSaving] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [awaitingNativeScan, setAwaitingNativeScan] = useState(false);
-  const [scanDebug, setScanDebug] = useState(null);
-  const [scanExtract, setScanExtract] = useState(null);
 
   // Validate a scanned QR code and fill the token input.
   // Accepts ICE onQ QR codes: legacy URLs on ice.onq.life / this app's
@@ -119,11 +117,10 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
       if (raw?.data !== undefined) d = raw.data;
       if (d?.detail !== undefined) d = d.detail;
       if (typeof d === "string") { try { d = JSON.parse(d); } catch { /* plain string */ } }
-      try { setScanDebug(typeof d === "string" ? d : JSON.stringify(d)); } catch { setScanDebug(String(d)); }
-      // Extract the scanned value and validate it exactly like a web scan
+      // Extract the scanned value and validate it exactly like a web scan —
+      // invalid codes show the same "This is not an ICE onQ QR Code" error.
       const url = extractScanUrl(d);
-      setScanExtract(url);
-      if (url && (/^https?:\/\/([^/]*\.)?onq\.(mobi|life)\//i.test(url) || url.includes(window.location.origin))) {
+      if (url && (/^https?:\/\//i.test(url) || /^[A-Za-z0-9_-]{6,32}$/.test(url))) {
         setAwaitingNativeScan(false);
         handleScannedText(url);
       }
@@ -292,8 +289,6 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                   // Inside the fusion iframe the camera is blocked — hand the
                   // scan to the host's native barcode scanner instead.
                   if (fusionScanBarcode()) {
-                    setScanDebug(null);
-                    setScanExtract(null);
                     setAwaitingNativeScan(true);
                   } else {
                     setShowScanner(true);
@@ -304,12 +299,6 @@ export default function LinkedQRCodesSection({ profileDbId, fusionUserId }) {
                 <ScanLine className="w-5 h-5" />
                 {awaitingNativeScan ? "Waiting for scan…" : "Activate Camera Scanning"}
               </button>
-              {scanDebug && (
-                <div className="text-[10px] font-mono bg-muted/60 border border-border rounded-lg p-2 break-all text-muted-foreground space-y-1">
-                  <p><span className="font-bold">[debug] last bridge message:</span> {scanDebug}</p>
-                  <p><span className="font-bold">[debug] extracted data:</span> {scanExtract || "(none found)"}</p>
-                </div>
-              )}
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="flex-1 h-px bg-border" />
                 <span className="uppercase tracking-wider">or paste manually</span>
