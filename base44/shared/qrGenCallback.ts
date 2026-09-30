@@ -10,7 +10,9 @@ const BACKOFF_MS = 500;
 // action: "bind" | "unbind" | "transfer"
 // token: the QR token (normalized, 32 chars)
 // profileId: the fusion profile id (fID) the code is bound to
-export async function pushQrBindingEvent(action, token, profileId) {
+// itemName: the label the code was given in this app (e.g. "Bike"), or "" —
+//           always sent, never omitted, so the generator can set or clear it.
+export async function pushQrBindingEvent(action, token, profileId, itemName) {
   const sharedSecret = secrets.get("QR_GEN_CALLBACK_SECRET");
   if (!sharedSecret) {
     console.error("[qrGenCallback] Missing QR_GEN_CALLBACK_SECRET — skipping", action, token);
@@ -21,7 +23,13 @@ export async function pushQrBindingEvent(action, token, profileId) {
     return;
   }
 
-  const body = { shared_secret: sharedSecret, action, token, profile_id: profileId || "" };
+  const body = {
+    shared_secret: sharedSecret,
+    action,
+    token,
+    profile_id: profileId || "",
+    item_name: itemName || "",
+  };
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {

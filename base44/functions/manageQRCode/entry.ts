@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
         linked_by: auth.actorEmail || String(body.fusionUserId || ''),
       });
       // Notify the ICE onQ QR Generator that this token is now bound.
-      waitUntil(pushQrBindingEvent('bind', qrToken, profile.fusion_id));
+      waitUntil(pushQrBindingEvent('bind', qrToken, profile.fusion_id, created.link_name));
       return Response.json({ status: 'linked', code: created });
     }
 
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
       if (!auth.authorized) return Response.json({ error: 'Not authorized' }, { status: 403 });
       await base44.asServiceRole.entities.LinkedQRCode.delete(linkedQrId);
       // Notify the ICE onQ QR Generator that this token has been released.
-      waitUntil(pushQrBindingEvent('unbind', record.qr_token, profile.fusion_id));
+      waitUntil(pushQrBindingEvent('unbind', record.qr_token, profile.fusion_id, record.link_name || ''));
       return Response.json({ status: 'unlinked' });
     }
 
