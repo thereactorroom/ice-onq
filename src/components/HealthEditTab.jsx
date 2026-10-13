@@ -117,6 +117,9 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
   const { toast } = useToast();
   const [dialog, setDialog] = useState(null);
   const [stamping, setStamping] = useState(false);
+  // Entries just deleted — hidden straight away so the list never shows a
+  // removal as still present while the refreshed data is in flight.
+  const [removedIds, setRemovedIds] = useState(() => new Set());
 
   const create = useMutation({
     mutationFn: (data) => base44.entities[entityName].create({ ...data, profile_id: profileId }),
@@ -136,7 +139,8 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
       itemId: id,
       fusionUserId,
     }),
-    onSuccess: () => {
+    onSuccess: (_res, id) => {
+      setRemovedIds((prev) => new Set(prev).add(id));
       qc.invalidateQueries({ queryKey: [entityName, profileId] });
       if (onDeleted) onDeleted();
     },
@@ -174,6 +178,7 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
   }
 
   const formatted = formatDate(reviewedDate);
+  const visibleItems = items.filter((item) => !removedIds.has(item.id));
 
   return (
     <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
@@ -201,12 +206,12 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
         </button>
       </div>
 
-      {items.length === 0 && (
+      {visibleItems.length === 0 && (
         <p className="text-xs text-muted-foreground italic">None added yet.</p>
       )}
 
       <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <div key={item.id} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
             item.is_critical_alert ? "bg-emergency/10 border-emergency/30 text-emergency" : "bg-muted border-border text-foreground"
           }`}>
