@@ -21,9 +21,9 @@ Deno.serve(async (req) => {
     }
 
     // ── Authorization ──────────────────────────────────────────────
-    // Allow if the fusion identity matches the profile's fusion_id or
-    // guardian_fid (guardian managing a dependent), OR if the caller is
-    // the Base44 user who created the profile / an admin.
+    // Allow the profile's own fusion identity, its guardian (primary via
+    // guardian_fid, or a co-guardian via ProfileGuardian), or the Base44
+    // user who created the profile / an admin.
     let authorized = false;
     let actorUserId = null;
 
@@ -32,6 +32,12 @@ Deno.serve(async (req) => {
           String(profile.guardian_fid) === String(fusionUserId)) {
         authorized = true;
       }
+      if (!authorized) {
+        const coGuardian = await base44.asServiceRole.entities.ProfileGuardian
+          .filter({ dependent_profile_id: profile.id, guardian_fusion_id: String(fusionUserId) })
+          .catch(() => []);
+        if (coGuardian && coGuardian.length > 0) authorized = true;
+      }
     }
 
     if (!authorized) {
@@ -39,8 +45,14 @@ Deno.serve(async (req) => {
         const user = await base44.auth.me();
         if (user) {
           actorUserId = user.id;
-          if (user.role === 'admin' || profile.created_by_id === user.id) {
+          if (user.role === 'admin' || profile.created_by_id === user.id || profile.created_by === user.email) {
             authorized = true;
+          }
+          if (!authorized) {
+            const guardian = await base44.asServiceRole.entities.ProfileGuardian
+              .filter({ dependent_profile_id: profile.id, guardian_email: user.email })
+              .catch(() => []);
+            if (guardian && guardian.length > 0) authorized = true;
           }
         }
       } catch { /* unauthenticated — fusion-pending user */ }

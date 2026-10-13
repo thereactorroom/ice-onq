@@ -1058,7 +1058,7 @@ export default function ProfileView() {
 
         {/* EDIT MODE */}
         {isEditMode && editTab === "contacts" && (
-          <ManageContacts profileId={profileDbId || profile?.id} fusionUserId={fusionUser?.userId} />
+          <ManageContacts profileId={profileDbId || profile?.id} fusionUserId={fusionUser?.userId || guardianFid || profileId} />
         )}
 
         {isEditMode && editTab === "medical" && (

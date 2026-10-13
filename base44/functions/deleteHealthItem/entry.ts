@@ -18,8 +18,15 @@ async function authorize(base44, profile, fusionUserId) {
   }
   try {
     const user = await base44.auth.me();
-    if (user && (user.role === 'admin' || profile.created_by_id === user.id || profile.created_by === user.email)) {
-      return true;
+    if (user) {
+      if (user.role === 'admin' || profile.created_by_id === user.id || profile.created_by === user.email) {
+        return true;
+      }
+      // Guardian signed in with the account their guardianship was recorded against
+      const guardian = await base44.asServiceRole.entities.ProfileGuardian
+        .filter({ dependent_profile_id: profile.id, guardian_email: user.email })
+        .catch(() => []);
+      if (guardian && guardian.length > 0) return true;
     }
   } catch { /* unauthenticated — fusion-pending user */ }
   return false;
