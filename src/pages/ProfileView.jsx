@@ -41,6 +41,10 @@ function requestCloseComponent() {
   closeComponent();
 }
 
+// Guided setup step ↔ edit tab mapping
+const STEP_TABS = { 1: "medical", 2: "contacts", 3: "health" };
+const TAB_STEPS = { medical: 1, contacts: 2, health: 3 };
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 function Field({ label, name, value, onChange, type = "text", placeholder, span2 }) {
   return (
@@ -712,6 +716,44 @@ export default function ProfileView() {
     fetchProfile();
   }
 
+  // First guided step this profile still has a gap in (null when complete)
+  function firstUnfinishedStep() {
+    const p = data?.profile;
+    if (!p) return null;
+    const detailsDone = !!(p.medical_aid_name && p.doctor_name);
+    const contactsDone = (data.contacts || []).length > 0;
+    const healthDone = (data.allergies?.length || 0) + (data.conditions?.length || 0) + (data.medications?.length || 0) > 0;
+    if (!detailsDone) return 1;
+    if (!contactsDone) return 2;
+    if (!healthDone) return 3;
+    return null;
+  }
+
+  // Open the editor. An incomplete profile is edited through the guided
+  // steps, starting at the first gap (or at a specific section if asked for).
+  function openEditor(tab) {
+    const gap = firstUnfinishedStep();
+    setMode("edit");
+    setStepSaved(false);
+    if (gap === null) {
+      setSetupStep(null);
+      setEditTab(tab || "medical");
+      return;
+    }
+    setEditTab(tab || STEP_TABS[gap]);
+    setSetupStep((tab && TAB_STEPS[tab]) || gap);
+    window.scrollTo({ top: 0 });
+  }
+
+  // Switching sections inside the editor keeps the guided step in sync
+  function goToEditTab(tab) {
+    setEditTab(tab);
+    if (setupStep !== null) {
+      setSetupStep(TAB_STEPS[tab] || setupStep);
+      setStepSaved(false);
+    }
+  }
+
   function switchProfile(targetFid) {
     console.log("[FusionBridge] Jumping to profile:", targetFid);
     setActiveFid(targetFid);
@@ -965,7 +1007,7 @@ export default function ProfileView() {
           </div>
           <div className="flex items-center gap-2">
             {isOwner && !isEditMode && (
-              <Button size="sm" onClick={() => { setMode("edit"); setEditTab("medical"); }}
+              <Button size="sm" onClick={() => openEditor()}
                 className="bg-white text-primary hover:bg-white/90 gap-1 text-xs font-semibold">
                 <Pencil className="w-3 h-3" /> Edit Profile
               </Button>
@@ -1006,7 +1048,7 @@ export default function ProfileView() {
         {/* DISPLAY MODE */}
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
-            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={(tab) => { setMode("edit"); setEditTab(tab); window.scrollTo({ top: 0 }); }} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} />
+            <ProfileHeader user={user} profile={profile} contacts={sortedContacts} allergies={allergies} conditions={conditions} medications={medications} isOwner={isOwner} onNavigateEdit={openEditor} profileDbId={profileDbId} onProfileUpdated={handleMedicalSaved} />
 
             <div className="bg-card rounded-2xl border-2 border-red-200 p-4 space-y-3">
               <div className="flex items-center gap-2 mb-1">
@@ -1209,7 +1251,7 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium">Back</span>
             </button>
             <button
-              onClick={() => setEditTab("medical")}
+              onClick={() => goToEditTab("medical")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
                 editTab === "medical" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
@@ -1218,7 +1260,7 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium">Info</span>
             </button>
             <button
-              onClick={() => setEditTab("contacts")}
+              onClick={() => goToEditTab("contacts")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
                 editTab === "contacts" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
@@ -1227,7 +1269,7 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium">Contacts</span>
             </button>
             <button
-              onClick={() => setEditTab("health")}
+              onClick={() => goToEditTab("health")}
               className={`flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors ${
                 editTab === "health" ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary"
               }`}
