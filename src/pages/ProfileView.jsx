@@ -1077,6 +1077,8 @@ export default function ProfileView() {
           <HealthEditTab
             profileId={profileDbId || profile?.id}
             profileDbId={profileDbId}
+            fusionUserId={fusionUser?.userId || guardianFid || profileId}
+            onDeleted={() => fetchProfile()}
             reviewedDates={{
               allergies_reviewed_date: profile?.allergies_reviewed_date,
               conditions_reviewed_date: profile?.conditions_reviewed_date,

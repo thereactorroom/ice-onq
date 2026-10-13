@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
 
 function formatDate(iso) {
   if (!iso) return null;
@@ -111,8 +112,9 @@ function ItemDialog({ title, fields, initial, onSave, onDelete, onClose }) {
 }
 
 // ── generic section ───────────────────────────────────────────────────────────
-function Section({ title, icon, items, fields, entityName, profileId, profileDbId, reviewedField, reviewedDate, onReviewed, renderTag }) {
+function Section({ title, icon, items, fields, entityName, profileId, profileDbId, fusionUserId, reviewedField, reviewedDate, onReviewed, onDeleted, renderTag }) {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [dialog, setDialog] = useState(null);
   const [stamping, setStamping] = useState(false);
 
@@ -124,9 +126,27 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
     mutationFn: ({ id, data }) => base44.entities[entityName].update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: [entityName, profileId] }),
   });
+  // Removal runs through the backend function so it is authorized by the
+  // viewer's ownership of the profile (fusion identity / guardian / admin),
+  // not by whoever created the entry.
   const remove = useMutation({
-    mutationFn: (id) => base44.entities[entityName].delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [entityName, profileId] }),
+    mutationFn: (id) => base44.functions.invoke("deleteHealthItem", {
+      profileId: profileDbId || profileId,
+      entityName,
+      itemId: id,
+      fusionUserId,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [entityName, profileId] });
+      if (onDeleted) onDeleted();
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Could not delete this entry",
+        description: "Please check your connection and try again.",
+      });
+    },
   });
 
   async function stampReviewed(isoDate) {
@@ -213,7 +233,7 @@ function Section({ title, icon, items, fields, entityName, profileId, profileDbI
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
-export default function HealthEditTab({ profileId, profileDbId, reviewedDates = {}, onReviewed }) {
+export default function HealthEditTab({ profileId, profileDbId, fusionUserId, reviewedDates = {}, onReviewed, onDeleted }) {
   const { data: allergies = [] } = useQuery({
     queryKey: ["Allergy", profileId],
     queryFn: () => base44.entities.Allergy.filter({ profile_id: profileId }),
@@ -239,6 +259,8 @@ export default function HealthEditTab({ profileId, profileDbId, reviewedDates = 
         entityName="Allergy"
         profileId={profileId}
         profileDbId={profileDbId}
+        fusionUserId={fusionUserId}
+        onDeleted={onDeleted}
         reviewedField="allergies_reviewed_date"
         reviewedDate={reviewedDates.allergies_reviewed_date}
         onReviewed={onReviewed}
@@ -257,6 +279,8 @@ export default function HealthEditTab({ profileId, profileDbId, reviewedDates = 
         entityName="ChronicCondition"
         profileId={profileId}
         profileDbId={profileDbId}
+        fusionUserId={fusionUserId}
+        onDeleted={onDeleted}
         reviewedField="conditions_reviewed_date"
         reviewedDate={reviewedDates.conditions_reviewed_date}
         onReviewed={onReviewed}
@@ -275,6 +299,8 @@ export default function HealthEditTab({ profileId, profileDbId, reviewedDates = 
         entityName="Medication"
         profileId={profileId}
         profileDbId={profileDbId}
+        fusionUserId={fusionUserId}
+        onDeleted={onDeleted}
         reviewedField="medications_reviewed_date"
         reviewedDate={reviewedDates.medications_reviewed_date}
         onReviewed={onReviewed}
