@@ -3,15 +3,15 @@ import { Shield, ArrowLeft, Save, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import DateInput from "@/components/DateInput";
+import { BLOOD_GROUPS, UNKNOWN_BLOOD_GROUP } from "@/lib/bloodGroups";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
 const RELATIONSHIPS = ["Child", "Spouse / Partner", "Parent", "Sibling", "Other"];
 
 export default function AddDependentForm({ guardianFid, onBack, onCreated }) {
   const [form, setForm] = useState({
     display_name: "",
     date_of_birth: "",
-    blood_group: "",
+    blood_group: UNKNOWN_BLOOD_GROUP,
     dependent_relationship: "",
   });
   const [saving, setSaving] = useState(false);
@@ -35,7 +35,7 @@ export default function AddDependentForm({ guardianFid, onBack, onCreated }) {
         create: {
           display_name: form.display_name,
           date_of_birth: form.date_of_birth || undefined,
-          blood_group: form.blood_group || undefined,
+          blood_group: form.blood_group || UNKNOWN_BLOOD_GROUP,
           dependent_relationship: form.dependent_relationship || undefined,
           guardian_fid: String(guardianFid),
           fusion_link_pending: true,
@@ -120,7 +120,6 @@ export default function AddDependentForm({ guardianFid, onBack, onCreated }) {
                   onChange={handleChange}
                   className="w-full bg-background border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary"
                 >
-                  <option value="">Select...</option>
                   {BLOOD_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>

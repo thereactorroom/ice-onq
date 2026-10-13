@@ -14,8 +14,7 @@ import { Plus, Trash2, Pencil, Save, AlertTriangle, X, Check } from "lucide-reac
 import DateInput from "@/components/DateInput";
 import { toast } from "sonner";
 import { base44 as b44 } from "@/api/base44Client";
-
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
+import { BLOOD_GROUPS, bloodGroupOrDefault } from "@/lib/bloodGroups";
 
 function ItemList({ items, onEdit, onDelete, renderItem }) {
   const [deleteId, setDeleteId] = useState(null);
@@ -113,7 +112,7 @@ export default function EditProfile() {
       setForm({
         display_name: profile.display_name || "",
         date_of_birth: profile.date_of_birth || "",
-        blood_group: profile.blood_group || "",
+        blood_group: bloodGroupOrDefault(profile.blood_group),
         medical_aid_name: profile.medical_aid_name || "",
         medical_aid_number: profile.medical_aid_number || "",
         medical_aid_plan: profile.medical_aid_plan || "",
@@ -220,7 +219,7 @@ export default function EditProfile() {
               </div>
               <div className="space-y-1.5">
                 <Label>Blood Group</Label>
-                <Select value={form.blood_group || ""} onValueChange={(v) => setForm({ ...form, blood_group: v })}>
+                <Select value={bloodGroupOrDefault(form.blood_group)} onValueChange={(v) => setForm({ ...form, blood_group: v })}>
                   <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
                   <SelectContent>{BLOOD_GROUPS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>

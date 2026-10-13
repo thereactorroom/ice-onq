@@ -46,6 +46,7 @@
     "blood_group": {
       "type": "string",
       "title": "Blood Group",
+      "default": "Unknown",
       "enum": [
         "A+",
         "A-",

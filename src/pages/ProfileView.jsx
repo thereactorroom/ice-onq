@@ -32,6 +32,7 @@ import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
 import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
 import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
+import { BLOOD_GROUPS, bloodGroupOrDefault } from "@/lib/bloodGroups";
 // ── Close-component: mirrors the fusion boilerplate closeComponent helper ──
 // Calls the host bridge's closeComponent when available AND always posts the
 // raw close request to the top window as a fallback.
@@ -73,8 +74,6 @@ function SelectField({ label, name, value, onChange, options }) {
   );
 }
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
-
 // ── Image compression utility ─────────────────────────────────────────────────
 function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
   return new Promise((resolve, reject) => {
@@ -108,7 +107,7 @@ function compressImage(file, maxWidth = 400, maxHeight = 400, quality = 0.7) {
 
 // ── MedicalEditTab ────────────────────────────────────────────────────────────
 function MedicalEditTab({ profile, profileDbId, viewerEmail, fusionUserId, onSaved, onBack, onRegisterBack }) {
-  const [form, setForm] = useState({ ...profile });
+  const [form, setForm] = useState({ ...profile, blood_group: bloodGroupOrDefault(profile?.blood_group) });
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -155,13 +154,15 @@ function MedicalEditTab({ profile, profileDbId, viewerEmail, fusionUserId, onSav
     setSaving(true);
     setSaveError(null);
     try {
+      // Never save a blank blood group — an unset one always means "Unknown".
+      const payload = { ...form, blood_group: bloodGroupOrDefault(form.blood_group) };
       await base44.functions.invoke("updatePublicICEProfile", {
         profileId: profileDbId,
-        updates: form,
+        updates: payload,
       });
       setDirty(false);
       setSaving(false);
-      onSaved(form);
+      onSaved(payload);
       return true;
     } catch (err) {
       const msg = err?.response?.data?.error || err?.response?.data?.detail || err?.message || "Unknown error";
