@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, GripVertical, Pencil, Star, Phone } from "lucide-react";
 import EditContactDialog from "../components/EditContactDialog";
 
-export default function ManageContacts({ profileId: profileIdProp, fusionUserId }) {
+export default function ManageContacts({ profileId: profileIdProp, fusionUserId, onContactSaved }) {
   const qc = useQueryClient();
   const [editContact, setEditContact] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -71,6 +71,7 @@ export default function ManageContacts({ profileId: profileIdProp, fusionUserId 
     } else {
       await createMut.mutateAsync(formData);
     }
+    if (onContactSaved) onContactSaved();
   };
 
   const onDragEnd = ({ source, destination }) => {

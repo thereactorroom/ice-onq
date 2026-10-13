@@ -32,6 +32,7 @@ import HelpView from "../components/HelpView.jsx";
 import AcceptInviteScreen from "../components/AcceptInviteScreen.jsx";
 import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
 import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
+import SetupStepBanner from "../components/SetupStepBanner.jsx";
 import { BLOOD_GROUPS, bloodGroupOrDefault } from "@/lib/bloodGroups";
 // ── Close-component: mirrors the fusion boilerplate closeComponent helper ──
 // Calls the host bridge's closeComponent when available AND always posts the
@@ -550,6 +551,9 @@ export default function ProfileView() {
   }
   // edit tab: 'contacts' | 'medical' | 'health'
   const [editTab, setEditTab] = useState("medical");
+  // Guided setup for a newly created record: 1 personal/medical → 2 contacts → 3 health
+  const [setupStep, setSetupStep] = useState(null);
+  const [stepSaved, setStepSaved] = useState(false);
   const medicalBackHandler = useRef(null);
   const hasAutoOpenedEdit = useRef(false);
   const [showContextDialog, setShowContextDialog] = useState(false);
@@ -638,6 +642,8 @@ export default function ProfileView() {
             hasAutoOpenedEdit.current = true;
             setIsNewProfile(true);
             setMode("edit");
+            setEditTab("medical");
+            setSetupStep(1);
           }
         }
       })
@@ -691,6 +697,19 @@ export default function ProfileView() {
 
   function handleMedicalSaved(updatedFields) {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
+  }
+
+  // Confirm the current setup step as saved (drives the guided banner)
+  function handleStepSaved() {
+    if (setupStep !== null) setStepSaved(true);
+  }
+
+  // Leave edit mode — any guided setup in progress is closed with it
+  function leaveEditMode() {
+    setSetupStep(null);
+    setStepSaved(false);
+    setMode("display");
+    fetchProfile();
   }
 
   function switchProfile(targetFid) {
@@ -961,6 +980,29 @@ export default function ProfileView() {
       {/* ── Content ── */}
       <div className="max-w-lg mx-auto px-4 pt-4 pb-36">
 
+        {isEditMode && setupStep !== null && (
+          <div className="mb-4">
+            <SetupStepBanner
+              step={setupStep}
+              saved={stepSaved}
+              onNext={() => {
+                setEditTab(setupStep === 1 ? "contacts" : "health");
+                setSetupStep(setupStep === 1 ? 2 : 3);
+                setStepSaved(false);
+                window.scrollTo({ top: 0 });
+              }}
+              onFinish={() => {
+                // Setup complete — drop the "new profile" flag so a refresh
+                // returns to the normal profile view
+                const url = new URL(window.location.href);
+                url.searchParams.delete("newProfile");
+                window.history.replaceState({}, "", url.toString());
+                leaveEditMode();
+              }}
+            />
+          </div>
+        )}
+
         {/* DISPLAY MODE */}
         {!isEditMode && displayTab === "overview" && (
           <div className="space-y-4">
@@ -1058,7 +1100,11 @@ export default function ProfileView() {
 
         {/* EDIT MODE */}
         {isEditMode && editTab === "contacts" && (
-          <ManageContacts profileId={profileDbId || profile?.id} fusionUserId={fusionUser?.userId || guardianFid || profileId} />
+          <ManageContacts
+            profileId={profileDbId || profile?.id}
+            fusionUserId={fusionUser?.userId || guardianFid || profileId}
+            onContactSaved={handleStepSaved}
+          />
         )}
 
         {isEditMode && editTab === "medical" && (
@@ -1067,8 +1113,8 @@ export default function ProfileView() {
             profileDbId={profileDbId}
             viewerEmail={viewerEmail}
             fusionUserId={fusionUser?.userId || guardianFid || profileId}
-            onSaved={handleMedicalSaved}
-            onBack={() => { setMode("display"); fetchProfile(); }}
+            onSaved={(payload) => { handleMedicalSaved(payload); handleStepSaved(); }}
+            onBack={leaveEditMode}
             onRegisterBack={(fn) => { medicalBackHandler.current = fn; }}
           />
         )}
@@ -1084,7 +1130,7 @@ export default function ProfileView() {
               conditions_reviewed_date: profile?.conditions_reviewed_date,
               medications_reviewed_date: profile?.medications_reviewed_date,
             }}
-            onReviewed={(field, value) => handleMedicalSaved({ [field]: value })}
+            onReviewed={(field, value) => { handleMedicalSaved({ [field]: value }); handleStepSaved(); }}
           />
         )}
 
@@ -1154,7 +1200,7 @@ export default function ProfileView() {
                 if (editTab === "medical" && medicalBackHandler.current) {
                   medicalBackHandler.current();
                 } else {
-                  setMode("display"); fetchProfile();
+                  leaveEditMode();
                 }
               }}
               className="flex flex-col items-center gap-0.5 px-5 py-1 rounded-lg transition-colors text-muted-foreground hover:text-primary"
