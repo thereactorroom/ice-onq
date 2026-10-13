@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause, User, ZoomIn, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import ZoomablePhotoOverlay from "@/components/ZoomablePhotoOverlay";
 
 const SITUATIONS = [
   { id: "cardiac", label: "Chest Pain / Heart Attack", icon: Heart, color: "text-red-600", bg: "bg-red-50 border-red-200" },
@@ -231,16 +232,11 @@ export default function HelpView({ profile, allergies, conditions, medications, 
       {profile && (
         <div className="bg-card rounded-2xl border border-border p-3">
           {enlarged && profile.profile_photo && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-              onClick={() => setEnlarged(false)}
-            >
-              <img
-                src={profile.profile_photo}
-                alt={profile.display_name || "Profile photo"}
-                className="w-80 h-80 rounded-2xl object-cover shadow-2xl border-4 border-white"
-              />
-            </div>
+            <ZoomablePhotoOverlay
+              src={profile.profile_photo}
+              alt={profile.display_name || "Profile photo"}
+              onClose={() => setEnlarged(false)}
+            />
           )}
           <button
             type="button"

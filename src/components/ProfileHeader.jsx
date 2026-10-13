@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { User, ZoomIn } from "lucide-react";
 import ICEStatusBadge from "./ICEStatusBadge";
+import ZoomablePhotoOverlay from "./ZoomablePhotoOverlay";
 
 function photoAge(iso) {
   if (!iso) return null;
@@ -30,18 +31,13 @@ export default function ProfileHeader({ user, profile, contacts, allergies, cond
 
   return (
     <div className="bg-card rounded-2xl border border-border p-5 flex flex-col gap-4">
-      {/* Enlarged photo overlay */}
+      {/* Enlarged, zoomable photo overlay */}
       {enlarged && profile?.profile_photo && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setEnlarged(false)}
-        >
-          <img
-            src={profile.profile_photo}
-            alt={profile?.display_name || "Profile photo"}
-            className="w-80 h-80 rounded-2xl object-cover shadow-2xl border-4 border-white"
-          />
-        </div>
+        <ZoomablePhotoOverlay
+          src={profile.profile_photo}
+          alt={profile?.display_name || "Profile photo"}
+          onClose={() => setEnlarged(false)}
+        />
       )}
 
       <h2 className="text-lg font-bold text-foreground">
