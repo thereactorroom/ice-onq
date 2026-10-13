@@ -703,9 +703,13 @@ export default function ProfileView() {
     setData((prev) => ({ ...prev, profile: { ...prev.profile, ...updatedFields } }));
   }
 
-  // Confirm the current setup step as saved (drives the guided banner)
+  // Confirm the current setup step as saved (drives the guided banner) and
+  // return to the top of the page so the banner's Next button is in view
   function handleStepSaved() {
-    if (setupStep !== null) setStepSaved(true);
+    if (setupStep !== null) {
+      setStepSaved(true);
+      window.scrollTo({ top: 0 });
+    }
   }
 
   // Leave edit mode — any guided setup in progress is closed with it
