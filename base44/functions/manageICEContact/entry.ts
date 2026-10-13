@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { authorizeProfileAccess } from '../../shared/profileAccess.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -21,46 +22,13 @@ Deno.serve(async (req) => {
     }
 
     // ── Authorization ──────────────────────────────────────────────
-    // Allow the profile's own fusion identity, its guardian (primary via
-    // guardian_fid, or a co-guardian via ProfileGuardian), or the Base44
-    // user who created the profile / an admin.
-    let authorized = false;
-    let actorUserId = null;
-
-    if (fusionUserId && String(fusionUserId) !== "0") {
-      if (String(profile.fusion_id) === String(fusionUserId) ||
-          String(profile.guardian_fid) === String(fusionUserId)) {
-        authorized = true;
-      }
-      if (!authorized) {
-        const coGuardian = await base44.asServiceRole.entities.ProfileGuardian
-          .filter({ dependent_profile_id: profile.id, guardian_fusion_id: String(fusionUserId) })
-          .catch(() => []);
-        if (coGuardian && coGuardian.length > 0) authorized = true;
-      }
-    }
-
-    if (!authorized) {
-      try {
-        const user = await base44.auth.me();
-        if (user) {
-          actorUserId = user.id;
-          if (user.role === 'admin' || profile.created_by_id === user.id || profile.created_by === user.email) {
-            authorized = true;
-          }
-          if (!authorized) {
-            const guardian = await base44.asServiceRole.entities.ProfileGuardian
-              .filter({ dependent_profile_id: profile.id, guardian_email: user.email })
-              .catch(() => []);
-            if (guardian && guardian.length > 0) authorized = true;
-          }
-        }
-      } catch { /* unauthenticated — fusion-pending user */ }
-    }
-
-    if (!authorized) {
+    // The profile's own fusion identity, its primary guardian, any verified
+    // co-guardian, the Base44 user who created the profile, or an admin.
+    const access = await authorizeProfileAccess(base44, profile, fusionUserId);
+    if (!access.authorized) {
       return Response.json({ error: 'Not authorized to manage contacts for this profile' }, { status: 403 });
     }
+    const actorUserId = access.actorUserId;
 
     // ── Perform action ─────────────────────────────────────────────
     switch (action) {
