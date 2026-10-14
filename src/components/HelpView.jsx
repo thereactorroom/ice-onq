@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Phone, AlertTriangle, Heart, Zap, Wind, Droplets, Bone, Brain, ChevronRight, Loader2, Shield, X, Play, Square, Pause, User, ZoomIn, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { fusionCall } from "@/lib/fusionBridge";
 import ZoomablePhotoOverlay from "@/components/ZoomablePhotoOverlay";
 
 const SITUATIONS = [
@@ -21,6 +22,7 @@ function EmergencyCallButton() {
   return (
     <a
       href={`tel:${EMERGENCY_NUMBER}`}
+      onClick={(e) => { e.preventDefault(); fusionCall(EMERGENCY_NUMBER); }}
       className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 px-8 rounded-2xl shadow-lg transition-colors"
     >
       <Phone className="w-6 h-6 fill-white" />

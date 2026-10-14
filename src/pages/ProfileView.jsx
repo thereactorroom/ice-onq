@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp, closeComponent } from "@/lib/fusionBridge";
+import { getGlobalBridge, isInFusionIframe, fusionDownload, fusionWhatsApp, fusionCall, closeComponent } from "@/lib/fusionBridge";
 import { base44 } from "@/api/base44Client";
 import { Shield, Pencil, ArrowLeft, Users, Info, LayoutDashboard, CreditCard as WalletIcon, Save, X, QrCode, Smartphone, CreditCard, Upload, User, AlertTriangle, Trash2, HelpCircle, RefreshCw, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1062,6 +1062,7 @@ export default function ProfileView() {
               <p className="text-xs text-muted-foreground">If this is a life-threatening emergency, call immediately.</p>
               <a
                 href="tel:082911"
+                onClick={(e) => { e.preventDefault(); fusionCall("082911"); }}
                 className="flex items-center justify-center gap-3 w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-4 px-8 rounded-2xl shadow-lg transition-colors"
               >
                 <Phone className="w-6 h-6 fill-white" />
