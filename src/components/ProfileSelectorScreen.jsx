@@ -30,31 +30,40 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
   // Try to get the current user's email for invite lookup
   const [userEmail, setUserEmail] = useState("");
   const [userMobile, setUserMobile] = useState("");
+  // True once the identity lookups settle — the list loads once, nothing re-triggers it
+  const [identityReady, setIdentityReady] = useState(false);
   const [qrCounts, setQrCounts] = useState({});
   const [qrDialog, setQrDialog] = useState(null); // { id, name }
 
+  // Resolve the identity the invite lookup needs — the app user's email and,
+  // inside a fusion iframe, the fusion user's mobile — then flag it ready. The
+  // list waits for this, so it loads once instead of again per resolved value.
   useEffect(() => {
-    base44.auth.me().then(u => setUserEmail(u?.email || "")).catch(() => {});
-  }, []);
+    let cancelled = false;
 
-  // Fetch the fusion user's mobile (when inside a fusion iframe) so pending
-  // co-guardian invitations can be matched by mobile number as well as token.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const session = params.get("session");
-    if (!session || window.self === window.top) return;
-    let host = "";
-    try { host = window.parent.location.hostname; } catch { try { host = new URL(document.referrer).hostname; } catch {} }
-    if (!host.endsWith("fusiononq.com")) return;
-    const baseUrl = host.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
-    console.log("[FusionEnv] Selector — Parent hostname:", host, "| getFusionUser host:", baseUrl);
-    base44.functions.invoke("getFusionUser", { host: baseUrl, session })
-      .then((res) => {
+    const emailLookup = base44.auth.me()
+      .then((u) => { if (!cancelled) setUserEmail(u?.email || ""); })
+      .catch(() => {});
+
+    const mobileLookup = (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const session = params.get("session");
+      if (!session || window.self === window.top) return;
+      let host = "";
+      try { host = window.parent.location.hostname; } catch { try { host = new URL(document.referrer).hostname; } catch {} }
+      if (!host.endsWith("fusiononq.com")) return;
+      const baseUrl = host.includes("uat") ? "https://uat.fusiononq.com" : "https://app.fusiononq.com";
+      console.log("[FusionEnv] Selector — Parent hostname:", host, "| getFusionUser host:", baseUrl);
+      try {
+        const res = await base44.functions.invoke("getFusionUser", { host: baseUrl, session });
         const u = res.data?.user || {};
         const m = u.mobile || u.phone || u.cell || u.mobileNumber || u.phoneNumber || u.contactNumber || u.telephone || "";
-        if (m) setUserMobile(String(m));
-      })
-      .catch(() => {});
+        if (m && !cancelled) setUserMobile(String(m));
+      } catch { /* no mobile available */ }
+    })();
+
+    Promise.all([emailLookup, mobileLookup]).then(() => { if (!cancelled) setIdentityReady(true); });
+    return () => { cancelled = true; };
   }, []);
 
   function isActiveProfile(profile) {
@@ -110,7 +119,11 @@ export default function ProfileSelectorScreen({ guardianFid, onBack, onSelect })
       .catch(() => setLoading(false));
   }
 
-  useEffect(() => { loadProfiles(); }, [guardianFid, userEmail, userMobile]);
+  // One load per profile, once the identity is known (re-running on every
+  // resolved email/mobile is what made the screen appear to load twice).
+  useEffect(() => {
+    if (identityReady) loadProfiles();
+  }, [guardianFid, identityReady]);
 
   if (showHelp) {
     return (
