@@ -138,13 +138,14 @@ export function fusionDownload(url, filename) {
   return true;
 }
 
-// Close the component — call the host bridge's closeComponent if present, and
-// ALWAYS also post the raw close request to the top window as a fallback
-// (the host may rely on the postMessage even when the bridge call succeeds).
+// Close the component — call the host bridge's closeComponent when present,
+// otherwise post the raw close request to the top window as a fallback.
+// Only one path fires so the host receives the close exactly once.
 export function closeComponent() {
   const fusionBridge = getGlobalBridge("FusionBridge");
   if (fusionBridge && typeof fusionBridge.closeComponent === "function") {
     fusionBridge.closeComponent();
+    return;
   }
   if (window.self !== window.top) {
     window.top.postMessage({ request: "closeComponent" }, "*");
