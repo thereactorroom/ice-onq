@@ -68,12 +68,10 @@ Deno.serve(async (req) => {
       if (isDbId) {
         return Response.json({ notFound: true, profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' } });
       }
-      const isOwner = fusionUser && String(fusionUser.userId) === String(profileId);
-      // Also allow co-guardians to trigger auto-create for profiles they manage
-      const isCoGuardian = fusionUser
-        ? (await base44.asServiceRole.entities.ProfileGuardian.filter({ guardian_fusion_id: String(fusionUser.userId) })).length > 0
-        : false;
-      if (!isOwner && !isCoGuardian) {
+      // Auto-create ONLY for the session user's own fID. Viewing another
+      // user's fID (owner or guardian) is read-only: it either exists or not.
+      const isSelf = fusionUser && String(fusionUser.userId) === String(profileId);
+      if (!isSelf) {
         return Response.json({ profile: null, profileDbId: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: userName || 'Unknown' }, notFound: true });
       }
 
