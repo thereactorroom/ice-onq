@@ -24,15 +24,17 @@ Deno.serve(async (req) => {
     // Lookup by public_slug (used for shared links: /profile?s=...)
     // Slug takes priority — even when no fID is present (isDemoRequest would be true otherwise)
     if (slug) {
-      const slugResults = await base44.asServiceRole.entities.ICEProfile.filter({ public_slug: slug });
+      const slugResults = await base44.asServiceRole.entities.ICEProfile.filter({ public_slug: slug, is_deleted: { $ne: true } });
       profile = slugResults[0] || null;
       if (!profile) {
         return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [] });
       }
     } else if (isDbId && !isDemoRequest) {
       profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
+      if (profile?.is_deleted) profile = null;
     } else {
-      const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId });
+      // Soft-deleted profiles count as non-existent — the owner can create a new one
+      const profiles = await base44.asServiceRole.entities.ICEProfile.filter({ fusion_id: profileId, is_deleted: { $ne: true } });
       profile = profiles[0] || null;
 
       // Deduplicate: if multiple profiles exist for the same fusion_id,
@@ -57,6 +59,7 @@ Deno.serve(async (req) => {
       // Fallback: try as a DB id if fusion_id lookup fails
       if (!profile && !isDemoRequest) {
         profile = await base44.asServiceRole.entities.ICEProfile.get(profileId).catch(() => null);
+        if (profile?.is_deleted) profile = null;
       }
     }
 
@@ -112,9 +115,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Soft-delete check
+    // Soft-delete check (defensive — deleted profiles are already excluded above)
     if (profile.is_deleted) {
-      return Response.json({ isDeleted: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: profile.display_name || 'Unknown' } });
+      return Response.json({ notFound: true, profile: null, contacts: [], allergies: [], conditions: [], medications: [], user: { full_name: profile.display_name || 'Unknown' } });
     }
 
     const profileDbId = profile.id;
