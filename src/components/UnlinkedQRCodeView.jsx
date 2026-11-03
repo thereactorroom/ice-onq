@@ -53,6 +53,21 @@ export default function UnlinkedQRCodeView({ qrToken }) {
             Once linked, scanning this QR code will provide access to the emergency information you have chosen to make available.
           </p>
         )}
+
+        {/* Create-profile prompt — for users who do not have ICE onQ yet */}
+        {!isTerminal && (
+          <div className="border-t border-border pt-6 flex flex-col items-center text-center gap-3">
+            <p className="text-xs text-muted-foreground leading-relaxed px-2">
+              If you do not have ICE onQ click to create a profile. Once created you will be able link ICE onQ QR codes.
+            </p>
+            <a
+              href="https://iceonq.fusiononq.com"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow hover:bg-primary/90 transition-colors"
+            >
+              Create an ICE onQ Profile
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
