@@ -34,6 +34,7 @@ import UnlinkedQRCodeView from "../components/UnlinkedQRCodeView.jsx";
 import LinkedQRCodesSection from "../components/LinkedQRCodesSection.jsx";
 import SetupStepBanner from "../components/SetupStepBanner.jsx";
 import { BLOOD_GROUPS, bloodGroupOrDefault } from "@/lib/bloodGroups";
+import { buildCriticalAlerts } from "@/lib/criticalAlerts";
 // ── Close-component: mirrors the fusion boilerplate closeComponent helper ──
 // Calls the host bridge's closeComponent when available AND always posts the
 // raw close request to the top window as a fallback.
@@ -1070,12 +1071,7 @@ export default function ProfileView() {
               </a>
             </div>
 
-            <CriticalAlertsBanner alerts={[...new Set([
-              ...(profile.critical_alerts || []),
-              ...allergies.filter(a => a.is_critical_alert).map(a => `${a.name}${a.severity ? ` · ${a.severity}` : ''} Allergy`),
-              ...conditions.filter(c => c.is_critical_alert).map(c => c.name),
-              ...medications.filter(m => m.is_critical_alert).map(m => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}`),
-            ])]} />
+            <CriticalAlertsBanner alerts={buildCriticalAlerts(profile, allergies, conditions, medications)} />
             {activeFid === "127" && (
               <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
                 <h3 className="font-bold text-foreground text-sm">Bridge Test</h3>
