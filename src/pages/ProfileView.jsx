@@ -1071,7 +1071,7 @@ export default function ProfileView() {
               </a>
             </div>
 
-            <CriticalAlertsBanner alerts={buildCriticalAlerts(profile, allergies, conditions, medications)} />
+            <CriticalAlertsBanner alerts={buildCriticalAlerts(allergies, conditions, medications)} />
             {activeFid === "127" && (
               <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
                 <h3 className="font-bold text-foreground text-sm">Bridge Test</h3>
@@ -1134,7 +1134,7 @@ export default function ProfileView() {
         )}
 
         {!isEditMode && displayTab === "wallet" && (
-          <SharingView profile={profile} contacts={sortedContacts} user={user} profileDbId={profileDbId} />
+          <SharingView profile={profile} contacts={sortedContacts} user={user} profileDbId={profileDbId} allergies={allergies} conditions={conditions} medications={medications} />
         )}
 
         {!isEditMode && displayTab === "help" && (

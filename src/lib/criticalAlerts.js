@@ -1,22 +1,19 @@
-// Critical Medical Alerts come from two places: the legacy free-text list stored
-// on the profile, and the structured health records flagged as critical alerts.
-// Both are merged here so the red banner always matches what the Health sections
-// list, and an alert recorded in both places is shown only once.
+// Critical Medical Alerts are derived only from the health records themselves
+// (allergies, conditions and medications flagged as critical), so the red banner
+// can never list an alert that the Health sections no longer hold.
 const normalize = (value) =>
   (value || "")
     .toLowerCase()
     .replace(/\ballergy\b/g, "")
     .replace(/[^a-z0-9]/g, "");
 
-export function buildCriticalAlerts(profile, allergies = [], conditions = [], medications = []) {
+export function buildCriticalAlerts(allergies = [], conditions = [], medications = []) {
   const alerts = new Map();
 
   const add = (key, label) => {
     const k = normalize(key);
     if (k && !alerts.has(k)) alerts.set(k, label);
   };
-
-  (profile?.critical_alerts || []).forEach((alert) => add(alert, alert));
 
   allergies
     .filter((a) => a.is_critical_alert)

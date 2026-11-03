@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Pencil, Save, AlertTriangle, X, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, Check } from "lucide-react";
 import DateInput from "@/components/DateInput";
 import { toast } from "sonner";
 import { base44 as b44 } from "@/api/base44Client";
@@ -104,7 +104,6 @@ export default function EditProfile() {
   const { data: medications = [] } = useQuery({ queryKey: ["medications", profileId], queryFn: () => base44.entities.Medication.filter({ profile_id: profileId }), enabled: !!profileId });
 
   const [form, setForm] = useState({});
-  const [alertInput, setAlertInput] = useState("");
   const [itemDialog, setItemDialog] = useState({ open: false, type: null, item: null });
 
   useEffect(() => {
@@ -123,7 +122,6 @@ export default function EditProfile() {
         hospital_name: profile.hospital_name || "",
         hospital_location: profile.hospital_location || "",
         emergency_notes: profile.emergency_notes || "",
-        critical_alerts: profile.critical_alerts || [],
         pre_login_enabled: profile.pre_login_enabled || false,
       });
     }
@@ -152,14 +150,6 @@ export default function EditProfile() {
     if (type === "condition") { item ? await condUpdate.mutateAsync({ id: item.id, data: formData }) : await condCreate.mutateAsync(formData); }
     if (type === "medication") { item ? await medUpdate.mutateAsync({ id: item.id, data: formData }) : await medCreate.mutateAsync(formData); }
   };
-
-  const addAlert = () => {
-    if (alertInput.trim() && !form.critical_alerts?.includes(alertInput.trim())) {
-      setForm({ ...form, critical_alerts: [...(form.critical_alerts || []), alertInput.trim()] });
-      setAlertInput("");
-    }
-  };
-  const removeAlert = (a) => setForm({ ...form, critical_alerts: (form.critical_alerts || []).filter((x) => x !== a) });
 
   const itemFields = {
     allergy: [
@@ -224,26 +214,6 @@ export default function EditProfile() {
                   <SelectContent>{BLOOD_GROUPS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-2xl border border-border p-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-emergency" />
-              <h3 className="font-semibold">Critical Medical Alerts</h3>
-            </div>
-            <p className="text-sm text-muted-foreground">These appear prominently on your emergency profile. Add conditions that responders need to know immediately.</p>
-            <div className="flex gap-2">
-              <Input value={alertInput} onChange={(e) => setAlertInput(e.target.value)} placeholder="e.g. Severe Penicillin Allergy" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAlert())} />
-              <Button type="button" onClick={addAlert} variant="outline"><Plus className="w-4 h-4" /></Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(form.critical_alerts || []).map((a, i) => (
-                <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emergency/10 text-emergency text-sm font-medium">
-                  {a}
-                  <button onClick={() => removeAlert(a)} className="hover:bg-emergency/20 rounded p-0.5"><X className="w-3 h-3" /></button>
-                </span>
-              ))}
             </div>
           </div>
 

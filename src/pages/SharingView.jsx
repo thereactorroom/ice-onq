@@ -3,7 +3,7 @@ import { QrCode, Smartphone, CreditCard, Copy, Check, Link, Download } from "luc
 import WalletCardPreview from "../components/WalletCardPreview";
 import { fusionDownload, getGlobalBridge } from "@/lib/fusionBridge";
 
-export default function SharingView({ profile, contacts, user, profileDbId }) {
+export default function SharingView({ profile, contacts, user, profileDbId, allergies, conditions, medications }) {
   const [copied, setCopied] = useState(false);
   const [qrDownloaded, setQrDownloaded] = useState(false);
 
@@ -102,7 +102,7 @@ export default function SharingView({ profile, contacts, user, profileDbId }) {
 
   return (
     <div className="space-y-6">
-      <WalletCardPreview profile={profile} contacts={sortedContacts} user={user} />
+      <WalletCardPreview profile={profile} contacts={sortedContacts} user={user} allergies={allergies} conditions={conditions} medications={medications} />
 
       {/* Copy Link */}
       {shareUrl && (

@@ -5,8 +5,10 @@ import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { fusionDownload, getGlobalBridge } from "@/lib/fusionBridge";
+import { buildCriticalAlerts } from "@/lib/criticalAlerts";
 
-export default function WalletCardPreview({ user, profile, primaryContact }) {
+export default function WalletCardPreview({ user, profile, primaryContact, allergies = [], conditions = [], medications = [] }) {
+  const criticalAlerts = buildCriticalAlerts(allergies, conditions, medications);
   const cardRef = useRef(null);
   const [downloaded, setDownloaded] = useState(false);
 
@@ -91,9 +93,9 @@ export default function WalletCardPreview({ user, profile, primaryContact }) {
                   </p>
                 </div>
               </div>
-              {profile?.critical_alerts?.length > 0 && (
+              {criticalAlerts.length > 0 && (
                 <p className="text-[10px] opacity-80 mt-1 leading-relaxed">
-                  ⚠ {profile.critical_alerts.join(" · ")}
+                  ⚠ {criticalAlerts.join(" · ")}
                 </p>
               )}
             </div>
