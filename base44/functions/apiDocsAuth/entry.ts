@@ -5,9 +5,12 @@ import { API_SPEC } from "../../shared/apiSpec.ts";
 // The spec itself lives in base44/shared/apiSpec.ts, so it never reaches the
 // public client bundle: it is only returned here, after a correct login.
 //
-// Secrets: API_DOCS_USERNAME, API_DOCS_PASSWORD.
-// Tokens are HMAC-signed with the password, so changing the password ends
-// every open docs session.
+// Two credential sets are supported:
+//   primary   — API_DOCS_USERNAME / API_DOCS_PASSWORD
+//   secondary — API_DOCS_USERNAME_2 / API_DOCS_PASSWORD_2 (optional)
+//
+// Tokens are HMAC-signed per credential slot with that slot's password, so
+// changing one password ends only that set's sessions.
 
 const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
 
@@ -25,7 +28,7 @@ function safeEqual(a, b) {
   return diff === 0;
 }
 
-async function signToken(expiry, secret) {
+async function signToken(expiry, slot, secret) {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -33,10 +36,23 @@ async function signToken(expiry, secret) {
     false,
     ["sign"]
   );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`iceonq-docs:${expiry}`));
+  const message = new TextEncoder().encode(`iceonq-docs:${expiry}:${slot}`);
+  const sig = await crypto.subtle.sign("HMAC", key, message);
   return Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+// Every credential set that is fully configured, in slot order.
+function credentialPairs() {
+  const pairs = [];
+  const user1 = secrets.get("API_DOCS_USERNAME");
+  const pass1 = secrets.get("API_DOCS_PASSWORD");
+  if (user1 && pass1) pairs.push({ username: user1, password: pass1 });
+  const user2 = secrets.get("API_DOCS_USERNAME_2");
+  const pass2 = secrets.get("API_DOCS_PASSWORD_2");
+  if (user2 && pass2) pairs.push({ username: user2, password: pass2 });
+  return pairs;
 }
 
 export default async function (req) {
@@ -44,11 +60,13 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const action = body.action;
 
-    const configuredUser = secrets.get("API_DOCS_USERNAME");
-    const configuredPass = secrets.get("API_DOCS_PASSWORD");
-    if (!configuredUser || !configuredPass) {
+    const pairs = credentialPairs();
+    if (pairs.length === 0) {
       return Response.json(
-        { error: "API documentation access is not configured yet. Set API_DOCS_USERNAME and API_DOCS_PASSWORD." },
+        {
+          error:
+            "API documentation access is not configured yet. Set API_DOCS_USERNAME and API_DOCS_PASSWORD.",
+        },
         { status: 503 }
       );
     }
@@ -60,29 +78,41 @@ export default async function (req) {
         return Response.json({ error: "Username and password are required." }, { status: 400 });
       }
 
-      const userMatch = safeEqual(await sha256Hex(username), await sha256Hex(configuredUser));
-      const passMatch = safeEqual(await sha256Hex(password), await sha256Hex(configuredPass));
-      if (!userMatch || !passMatch) {
+      let slot = -1;
+      for (let i = 0; i < pairs.length; i += 1) {
+        const userMatch = safeEqual(await sha256Hex(username), await sha256Hex(pairs[i].username));
+        const passMatch = safeEqual(await sha256Hex(password), await sha256Hex(pairs[i].password));
+        if (userMatch && passMatch) {
+          slot = i;
+          break;
+        }
+      }
+      if (slot === -1) {
         return Response.json({ error: "Invalid username or password." }, { status: 401 });
       }
 
       const expiresAt = Date.now() + TOKEN_TTL_MS;
-      const signature = await signToken(expiresAt, configuredPass);
-      return Response.json({ token: `${expiresAt}.${signature}`, expiresAt });
+      const signature = await signToken(expiresAt, slot, pairs[slot].password);
+      return Response.json({ token: `${expiresAt}.${slot}.${signature}`, expiresAt });
     }
 
     if (action === "spec") {
       const token = String(body.token || "");
       const parts = token.split(".");
-      if (parts.length !== 2) {
+      if (parts.length !== 3) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
       const expiry = Number(parts[0]);
+      const slot = Number(parts[1]);
       if (!Number.isFinite(expiry) || expiry < Date.now()) {
         return Response.json({ error: "Session expired. Sign in again." }, { status: 401 });
       }
-      const expected = await signToken(expiry, configuredPass);
-      if (!safeEqual(parts[1], expected)) {
+      const pair = pairs[slot];
+      if (!pair) {
+        return Response.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const expected = await signToken(expiry, slot, pair.password);
+      if (!safeEqual(parts[2], expected)) {
         return Response.json({ error: "Unauthorized" }, { status: 401 });
       }
       return Response.json({ spec: API_SPEC });
