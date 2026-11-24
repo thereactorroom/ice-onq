@@ -23,6 +23,7 @@ const Register = lazy(() => import('./pages/Register'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ICESetup = lazy(() => import('./pages/ICESetup'));
+const ApiDocs = lazy(() => import('./pages/ApiDocs'));
 
 const AuthenticatedApp = () => {
   // Hooks must always be called first — no early returns before this
@@ -37,7 +38,7 @@ const AuthenticatedApp = () => {
   }
 
   // Resolve QR-code path URLs: https://ice.onq.life/{32-char-token} → /profile?qrToken=...
-  const knownRoutes = ['/profile', '/login', '/register', '/forgot-password', '/reset-password', '/contacts', '/medical', '/wallet-card'];
+  const knownRoutes = ['/profile', '/login', '/register', '/forgot-password', '/reset-password', '/contacts', '/medical', '/wallet-card', '/api-docs'];
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
   if (pathSegments.length === 1 && !knownRoutes.includes(window.location.pathname)) {
     const seg = pathSegments[0];
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/profile" replace />} />
             <Route path="/contacts" element={<ManageContacts />} />
