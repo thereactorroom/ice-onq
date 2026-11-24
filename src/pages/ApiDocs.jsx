@@ -1,26 +1,112 @@
-import { Shield, ArrowRight, Terminal, Server, AlertTriangle, BookOpen } from "lucide-react";
-import {
-  specMeta,
-  flow,
-  conventions,
-  httpExample,
-  upstream,
-  endpoints,
-  limitations,
-} from "@/data/apiSpec";
+import { useState, useEffect } from "react";
+import { Shield, ArrowRight, Terminal, Server, AlertTriangle, BookOpen, Lock, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 import SpecSidebar from "@/components/api-docs/SpecSidebar";
 import EndpointCard from "@/components/api-docs/EndpointCard";
 import CodeBlock from "@/components/api-docs/CodeBlock";
+import ApiDocsLogin from "@/components/api-docs/ApiDocsLogin";
 
-const sections = [
-  { id: "overview", label: "Flow overview" },
-  { id: "conventions", label: "Conventions" },
-  { id: "upstream", label: "fusion onQ API" },
-  ...endpoints.map((e) => ({ id: e.id, label: e.name })),
-  { id: "limitations", label: "Known limitations" },
-];
+const TOKEN_KEY = "iceonq_api_docs_token";
+
+function readToken() {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY) || "";
+  } catch {
+    return "";
+  }
+}
 
 export default function ApiDocs() {
+  const [token, setToken] = useState(readToken);
+  const [spec, setSpec] = useState(null);
+  const [loading, setLoading] = useState(!!token);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (!token) {
+      setSpec(null);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    base44.functions
+      .invoke("apiDocsAuth", { action: "spec", token })
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.data?.spec) throw new Error(res.data?.error || "Could not load the specification.");
+        setSpec(res.data.spec);
+        setNotice("");
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        try {
+          sessionStorage.removeItem(TOKEN_KEY);
+        } catch {
+          /* storage unavailable */
+        }
+        setToken("");
+        setSpec(null);
+        setLoading(false);
+        setNotice("Your session expired. Sign in again.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  function handleAuthed(nextToken) {
+    try {
+      sessionStorage.setItem(TOKEN_KEY, nextToken);
+    } catch {
+      /* storage unavailable — the in-memory token still works for this visit */
+    }
+    setToken(nextToken);
+  }
+
+  function handleLock() {
+    try {
+      sessionStorage.removeItem(TOKEN_KEY);
+    } catch {
+      /* storage unavailable */
+    }
+    setToken("");
+    setSpec(null);
+    setNotice("");
+  }
+
+  if (!token) {
+    return <ApiDocsLogin onAuthed={handleAuthed} notice={notice} />;
+  }
+
+  if (loading || !spec) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="bg-primary">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-white" />
+            <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <p className="text-sm">Opening documentation…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { specMeta, flow, conventions, httpExample, upstream, endpoints, limitations } = spec;
+
+  const sections = [
+    { id: "overview", label: "Flow overview" },
+    { id: "conventions", label: "Conventions" },
+    { id: "upstream", label: "fusion onQ API" },
+    ...endpoints.map((e) => ({ id: e.id, label: e.name })),
+    { id: "limitations", label: "Known limitations" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Brand bar */}
@@ -30,7 +116,18 @@ export default function ApiDocs() {
             <Shield className="w-5 h-5 text-white" />
             <span className="font-bold text-sm tracking-wider text-white">ICE onQ</span>
           </div>
-          <span className="text-[11px] text-white/70">API reference · v{specMeta.version}</span>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-[11px] text-white/70">
+              API reference · v{specMeta.version}
+            </span>
+            <button
+              onClick={handleLock}
+              className="flex items-center gap-1.5 text-[11px] text-white/80 hover:text-white px-2.5 py-1 rounded-full border border-white/25 transition-colors"
+            >
+              <Lock className="w-3 h-3" />
+              Lock
+            </button>
+          </div>
         </div>
       </div>
 

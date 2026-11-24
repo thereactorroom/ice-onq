@@ -1,9 +1,8 @@
-// API specification data for the non-iframe ICE QR verification flow.
-// Examples are based on the current implementation. Where fusion onQ's own
-// response shape is passed through verbatim and not fully specified upstream,
-// the example is marked "illustrative".
+// Server-side API specification for the non-iframe ICE QR verification flow.
+// Lives outside src/ on purpose: the content must never ship in the public
+// client bundle. It is served only by the apiDocsAuth function after login.
 
-export const specMeta = {
+const specMeta = {
   title: "ICE onQ Verification API",
   version: "1.0",
   updated: "24 November 2026",
@@ -12,7 +11,7 @@ export const specMeta = {
   publishedUrl: "https://ice-onq-app.base44.app",
 };
 
-export const flow = [
+const flow = [
   {
     step: 1,
     title: "Resolve the scanned QR code",
@@ -50,7 +49,7 @@ export const flow = [
   },
 ];
 
-export const conventions = [
+const conventions = [
   {
     title: "Transport",
     body: "Every Base44 function accepts a POST with a JSON body and replies with JSON. From inside the app, call it with base44.functions.invoke(name, payload) and read res.data; never build an absolute URL in app code.",
@@ -73,7 +72,7 @@ export const conventions = [
   },
 ];
 
-export const httpExample = {
+const httpExample = {
   curl: `curl -X POST "https://ice-onq-app.base44.app/functions/fusionUserCheck" \\
   -H "Content-Type: application/json" \\
   -d '{"mobile": "+27 82 000 0000"}'`,
@@ -82,7 +81,7 @@ export const httpExample = {
 });`,
 };
 
-export const upstream = {
+const upstream = {
   url: "https://app.fusiononq.com/api/",
   transport:
     "POST with Content-Type: application/x-www-form-urlencoded and an apiKey header. The proxies add the key; callers never see it.",
@@ -117,7 +116,7 @@ userId=0820000000&countryCode=27&action=userCheck`,
   },
 };
 
-export const endpoints = [
+const endpoints = [
   {
     id: "manageQRCode",
     name: "manageQRCode",
@@ -135,10 +134,7 @@ export const endpoints = [
       { action: "unlink", auth: "Authorised", purpose: "Delete an alias; the founding token is never stored here." },
     ],
     requests: [
-      {
-        label: "Resolve a scanned token",
-        code: { action: "resolve", qrToken: "q7f3k9m2x4b8" },
-      },
+      { label: "Resolve a scanned token", code: { action: "resolve", qrToken: "q7f3k9m2x4b8" } },
       {
         label: "Link a token to the chosen profile",
         code: {
@@ -162,16 +158,8 @@ export const endpoints = [
           displayName: "Joe Soap",
         },
       },
-      {
-        label: "Token is not bound to anything",
-        status: 200,
-        code: { status: "unlinked" },
-      },
-      {
-        label: "Token is malformed or empty",
-        status: 200,
-        code: { status: "invalid" },
-      },
+      { label: "Token is not bound to anything", status: 200, code: { status: "unlinked" } },
+      { label: "Token is malformed or empty", status: 200, code: { status: "invalid" } },
       {
         label: "Link created",
         status: 200,
@@ -187,11 +175,7 @@ export const endpoints = [
           },
         },
       },
-      {
-        label: "Token already bound to the same profile",
-        status: 200,
-        code: { status: "already_linked" },
-      },
+      { label: "Token already bound to the same profile", status: 200, code: { status: "already_linked" } },
       {
         label: "Token owned by a different profile",
         status: 200,
@@ -308,12 +292,7 @@ export const endpoints = [
     auth: "Public.",
     requests: [{ label: "Request a code", code: { mobile: "+27 82 000 0000" } }],
     responses: [
-      {
-        label: "Code sent",
-        status: 200,
-        illustrative: true,
-        code: { result: true, reason: "OTP has been sent." },
-      },
+      { label: "Code sent", status: 200, illustrative: true, code: { result: true, reason: "OTP has been sent." } },
       {
         label: "Daily limit reached",
         status: 200,
@@ -370,7 +349,8 @@ export const endpoints = [
     path: "/functions/fusionRegister",
     summary:
       "Creates a fusion onQ account for a number that was just verified by SMS code. Called from the registration step of the claim flow.",
-    auth: "Public. The caller is expected to have verified the number first, but the endpoint does not enforce that itself.",
+    auth:
+      "Public. The caller is expected to have verified the number first, but the endpoint does not enforce that itself.",
     requests: [
       {
         label: "Register after OTP verification",
@@ -395,9 +375,7 @@ export const endpoints = [
         code: { result: false, reason: "This number is already registered." },
       },
     ],
-    errors: [
-      { status: 400, code: { error: "name, surname, password and mobile required" } },
-    ],
+    errors: [{ status: 400, code: { error: "name, surname, password and mobile required" } }],
     notes: [
       "countryName is fixed to South Africa, countryCode to 27, and communityCode is sent empty.",
       "Registration does not return an app session. The claim flow continues with the returned fusion user and does not call fusionSignIn again.",
@@ -483,7 +461,13 @@ export const endpoints = [
       {
         label: "Nothing found",
         status: 200,
-        code: { pendingInvites: [], dependentProfiles: [], sharedProfiles: [], dependentGuardians: [], dependentInvites: [] },
+        code: {
+          pendingInvites: [],
+          dependentProfiles: [],
+          sharedProfiles: [],
+          dependentGuardians: [],
+          dependentInvites: [],
+        },
       },
     ],
     errors: [],
@@ -574,7 +558,7 @@ export const endpoints = [
   },
 ];
 
-export const limitations = [
+const limitations = [
   "The claim flow is unauthenticated at the app level: identity comes from fusion onQ verification, and no Base44 session is created. Authorisation on manageQRCode therefore relies on the fusionUserId the client sends, checked against fusion_id, guardian_fid or a ProfileGuardian record.",
   "Registration does not sign the user in again, and the upstream OTP token is not exchanged for a session.",
   "fusionSendOtp sends the number as a local mobile while fusionVerifyOtp sends E.164 userId, matching the upstream contract but easy to get wrong when integrating directly.",
@@ -582,3 +566,5 @@ export const limitations = [
   "getPublicICEProfile deletes duplicate records for the same fusion_id during a read, which is destructive behaviour on a GET-like call.",
   "OTP delivery is capped at three per number per 24 hours by fusion onQ.",
 ];
+
+export const API_SPEC = { specMeta, flow, conventions, httpExample, upstream, endpoints, limitations };
